@@ -227,7 +227,7 @@ export const useQuinielaStore = create<QuinielaState>()(
       },
 
       refreshKnockout: () => {
-        const { groups } = get()
+        const { groups, knockout: existing } = get()
         const allComplete = groups.every((g) => g.first && g.second && g.third && g.fourth)
         if (!allComplete) {
           set({ knockout: [] })
@@ -236,7 +236,15 @@ export const useQuinielaStore = create<QuinielaState>()(
         const bestThird = getBestThirdPlaced(groups)
         const thirdQualifiers = bestThird.map((t) => t.teamId).filter(Boolean) as string[]
         const matrix = buildFifaMatrix(groups, thirdQualifiers)
-        set({ knockout: matrix })
+        const merged = matrix.map((m) => {
+          const old = existing.find((e) => e.id === m.id)
+          if (!old) return m
+          if (m.round === 'r32') {
+            return { ...m, winner: old.winner ?? m.winner }
+          }
+          return { ...m, ...old }
+        })
+        set({ knockout: propagateWinners(merged) })
       },
 
       getTotalPoints: () => {
@@ -327,14 +335,18 @@ export const useQuinielaStore = create<QuinielaState>()(
             const loaded: Partial<QuinielaState> = {
               participantName: participant.name,
               groups: participant.groups,
-              knockout: participant.knockout ?? [],
               bonuses: participant.bonuses,
             }
             if (participant.matchPredictions) {
               loaded.matchPredictions = participant.matchPredictions
             }
-            set(loaded)
-            get().refreshKnockout()
+            const savedKnockout: KnockoutMatch[] = participant.knockout ?? []
+            if (savedKnockout.length > 0) {
+              set({ ...loaded, knockout: savedKnockout })
+            } else {
+              set(loaded)
+              get().refreshKnockout()
+            }
           }
         } catch (err) {
           console.error("Load error:", err)
