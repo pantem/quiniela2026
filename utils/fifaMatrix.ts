@@ -159,11 +159,12 @@ export function propagateWinners(matches: KnockoutMatch[]): KnockoutMatch[] {
     return parseInt(parts[1]) || 0
   }
 
-  for (const [fromRound, fromCount, toRound, toCount] of PROPAGATION) {
-    const fromMatches = matches
+  for (const [fromRound, , toRound] of PROPAGATION) {
+    const all = Array.from(byId.values())
+    const fromMatches = all
       .filter((m) => m.round === fromRound)
       .sort((a, b) => sortKey(a.id) - sortKey(b.id))
-    const toMatches = matches
+    const toMatches = all
       .filter((m) => m.round === toRound)
       .sort((a, b) => sortKey(a.id) - sortKey(b.id))
 
@@ -177,10 +178,7 @@ export function propagateWinners(matches: KnockoutMatch[]): KnockoutMatch[] {
       if (awaySource.winner) updated.awayTeam = awaySource.winner
 
       if (Object.keys(updated).length > 0) {
-        const existing = byId.get(target.id)
-        if (existing) {
-          byId.set(target.id, { ...existing, ...updated })
-        }
+        byId.set(target.id, { ...target, ...updated })
       }
     }
   }
