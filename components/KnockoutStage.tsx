@@ -21,6 +21,7 @@ export default function KnockoutStage({ round, title, subtitle, icon }: Props) {
   if (matches.length === 0) {
     const { groups } = useQuinielaStore.getState()
     const completed = groups.filter((g) => g.first && g.second && g.third && g.fourth).length
+    const allComplete = completed === 12
 
     return (
       <div className="bg-gray-800/60 backdrop-blur rounded-xl border border-gray-700/50 p-8 text-center">
@@ -28,9 +29,15 @@ export default function KnockoutStage({ round, title, subtitle, icon }: Props) {
         <h3 className="text-lg font-semibold text-white mb-2">
           Fase Eliminatoria
         </h3>
-        <p className="text-gray-400 text-sm max-w-md mx-auto">
-          Completa los <span className="text-white font-bold">12 grupos</span> con sus 4 posiciones para generar los cruces de la fase eliminatoria.
-        </p>
+        {allComplete ? (
+          <p className="text-gray-400 text-sm max-w-md mx-auto">
+            Generando cruces... si esto persiste, presiona "Guardar" y recarga la página.
+          </p>
+        ) : (
+          <p className="text-gray-400 text-sm max-w-md mx-auto">
+            Completa los <span className="text-white font-bold">12 grupos</span> con sus 4 posiciones para generar los cruces de la fase eliminatoria.
+          </p>
+        )}
         <p className="text-gray-500 text-xs mt-3">
           {completed}/12 grupos completados
         </p>

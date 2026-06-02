@@ -69,6 +69,23 @@ export default function Home() {
     }
   }, [])
 
+  useEffect(() => {
+    const unsub = useQuinielaStore.subscribe((state) => {
+      const allComplete = state.groups.every((g) => g.first && g.second && g.third && g.fourth)
+      if (allComplete && state.knockout.length === 0) {
+        state.refreshKnockout()
+      }
+    })
+    return () => unsub()
+  }, [])
+
+  useEffect(() => {
+    const groups = useQuinielaStore.getState().groups
+    if (groups.every((g) => g.first && g.second && g.third && g.fourth)) {
+      useQuinielaStore.getState().refreshKnockout()
+    }
+  }, [])
+
   const handleSync = useCallback(async () => {
     await syncToMongo()
   }, [syncToMongo])
