@@ -53,8 +53,18 @@ export interface Participant {
   points: number
 }
 
+export interface MatchScore {
+  id: string
+  groupId: string
+  homeTeam: string
+  awayTeam: string
+  homeScore: number | null
+  awayScore: number | null
+}
+
 export type TabId =
   | 'grupos'
+  | 'marcadores'
   | 'dieciseisavos'
   | 'octavos'
   | 'cuartos'

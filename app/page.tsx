@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useQuinielaStore } from "@/store/store"
 import GroupStage from "@/components/GroupStage"
 import GroupSummary from "@/components/GroupSummary"
+import GroupMatches from "@/components/GroupMatches"
 import KnockoutStage from "@/components/KnockoutStage"
 import BonusSelector from "@/components/BonusSelector"
 import ResultsAdmin from "@/components/ResultsAdmin"
@@ -11,14 +12,15 @@ import Ranking from "@/components/Ranking"
 import Dashboard from "@/components/Dashboard"
 import {
   Table2,
+  Timer,
   Swords,
   Trophy,
   ShieldCheck,
   BarChart3,
   UserCircle,
-  Settings,
-  ChevronLeft,
-  ChevronRight,
+  Cloud,
+  CloudOff,
+  Loader2,
 } from "lucide-react"
 import type { TabId } from "./types"
 
@@ -31,6 +33,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { id: "grupos", label: "Grupos", icon: <Table2 className="w-4 h-4" />, section: "predict" },
+  { id: "marcadores", label: "Marcadores", icon: <Timer className="w-4 h-4" />, section: "predict" },
   { id: "dieciseisavos", label: "Dieciseisavos", icon: <Swords className="w-4 h-4" />, section: "predict" },
   { id: "octavos", label: "Octavos", icon: <Swords className="w-4 h-4" />, section: "predict" },
   { id: "cuartos", label: "Cuartos", icon: <Swords className="w-4 h-4" />, section: "predict" },
@@ -44,7 +47,31 @@ const navItems: NavItem[] = [
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabId>("grupos")
-  const { participantName, setParticipantName } = useQuinielaStore()
+  const {
+    participantName,
+    setParticipantName,
+    syncToMongo,
+    loadFromMongo,
+    loadResultsFromMongo,
+    loadAllParticipants,
+    syncing,
+    lastSync,
+  } = useQuinielaStore()
+
+  useEffect(() => {
+    loadResultsFromMongo()
+    loadAllParticipants()
+  }, [loadResultsFromMongo, loadAllParticipants])
+
+  useEffect(() => {
+    if (participantName) {
+      loadFromMongo(participantName)
+    }
+  }, [])
+
+  const handleSync = useCallback(async () => {
+    await syncToMongo()
+  }, [syncToMongo])
 
   const knockoutRounds = [
     {
@@ -93,6 +120,8 @@ export default function Home() {
             <GroupSummary />
           </div>
         )
+      case "marcadores":
+        return <GroupMatches />
       case "dieciseisavos":
       case "octavos":
       case "cuartos":
@@ -134,14 +163,29 @@ export default function Home() {
               </h1>
             </div>
             <div className="flex items-center gap-2">
-              <UserCircle className="w-4 h-4 text-gray-400" />
+              <UserCircle className="w-4 h-4 text-gray-400 shrink-0" />
               <input
                 type="text"
                 placeholder="Tu nombre"
                 value={participantName}
                 onChange={(e) => setParticipantName(e.target.value)}
-                className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-gray-500 w-32 focus:outline-none focus:ring-2 focus:ring-purple-500/30"
+                className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-gray-500 w-28 focus:outline-none focus:ring-2 focus:ring-purple-500/30"
               />
+              <button
+                onClick={handleSync}
+                disabled={syncing || !participantName}
+                title={lastSync ? `Última sincronización: ${new Date(lastSync).toLocaleTimeString()}` : "Guardar en la nube"}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-purple-600/20 text-purple-300 border border-purple-500/30 hover:bg-purple-600/30"
+              >
+                {syncing ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : lastSync ? (
+                  <Cloud className="w-3.5 h-3.5" />
+                ) : (
+                  <CloudOff className="w-3.5 h-3.5" />
+                )}
+                {syncing ? "Guardando..." : lastSync ? "Guardado" : "Guardar"}
+              </button>
             </div>
           </div>
         </div>

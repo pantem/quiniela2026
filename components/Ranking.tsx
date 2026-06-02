@@ -5,6 +5,7 @@ import { Trophy, Medal, TrendingUp } from "lucide-react"
 
 interface ParticipantScore {
   name: string
+  matchPoints: number
   groupPoints: number
   knockoutPoints: number
   bonusPoints: number
@@ -14,6 +15,7 @@ interface ParticipantScore {
 export default function Ranking() {
   const {
     participantName,
+    getMatchPoints,
     getGroupPoints,
     getKnockoutPoints,
     getBonusPoints,
@@ -26,6 +28,7 @@ export default function Ranking() {
   const scores: ParticipantScore[] = [
     {
       name: participantName || "Tú",
+      matchPoints: getMatchPoints(),
       groupPoints: getGroupPoints(),
       knockoutPoints: getKnockoutPoints(),
       bonusPoints: getBonusPoints(),
@@ -79,6 +82,9 @@ export default function Ranking() {
                   Nombre
                 </th>
                 <th className="text-center px-3 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  Marcadores
+                </th>
+                <th className="text-center px-3 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">
                   Grupos
                 </th>
                 <th className="text-center px-3 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">
@@ -109,6 +115,9 @@ export default function Ranking() {
                   </td>
                   <td className="px-4 py-4">
                     <span className="text-white font-medium">{p.name}</span>
+                  </td>
+                  <td className="px-3 py-4 text-center text-sm text-gray-300">
+                    {p.matchPoints}
                   </td>
                   <td className="px-3 py-4 text-center text-sm text-gray-300">
                     {p.groupPoints}

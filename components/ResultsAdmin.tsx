@@ -2,16 +2,20 @@
 
 import { useQuinielaStore } from "@/store/store"
 import { groups, getTeamsByGroup, getTeamById } from "@/utils/teams"
-import { Shield, Lock } from "lucide-react"
-import { useState } from "react"
+import { getGroupMatches, buildGroupResultsFromScores, computeStandingsFromMatches } from "@/utils/matches"
+import { Shield, Lock, Calculator, CheckCircle } from "lucide-react"
+import { useState, useMemo } from "react"
 
 export default function ResultsAdmin() {
   const {
     results,
+    resultMatchScores,
+    setResultMatchScore,
     setResultGroup,
     setResultWinner,
     setResultBonus,
-    knockout,
+    applyResultStandings,
+    resetResultMatchScores,
   } = useQuinielaStore()
   const [unlocked, setUnlocked] = useState(false)
 
@@ -34,12 +38,22 @@ export default function ResultsAdmin() {
     )
   }
 
-  const positions: Array<{ key: "first" | "second" | "third" | "fourth"; label: string }> = [
-    { key: "first", label: "1°" },
-    { key: "second", label: "2°" },
-    { key: "third", label: "3°" },
-    { key: "fourth", label: "4°" },
-  ]
+  const totalScores = resultMatchScores.filter(
+    (m) => m.homeScore !== null && m.awayScore !== null
+  ).length
+
+  const standings = useMemo(() => {
+    const byGroup = new Map<string, typeof resultMatchScores>()
+    for (const m of resultMatchScores) {
+      if (!byGroup.has(m.groupId)) byGroup.set(m.groupId, [])
+      byGroup.get(m.groupId)!.push(m)
+    }
+    const result: Record<string, ReturnType<typeof computeStandingsFromMatches>> = {}
+    for (const [gid, ms] of byGroup) {
+      result[gid] = computeStandingsFromMatches(ms)
+    }
+    return result
+  }, [resultMatchScores])
 
   return (
     <div className="space-y-8">
@@ -51,49 +65,113 @@ export default function ResultsAdmin() {
         </div>
       </div>
 
+      <div className="flex items-center justify-between bg-gray-800/60 rounded-xl border border-gray-700/50 p-4">
+        <div className="flex items-center gap-3">
+          <Calculator className="w-5 h-5 text-blue-400" />
+          <div>
+            <p className="text-sm text-gray-300">
+              <span className="text-white font-bold">{totalScores}</span>/72 marcadores ingresados
+            </p>
+            <p className="text-xs text-gray-500">
+              Las posiciones se calculan automáticamente desde los marcadores
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={resetResultMatchScores}
+            className="px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors"
+          >
+            Limpiar
+          </button>
+          <button
+            onClick={applyResultStandings}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors"
+          >
+            <CheckCircle className="w-3.5 h-3.5" />
+            Aplicar posiciones
+          </button>
+        </div>
+      </div>
+
       <div>
-        <h3 className="text-lg font-semibold text-white mb-4">Grupos</h3>
+        <h3 className="text-lg font-semibold text-white mb-4">Marcadores por Grupo</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {groups.map((group) => {
-            const teamList = getTeamsByGroup(group.id)
+            const groupMatches = resultMatchScores.filter(
+              (m) => m.groupId === group.id
+            )
+            const groupStandings = standings[group.id] ?? []
+
             return (
               <div
                 key={group.id}
                 className="bg-gray-800/80 backdrop-blur rounded-xl border border-gray-700/50 overflow-hidden"
               >
                 <div className="px-4 py-3 bg-gradient-to-r from-gray-700 to-gray-800 border-b border-gray-600/50">
-                  <h3 className="font-bold text-white">Grupo {group.id}</h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-bold text-white">Grupo {group.id}</h3>
+                    <span className="text-xs text-gray-400">
+                      {groupMatches.filter((m) => m.homeScore !== null).length}/6
+                    </span>
+                  </div>
                 </div>
-                <div className="p-3 space-y-2">
-                  {positions.map((pos) => {
-                    const g = results.groups.find(
-                      (r) => r.groupId === group.id
-                    )
-                    const currentValue = g?.[pos.key]
-
+                <div className="p-3 space-y-1.5">
+                  {groupMatches.map((match) => {
+                    const home = getTeamById(match.homeTeam)
+                    const away = getTeamById(match.awayTeam)
                     return (
-                      <select
-                        key={pos.key}
-                        value={currentValue ?? ""}
-                        onChange={(e) =>
-                          setResultGroup(
-                            group.id,
-                            pos.key,
-                            e.target.value || null
-                          )
-                        }
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg text-sm"
+                      <div
+                        key={match.id}
+                        className="flex items-center gap-1 bg-gray-700/30 rounded-lg p-1.5"
                       >
-                        <option value="">{pos.label}</option>
-                        {teamList.map((t) => (
-                          <option key={t.id} value={t.id}>
-                            {t.flag} {t.name}
-                          </option>
-                        ))}
-                      </select>
+                        <span className="text-xs w-28 truncate text-right text-gray-200">
+                          {home?.flag} {home?.name}
+                        </span>
+                        <AdminScoreSelect
+                          value={match.homeScore}
+                          onChange={(v) =>
+                            setResultMatchScore(match.id, v, match.awayScore)
+                          }
+                        />
+                        <span className="text-gray-500 text-xs">-</span>
+                        <AdminScoreSelect
+                          value={match.awayScore}
+                          onChange={(v) =>
+                            setResultMatchScore(match.id, match.homeScore, v)
+                          }
+                        />
+                        <span className="text-xs w-28 truncate text-left text-gray-200">
+                          {away?.flag} {away?.name}
+                        </span>
+                      </div>
                     )
                   })}
                 </div>
+                {groupStandings.length > 0 && (
+                  <div className="border-t border-gray-700/50 px-3 py-2 bg-gray-700/20">
+                    <p className="text-[10px] text-gray-500 font-semibold uppercase mb-1">
+                      Tabla calculada
+                    </p>
+                    {groupStandings.map((s, i) => {
+                      const team = getTeamById(s.teamId)
+                      return (
+                        <div
+                          key={s.teamId}
+                          className="flex items-center gap-1.5 text-xs py-0.5"
+                        >
+                          <span className="w-4 text-gray-500">{i + 1}°</span>
+                          <span className="text-gray-200">
+                            {team?.flag} {team?.name}
+                          </span>
+                          <span className="ml-auto text-gray-400">
+                            {s.points} pts
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
             )
           })}
@@ -138,5 +216,30 @@ export default function ResultsAdmin() {
         </div>
       </div>
     </div>
+  )
+}
+
+function AdminScoreSelect({
+  value,
+  onChange,
+}: {
+  value: number | null
+  onChange: (v: number | null) => void
+}) {
+  return (
+    <select
+      value={value ?? ""}
+      onChange={(e) =>
+        onChange(e.target.value === "" ? null : parseInt(e.target.value))
+      }
+      className="w-12 text-center bg-gray-700 border border-gray-600 rounded text-xs text-white py-1 appearance-none cursor-pointer hover:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+    >
+      <option value="">-</option>
+      {Array.from({ length: 16 }, (_, i) => (
+        <option key={i} value={i}>
+          {i}
+        </option>
+      ))}
+    </select>
   )
 }
