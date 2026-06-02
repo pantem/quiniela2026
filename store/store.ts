@@ -22,6 +22,7 @@ interface QuinielaState {
   matchPredictions: MatchScore[]
   knockout: KnockoutMatch[]
   bonuses: BonusPrediction
+  locked: boolean
   results: {
     groups: GroupPrediction[]
     knockout: KnockoutMatch[]
@@ -60,6 +61,7 @@ interface QuinielaState {
   loadResultsFromMongo: () => Promise<void>
   loadAllParticipants: () => Promise<void>
   setScoringConfig: (config: ScoringConfig) => void
+  setLocked: (locked: boolean) => void
   saveResultsToMongo: () => Promise<void>
 }
 
@@ -129,6 +131,7 @@ export const useQuinielaStore = create<QuinielaState>()(
         bonuses: { ...defaultBonuses },
         scoringConfig: null,
       },
+      locked: false,
       resultMatchScores: defaultResultMatchScores(),
       allParticipants: [],
       syncing: false,
@@ -236,6 +239,8 @@ export const useQuinielaStore = create<QuinielaState>()(
         }))
       },
 
+      setLocked: (locked) => set({ locked }),
+
       applyResultStandings: () => {
         const { resultMatchScores } = get()
         const standings = buildGroupResultsFromScores(resultMatchScores)
@@ -324,6 +329,7 @@ export const useQuinielaStore = create<QuinielaState>()(
 
       resetAll: () =>
         set({
+          locked: false,
           groups: defaultGroups(),
           matchPredictions: defaultMatchPredictions(),
           knockout: [],
@@ -408,16 +414,17 @@ export const useQuinielaStore = create<QuinielaState>()(
           const data = await fetchResults()
           if (data && data.groups) {
             set({
-              results: {
-                groups: data.groups,
-                knockout: data.knockout ?? [],
-                bonuses: data.bonuses,
-                scoringConfig: data.scoringConfig ?? null,
-              },
-            })
-            if (data.matchScores) {
-              set({ resultMatchScores: data.matchScores })
-            }
+          results: {
+            groups: data.groups,
+            knockout: data.knockout ?? [],
+            bonuses: data.bonuses,
+            scoringConfig: data.scoringConfig ?? null,
+          },
+          locked: data.locked ?? false,
+        })
+        if (data.matchScores) {
+          set({ resultMatchScores: data.matchScores })
+        }
           }
         } catch (err) {
           console.error("Load results error:", err)
@@ -442,6 +449,7 @@ export const useQuinielaStore = create<QuinielaState>()(
             bonuses: results.bonuses,
             matchScores: resultMatchScores,
             scoringConfig: results.scoringConfig ?? undefined,
+            locked: get().locked,
           })
           set({ syncError: null })
         } catch (err) {
@@ -455,23 +463,22 @@ export const useQuinielaStore = create<QuinielaState>()(
       name: "quiniela-2026",
       version: 2,
       migrate: (persisted: any, version: number) => {
-        if (version === 0 || version === 1) {
-          return {
-            ...persisted,
-            matchPredictions: persisted.matchPredictions ?? defaultMatchPredictions(),
-            resultMatchScores: persisted.resultMatchScores ?? defaultResultMatchScores(),
-            results: {
-              groups: persisted.results?.groups ?? defaultResultsGroups(),
-              knockout: (persisted.results?.knockout ?? []).map((m: any) => ({
-                ...m,
-                homeScore: m.homeScore ?? null,
-                awayScore: m.awayScore ?? null,
-              })),
-              bonuses: persisted.results?.bonuses ?? { ...defaultBonuses },
-            },
-          }
+        return {
+          locked: persisted.locked ?? false,
+          matchPredictions: persisted.matchPredictions ?? defaultMatchPredictions(),
+          resultMatchScores: persisted.resultMatchScores ?? defaultResultMatchScores(),
+          results: {
+            groups: persisted.results?.groups ?? defaultResultsGroups(),
+            knockout: (persisted.results?.knockout ?? []).map((m: any) => ({
+              ...m,
+              homeScore: m.homeScore ?? null,
+              awayScore: m.awayScore ?? null,
+            })),
+            bonuses: persisted.results?.bonuses ?? { ...defaultBonuses },
+            scoringConfig: persisted.results?.scoringConfig ?? null,
+          },
+          ...persisted,
         }
-        return persisted
       },
     }
   )

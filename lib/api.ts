@@ -58,6 +58,7 @@ export async function saveResults(data: {
   knockout: any[]
   bonuses: any
   scoringConfig?: any
+  locked?: boolean
 }) {
   const res = await fetch(`${BASE}/results`, {
     method: "POST",

@@ -5,7 +5,7 @@ import { groups, getTeamsByGroup, getTeamById } from "@/utils/teams"
 import { ChevronDown } from "lucide-react"
 
 export default function GroupStage() {
-  const { groups: predictions, setGroupPrediction } = useQuinielaStore()
+  const { groups: predictions, setGroupPrediction, locked } = useQuinielaStore()
 
   const getSelectedTeams = (groupId: string) => {
     const g = predictions.find((p) => p.groupId === groupId)
@@ -106,6 +106,7 @@ export default function GroupStage() {
                     <div key={pos.key} className="relative">
                       <select
                         value={currentValue ?? ""}
+                        disabled={locked}
                         onChange={(e) =>
                           setGroupPrediction(
                             group.id,
@@ -113,7 +114,8 @@ export default function GroupStage() {
                             e.target.value || null
                           )
                         }
-                        className={`w-full appearance-none px-3 py-2.5 rounded-lg border text-sm transition-colors cursor-pointer
+                        className={`w-full appearance-none px-3 py-2.5 rounded-lg border text-sm transition-colors
+                          ${locked ? "cursor-not-allowed opacity-60" : "cursor-pointer"}
                           ${
                             currentValue
                               ? "bg-gray-700 border-gray-600 text-white"

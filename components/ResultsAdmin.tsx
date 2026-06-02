@@ -30,6 +30,8 @@ export default function ResultsAdmin() {
     generateResultsKnockout,
     resetResultMatchScores,
     knockout,
+    locked,
+    setLocked,
   } = store
   const [unlocked, setUnlocked] = useState(false)
   const [renderError, setRenderError] = useState<string | null>(null)
@@ -133,6 +135,16 @@ export default function ResultsAdmin() {
             >
               <CheckCircle className="w-3.5 h-3.5" />
               Aplicar posiciones
+            </button>
+            <button
+              onClick={() => setLocked?.(!locked)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-colors ${
+                locked
+                  ? "bg-red-600/20 text-red-300 border border-red-500/30 hover:bg-red-600/30"
+                  : "bg-gray-700 hover:bg-gray-600 text-gray-300"
+              }`}
+            >
+              {locked ? "🔒" : "🔓"} {locked ? "Desbloquear" : "Bloquear"}
             </button>
           </div>
         </div>

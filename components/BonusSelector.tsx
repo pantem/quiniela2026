@@ -5,7 +5,7 @@ import { teams, getTeamById } from "@/utils/teams"
 import { Star } from "lucide-react"
 
 export default function BonusSelector() {
-  const { bonuses, setBonus, knockout } = useQuinielaStore()
+  const { bonuses, setBonus, knockout, locked } = useQuinielaStore()
 
   const eligibleTeams = teams
     .filter((t) => knockout.some((m) => m.homeTeam === t.id || m.awayTeam === t.id))
@@ -33,6 +33,7 @@ export default function BonusSelector() {
           points={16}
           teams={eligibleTeams}
           onChange={(v) => setBonus("finalist", v)}
+          disabled={locked}
         />
         <BonusCard
           label="Campeón"
@@ -41,6 +42,7 @@ export default function BonusSelector() {
           points={32}
           teams={eligibleTeams}
           onChange={(v) => setBonus("champion", v)}
+          disabled={locked}
         />
         <BonusCard
           label="Goleador"
@@ -49,6 +51,7 @@ export default function BonusSelector() {
           points={10}
           teams={allTeams}
           onChange={(v) => setBonus("topScorer", v)}
+          disabled={locked}
         />
       </div>
     </div>
@@ -62,6 +65,7 @@ function BonusCard({
   points,
   teams: teamList,
   onChange,
+  disabled,
 }: {
   label: string
   value: string | null
@@ -69,6 +73,7 @@ function BonusCard({
   points: number
   teams: typeof import("@/utils/teams").teams
   onChange: (v: string | null) => void
+  disabled?: boolean
 }) {
   const team = getTeamById(value)
 
@@ -88,8 +93,10 @@ function BonusCard({
       <div className="p-3">
         <select
           value={value ?? ""}
+          disabled={disabled}
           onChange={(e) => onChange(e.target.value || null)}
-          className={`w-full px-3 py-2.5 rounded-lg border text-sm transition-colors cursor-pointer
+          className={`w-full px-3 py-2.5 rounded-lg border text-sm transition-colors
+            ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}
             ${
               value
                 ? "bg-gray-700 border-gray-600 text-white"

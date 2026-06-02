@@ -60,6 +60,7 @@ export interface IResult extends Document {
   knockout: IKnockoutResult[]
   bonuses: IBonusResult
   scoringConfig: IScoringConfig | null
+  locked: boolean
   updatedAt: Date
 }
 
@@ -139,6 +140,7 @@ const ResultSchema = new Schema<IResult>(
     knockout: { type: [KnockoutResultSchema], default: [] },
     bonuses: { type: BonusResultSchema, required: true },
     scoringConfig: { type: ScoringConfigSchema, default: null },
+    locked: { type: Boolean, default: false },
   },
   { timestamps: true }
 )

@@ -7,7 +7,7 @@ import type { MatchScore } from "@/app/types"
 import { Timer } from "lucide-react"
 
 export default function GroupMatches() {
-  const { matchPredictions, setMatchScore } = useQuinielaStore()
+  const { matchPredictions, setMatchScore, locked } = useQuinielaStore()
 
   const totalPredicted = matchPredictions.filter(
     (m) => m.homeScore !== null && m.awayScore !== null
@@ -38,6 +38,7 @@ export default function GroupMatches() {
             groupName={`Grupo ${group.id}`}
             predictions={matchPredictions.filter((m) => m.groupId === group.id)}
             onSetScore={setMatchScore}
+            disabled={locked}
           />
         ))}
       </div>
@@ -50,11 +51,13 @@ function GroupMatchCard({
   groupName,
   predictions,
   onSetScore,
+  disabled,
 }: {
   groupId: string
   groupName: string
   predictions: MatchScore[]
   onSetScore: (matchId: string, homeScore: number | null, awayScore: number | null) => void
+  disabled?: boolean
 }) {
   const completed = predictions.filter(
     (m) => m.homeScore !== null && m.awayScore !== null
@@ -85,11 +88,13 @@ function GroupMatchCard({
               <ScoreInput
                 value={match.homeScore}
                 onChange={(v) => onSetScore(match.id, v, match.awayScore)}
+                disabled={disabled}
               />
               <span className="text-gray-500 text-xs font-bold">-</span>
               <ScoreInput
                 value={match.awayScore}
                 onChange={(v) => onSetScore(match.id, match.homeScore, v)}
+                disabled={disabled}
               />
               <span className="text-sm w-32 truncate text-left text-gray-200">
                 {away?.flag} {away?.name}
@@ -105,17 +110,22 @@ function GroupMatchCard({
 function ScoreInput({
   value,
   onChange,
+  disabled,
 }: {
   value: number | null
   onChange: (v: number | null) => void
+  disabled?: boolean
 }) {
   return (
     <select
       value={value ?? ""}
+      disabled={disabled}
       onChange={(e) =>
         onChange(e.target.value === "" ? null : parseInt(e.target.value))
       }
-      className="w-14 text-center bg-gray-700 border border-gray-600 rounded-md text-sm text-white py-1 appearance-none cursor-pointer hover:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+      className={`w-14 text-center bg-gray-700 border border-gray-600 rounded-md text-sm text-white py-1 appearance-none
+        ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}
+        hover:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/30`}
     >
       <option value="">-</option>
       {Array.from({ length: 16 }, (_, i) => (

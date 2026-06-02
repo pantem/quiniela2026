@@ -14,7 +14,7 @@ interface Props {
 }
 
 export default function KnockoutStage({ round, title, subtitle, icon }: Props) {
-  const { knockout, setKnockoutWinner, setKnockoutScore } = useQuinielaStore()
+  const { knockout, setKnockoutWinner, setKnockoutScore, locked } = useQuinielaStore()
 
   const matches = getMatchesByRound(knockout, round).filter((m) => m.homeTeam && m.awayTeam)
 
@@ -62,6 +62,7 @@ export default function KnockoutStage({ round, title, subtitle, icon }: Props) {
             match={match}
             onSelectWinner={setKnockoutWinner}
             onSetScore={setKnockoutScore}
+            disabled={locked}
           />
         ))}
       </div>
@@ -72,17 +73,22 @@ export default function KnockoutStage({ round, title, subtitle, icon }: Props) {
 function ScoreSelect({
   value,
   onChange,
+  disabled,
 }: {
   value: number | null
   onChange: (v: number | null) => void
+  disabled?: boolean
 }) {
   return (
     <select
       value={value ?? ""}
+      disabled={disabled}
       onChange={(e) =>
         onChange(e.target.value === "" ? null : parseInt(e.target.value))
       }
-      className="w-12 text-center bg-gray-700 border border-gray-600 rounded text-xs text-white py-1 appearance-none cursor-pointer hover:border-purple-500/50 focus:outline-none focus:ring-2 focus:ring-purple-500/30"
+      className={`w-12 text-center bg-gray-700 border border-gray-600 rounded text-xs text-white py-1 appearance-none
+        ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}
+        hover:border-purple-500/50 focus:outline-none focus:ring-2 focus:ring-purple-500/30`}
     >
       <option value="">-</option>
       {Array.from({ length: 16 }, (_, i) => (
@@ -96,10 +102,12 @@ function MatchCard({
   match,
   onSelectWinner,
   onSetScore,
+  disabled,
 }: {
   match: KnockoutMatch
   onSelectWinner: (matchId: string, teamId: string | null) => void
   onSetScore: (matchId: string, homeScore: number | null, awayScore: number | null) => void
+  disabled?: boolean
 }) {
   if (!match.homeTeam || !match.awayTeam) {
     return (
@@ -128,13 +136,15 @@ function MatchCard({
 
       <div className="p-3 space-y-2">
         <div
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all ${
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all ${
+            disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer"
+          } ${
             homeSelected
               ? "bg-purple-900/30 border-purple-500/50 text-white"
               : "bg-gray-700/30 border-gray-600/30 text-gray-300 hover:border-gray-500"
           }`}
           onClick={() =>
-            onSelectWinner(match.id, homeSelected ? null : match.homeTeam)
+            !disabled && onSelectWinner(match.id, homeSelected ? null : match.homeTeam)
           }
         >
           <span className="text-lg">{home?.flag}</span>
@@ -148,22 +158,26 @@ function MatchCard({
           <ScoreSelect
             value={match.homeScore}
             onChange={(v) => onSetScore(match.id, v, match.awayScore)}
+            disabled={disabled}
           />
           <span>-</span>
           <ScoreSelect
             value={match.awayScore}
             onChange={(v) => onSetScore(match.id, match.homeScore, v)}
+            disabled={disabled}
           />
         </div>
 
         <div
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all ${
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all ${
+            disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer"
+          } ${
             awaySelected
               ? "bg-purple-900/30 border-purple-500/50 text-white"
               : "bg-gray-700/30 border-gray-600/30 text-gray-300 hover:border-gray-500"
           }`}
           onClick={() =>
-            onSelectWinner(match.id, awaySelected ? null : match.awayTeam)
+            !disabled && onSelectWinner(match.id, awaySelected ? null : match.awayTeam)
           }
         >
           <span className="text-lg">{away?.flag}</span>
