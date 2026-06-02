@@ -12,9 +12,15 @@ import {
 import { groups } from "@/utils/teams"
 import { getBestThirdPlaced } from "@/utils/bestThird"
 import { buildFifaMatrix, propagateWinners } from "@/utils/fifaMatrix"
-import { calculateGroupPoints, calculateKnockoutPoints, calculateBonusPoints, calculateMatchScorePoints } from "@/utils/scoring"
+import { calculateGroupPoints, calculateKnockoutPoints, calculateBonusPoints, calculateMatchScorePoints, calculateMatchStats } from "@/utils/scoring"
 import { getAllGroupMatches, buildGroupResultsFromScores } from "@/utils/matches"
 import { saveParticipant, updateParticipant, fetchParticipants, fetchResults, saveResults } from "@/lib/api"
+
+const LOCK_DATE = new Date("2026-06-11T00:00:00Z")
+
+function isPastLockDate(): boolean {
+  return Date.now() >= LOCK_DATE.getTime()
+}
 
 interface QuinielaState {
   participantName: string
@@ -55,6 +61,7 @@ interface QuinielaState {
   getMatchPoints: () => number
   getKnockoutPoints: () => number
   getBonusPoints: () => number
+  getMatchStats: () => ReturnType<typeof calculateMatchStats>
   resetAll: () => void
   syncToMongo: () => Promise<void>
   loadFromMongo: (name: string) => Promise<void>
@@ -131,7 +138,7 @@ export const useQuinielaStore = create<QuinielaState>()(
         bonuses: { ...defaultBonuses },
         scoringConfig: null,
       },
-      locked: false,
+      locked: isPastLockDate(),
       resultMatchScores: defaultResultMatchScores(),
       allParticipants: [],
       syncing: false,
@@ -325,6 +332,11 @@ export const useQuinielaStore = create<QuinielaState>()(
         return calculateBonusPoints(state.bonuses, state.results.bonuses)
       },
 
+      getMatchStats: () => {
+        const state = get()
+        return calculateMatchStats(state.matchPredictions, state.resultMatchScores)
+      },
+
       resetAll: () =>
         set({
           locked: false,
@@ -344,6 +356,11 @@ export const useQuinielaStore = create<QuinielaState>()(
       syncToMongo: async () => {
         const { participantName, groups, matchPredictions, knockout, bonuses } = get()
         if (!participantName) return
+
+        if (isPastLockDate()) {
+          set({ locked: true, syncError: "La quiniela está cerrada desde el 10 de junio. No se permiten más modificaciones." })
+          return
+        }
 
         set({ syncing: true })
         try {
@@ -388,6 +405,7 @@ export const useQuinielaStore = create<QuinielaState>()(
               participantName: participant.name,
               groups: participant.groups,
               bonuses: participant.bonuses,
+              locked: isPastLockDate(),
             }
             if (participant.matchPredictions) {
               loaded.matchPredictions = participant.matchPredictions

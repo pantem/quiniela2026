@@ -2,6 +2,12 @@ import { NextResponse } from "next/server"
 import { connectDB } from "@/lib/mongodb"
 import { Participant } from "@/models/Participant"
 
+const LOCK_DATE = new Date("2026-06-11T00:00:00Z")
+
+function isLocked(): boolean {
+  return Date.now() >= LOCK_DATE.getTime()
+}
+
 export async function GET() {
   try {
     await connectDB()
@@ -18,6 +24,13 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    if (isLocked()) {
+      return NextResponse.json(
+        { error: "La quiniela está cerrada desde el 10 de junio. No se permiten más modificaciones." },
+        { status: 403 }
+      )
+    }
+
     await connectDB()
     const body = await req.json()
     const { name, groups, matchPredictions, knockout, bonuses } = body
@@ -59,6 +72,13 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   try {
+    if (isLocked()) {
+      return NextResponse.json(
+        { error: "La quiniela está cerrada desde el 10 de junio. No se permiten más modificaciones." },
+        { status: 403 }
+      )
+    }
+
     await connectDB()
     const body = await req.json()
     const { name, groups, matchPredictions, knockout, bonuses } = body

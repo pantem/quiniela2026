@@ -112,3 +112,4 @@ export type TabId =
   | 'resultados'
   | 'ranking'
   | 'dashboard'
+  | 'estadisticas'

@@ -10,6 +10,7 @@ import BonusSelector from "@/components/BonusSelector"
 import ResultsAdmin from "@/components/ResultsAdmin"
 import Ranking from "@/components/Ranking"
 import Dashboard from "@/components/Dashboard"
+import PredictionStats from "@/components/PredictionStats"
 import {
   Table2,
   Timer,
@@ -17,6 +18,7 @@ import {
   Trophy,
   ShieldCheck,
   BarChart3,
+  TrendingUp,
   UserCircle,
   Cloud,
   CloudOff,
@@ -39,6 +41,7 @@ const navItems: NavItem[] = [
   { id: "resultados", label: "Resultados", icon: <ShieldCheck className="w-4 h-4" />, section: "admin" },
   { id: "ranking", label: "Ranking", icon: <BarChart3 className="w-4 h-4" />, section: "stats" },
   { id: "dashboard", label: "Dashboard", icon: <BarChart3 className="w-4 h-4" />, section: "stats" },
+  { id: "estadisticas", label: "Estadísticas", icon: <TrendingUp className="w-4 h-4" />, section: "stats" },
 ]
 
 export default function Home() {
@@ -93,6 +96,8 @@ export default function Home() {
         return <Ranking />
       case "dashboard":
         return <Dashboard />
+      case "estadisticas":
+        return <PredictionStats />
       default:
         return null
     }
