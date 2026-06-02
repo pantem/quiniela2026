@@ -5,7 +5,7 @@ import { useQuinielaStore } from "@/store/store"
 import GroupStage from "@/components/GroupStage"
 import GroupSummary from "@/components/GroupSummary"
 import GroupMatches from "@/components/GroupMatches"
-import KnockoutStage from "@/components/KnockoutStage"
+import BracketView from "@/components/BracketView"
 import BonusSelector from "@/components/BonusSelector"
 import ResultsAdmin from "@/components/ResultsAdmin"
 import Ranking from "@/components/Ranking"
@@ -34,11 +34,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { id: "grupos", label: "Grupos", icon: <Table2 className="w-4 h-4" />, section: "predict" },
   { id: "marcadores", label: "Marcadores", icon: <Timer className="w-4 h-4" />, section: "predict" },
-  { id: "dieciseisavos", label: "Dieciseisavos", icon: <Swords className="w-4 h-4" />, section: "predict" },
-  { id: "octavos", label: "Octavos", icon: <Swords className="w-4 h-4" />, section: "predict" },
-  { id: "cuartos", label: "Cuartos", icon: <Swords className="w-4 h-4" />, section: "predict" },
-  { id: "semifinal", label: "Semifinal", icon: <Swords className="w-4 h-4" />, section: "predict" },
-  { id: "final", label: "Final", icon: <Trophy className="w-4 h-4" />, section: "predict" },
+  { id: "eliminatoria", label: "Eliminatoria", icon: <Swords className="w-4 h-4" />, section: "predict" },
   { id: "campeon", label: "Campeón", icon: <Trophy className="w-4 h-4" />, section: "predict" },
   { id: "resultados", label: "Resultados", icon: <ShieldCheck className="w-4 h-4" />, section: "admin" },
   { id: "ranking", label: "Ranking", icon: <BarChart3 className="w-4 h-4" />, section: "stats" },
@@ -76,44 +72,6 @@ export default function Home() {
     await syncToMongo()
   }, [syncToMongo])
 
-  const knockoutRounds = [
-    {
-      round: "r32" as const,
-      tabId: "dieciseisavos" as TabId,
-      title: "Dieciseisavos de Final",
-      subtitle: "Selecciona el ganador de cada cruce",
-      icon: <Swords className="w-6 h-6 text-blue-400" />,
-    },
-    {
-      round: "r16" as const,
-      tabId: "octavos" as TabId,
-      title: "Octavos de Final",
-      subtitle: "Selecciona el ganador de cada cruce",
-      icon: <Swords className="w-6 h-6 text-emerald-400" />,
-    },
-    {
-      round: "qf" as const,
-      tabId: "cuartos" as TabId,
-      title: "Cuartos de Final",
-      subtitle: "Selecciona el ganador de cada cruce",
-      icon: <Swords className="w-6 h-6 text-amber-400" />,
-    },
-    {
-      round: "sf" as const,
-      tabId: "semifinal" as TabId,
-      title: "Semifinales",
-      subtitle: "Selecciona el ganador de cada cruce",
-      icon: <Trophy className="w-6 h-6 text-purple-400" />,
-    },
-    {
-      round: "final" as const,
-      tabId: "final" as TabId,
-      title: "Gran Final",
-      subtitle: "Selecciona el campeón del mundo",
-      icon: <Trophy className="w-6 h-6 text-amber-400" />,
-    },
-  ]
-
   const renderContent = () => {
     switch (activeTab) {
       case "grupos":
@@ -125,22 +83,8 @@ export default function Home() {
         )
       case "marcadores":
         return <GroupMatches />
-      case "dieciseisavos":
-      case "octavos":
-      case "cuartos":
-      case "semifinal":
-      case "final": {
-        const roundData = knockoutRounds.find((r) => r.tabId === activeTab)
-        if (!roundData) return null
-        return (
-          <KnockoutStage
-            round={roundData.round}
-            title={roundData.title}
-            subtitle={roundData.subtitle}
-            icon={roundData.icon}
-          />
-        )
-      }
+      case "eliminatoria":
+        return <BracketView />
       case "campeon":
         return <BonusSelector />
       case "resultados":

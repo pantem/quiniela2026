@@ -107,11 +107,7 @@ export const DEFAULT_SCORING: ScoringConfig = {
 export type TabId =
   | 'grupos'
   | 'marcadores'
-  | 'dieciseisavos'
-  | 'octavos'
-  | 'cuartos'
-  | 'semifinal'
-  | 'final'
+  | 'eliminatoria'
   | 'campeon'
   | 'resultados'
   | 'ranking'
