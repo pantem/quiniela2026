@@ -32,6 +32,7 @@ interface QuinielaState {
   allParticipants: Array<{ name: string }>
   syncing: boolean
   lastSync: string | null
+  syncError: string | null
 
   setParticipantName: (name: string) => void
   setGroupPrediction: (groupId: string, position: "first" | "second" | "third" | "fourth", teamId: string | null) => void
@@ -131,6 +132,7 @@ export const useQuinielaStore = create<QuinielaState>()(
       allParticipants: [],
       syncing: false,
       lastSync: null,
+      syncError: null,
 
       setParticipantName: (name) => set({ participantName: name }),
 
@@ -353,9 +355,11 @@ export const useQuinielaStore = create<QuinielaState>()(
             })
           }
 
-          set({ lastSync: new Date().toISOString() })
+          set({ lastSync: new Date().toISOString(), syncError: null })
         } catch (err) {
+          const msg = err instanceof Error ? err.message : "Error de conexión con MongoDB"
           console.error("Sync error:", err)
+          set({ syncError: msg })
         } finally {
           set({ syncing: false })
         }
@@ -430,8 +434,11 @@ export const useQuinielaStore = create<QuinielaState>()(
             matchScores: resultMatchScores,
             scoringConfig: results.scoringConfig ?? undefined,
           })
+          set({ syncError: null })
         } catch (err) {
+          const msg = err instanceof Error ? err.message : "Error al guardar resultados"
           console.error("Save results error:", err)
+          set({ syncError: msg })
         }
       },
     }),

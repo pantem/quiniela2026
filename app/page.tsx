@@ -56,6 +56,7 @@ export default function Home() {
     loadAllParticipants,
     syncing,
     lastSync,
+    syncError,
   } = useQuinielaStore()
 
   useEffect(() => {
@@ -190,6 +191,13 @@ export default function Home() {
               </button>
             </div>
           </div>
+          {syncError && (
+            <div className="bg-red-900/40 border border-red-700/50 rounded-lg px-4 py-2 mt-2">
+              <p className="text-sm text-red-300">
+                <span className="font-semibold">Error de sincronización:</span> {syncError}
+              </p>
+            </div>
+          )}
         </div>
       </header>
 

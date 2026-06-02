@@ -3,11 +3,12 @@
 import { useQuinielaStore } from "@/store/store"
 import { groups, getTeamsByGroup, getTeamById } from "@/utils/teams"
 import { getGroupMatches, buildGroupResultsFromScores, computeStandingsFromMatches } from "@/utils/matches"
-import { getMatchesByRound } from "@/utils/fifaMatrix"
+import { getMatchesByRound, buildFifaMatrix } from "@/utils/fifaMatrix"
+import { getBestThirdPlaced } from "@/utils/bestThird"
 import { DEFAULT_SCORING } from "@/app/types"
 import ScoringConfigurator from "./ScoringConfigurator"
-import { Shield, Lock, Calculator, CheckCircle, Swords, Settings, AlertCircle } from "lucide-react"
-import { useState } from "react"
+import { Shield, Lock, Calculator, CheckCircle, Swords, AlertCircle } from "lucide-react"
+import { useState, useMemo } from "react"
 
 const ROUNDS = [
   { key: "r32", label: "Dieciseisavos" },
@@ -32,6 +33,21 @@ export default function ResultsAdmin() {
   } = store
   const [unlocked, setUnlocked] = useState(false)
   const [renderError, setRenderError] = useState<string | null>(null)
+
+  const safeMatchScores = Array.isArray(resultMatchScores) ? resultMatchScores : []
+  const totalScores = safeMatchScores.filter(
+    (m: any) => m && m.homeScore !== null && m.awayScore !== null
+  ).length
+
+  const derivedKnockout = useMemo(() => {
+    const existing = Array.isArray(results?.knockout) ? results.knockout : (Array.isArray(knockout) ? knockout : [])
+    if (existing.length > 0) return existing
+    if (totalScores === 0 && (!results?.groups || !results.groups.some((g) => g.first))) return []
+    const groups = results?.groups?.some((g) => g.first) ? results.groups : buildGroupResultsFromScores(safeMatchScores)
+    const bestThird = getBestThirdPlaced(groups, safeMatchScores)
+    const thirdQualifiers = bestThird.map((t) => t.teamId).filter(Boolean) as string[]
+    return buildFifaMatrix(groups, thirdQualifiers)
+  }, [results?.knockout, knockout, totalScores, results?.groups, safeMatchScores])
 
   if (!unlocked) {
     return (
@@ -73,13 +89,6 @@ export default function ResultsAdmin() {
 
   try {
     const safeResults = results ?? { groups: [], knockout: [], bonuses: { finalist: null, champion: null, topScorer: null } }
-    const safeMatchScores = Array.isArray(resultMatchScores) ? resultMatchScores : []
-    const safeKnockout = Array.isArray(safeResults.knockout) ? safeResults.knockout : (Array.isArray(knockout) ? knockout : [])
-
-    const totalScores = safeMatchScores.filter(
-      (m: any) => m && m.homeScore !== null && m.awayScore !== null
-    ).length
-
     const standings = buildStandings(safeMatchScores)
 
     return (
@@ -219,14 +228,14 @@ export default function ResultsAdmin() {
               Generar eliminatoria
             </button>
           </div>
-          {safeKnockout.length === 0 ? (
+          {derivedKnockout.length === 0 ? (
             <p className="text-gray-500 text-sm text-center py-8">
-              Primero ingresa marcadores de grupos y haz clic en "Generar eliminatoria"
+              Ingresa marcadores de grupos para generar automáticamente la eliminatoria
             </p>
           ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {ROUNDS.map(({ key, label }) => {
-                const roundMatches = getMatchesByRound(safeKnockout, key)
+                const roundMatches = getMatchesByRound(derivedKnockout, key)
                 if (roundMatches.length === 0) return null
                 return (
                   <div
