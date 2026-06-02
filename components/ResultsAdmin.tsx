@@ -208,19 +208,23 @@ export default function ResultsAdmin() {
           </div>
         </div>
 
-        {(safeKnockout.length > 0 || totalScores > 0) && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">Marcadores Fase Eliminatoria</h3>
-              <button
-                onClick={() => generateResultsKnockout?.()}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-amber-600 hover:bg-amber-500 text-white rounded-lg transition-colors"
-              >
-                <Swords className="w-3.5 h-3.5" />
-                Generar eliminatoria
-              </button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-white">Marcadores Fase Eliminatoria</h3>
+            <button
+              onClick={() => generateResultsKnockout?.()}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-amber-600 hover:bg-amber-500 text-white rounded-lg transition-colors"
+            >
+              <Swords className="w-3.5 h-3.5" />
+              Generar eliminatoria
+            </button>
+          </div>
+          {safeKnockout.length === 0 ? (
+            <p className="text-gray-500 text-sm text-center py-8">
+              Primero ingresa marcadores de grupos y haz clic en "Generar eliminatoria"
+            </p>
+          ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {ROUNDS.map(({ key, label }) => {
                 const roundMatches = getMatchesByRound(safeKnockout, key)
                 if (roundMatches.length === 0) return null
@@ -271,8 +275,8 @@ export default function ResultsAdmin() {
                 )
               })}
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         <ScoringConfigurator
           config={safeResults.scoringConfig ?? DEFAULT_SCORING}
