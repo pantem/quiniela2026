@@ -28,6 +28,8 @@ export function buildFifaMatrix(
       round: slot.round,
       homeTeam,
       awayTeam,
+      homeScore: null,
+      awayScore: null,
       winner: null,
       label: slot.label,
     })

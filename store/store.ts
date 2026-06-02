@@ -38,6 +38,7 @@ interface QuinielaState {
   setBonus: (key: keyof BonusPrediction, value: string | null) => void
   setResultMatchScore: (matchId: string, homeScore: number | null, awayScore: number | null) => void
   setResultGroup: (groupId: string, position: "first" | "second" | "third" | "fourth", teamId: string | null) => void
+  setResultKnockoutScore: (matchId: string, homeScore: number | null, awayScore: number | null) => void
   setResultWinner: (matchId: string, teamId: string | null) => void
   setResultBonus: (key: keyof BonusPrediction, value: string | null) => void
   applyResultStandings: () => void
@@ -167,6 +168,17 @@ export const useQuinielaStore = create<QuinielaState>()(
         }))
       },
 
+      setResultKnockoutScore: (matchId, homeScore, awayScore) => {
+        set((state) => ({
+          results: {
+            ...state.results,
+            knockout: state.results.knockout.map((m) =>
+              m.id === matchId ? { ...m, homeScore, awayScore } : m
+            ),
+          },
+        }))
+      },
+
       setResultGroup: (groupId, position, teamId) => {
         set((state) => ({
           results: {
@@ -215,6 +227,11 @@ export const useQuinielaStore = create<QuinielaState>()(
 
       refreshKnockout: () => {
         const { groups } = get()
+        const allComplete = groups.every((g) => g.first && g.second && g.third && g.fourth)
+        if (!allComplete) {
+          set({ knockout: [] })
+          return
+        }
         const bestThird = getBestThirdPlaced(groups)
         const thirdQualifiers = bestThird.map((t) => t.teamId).filter(Boolean) as string[]
         const matrix = buildFifaMatrix(groups, thirdQualifiers)
@@ -370,6 +387,26 @@ export const useQuinielaStore = create<QuinielaState>()(
     }),
     {
       name: "quiniela-2026",
+      version: 2,
+      migrate: (persisted: any, version: number) => {
+        if (version === 0 || version === 1) {
+          return {
+            ...persisted,
+            matchPredictions: persisted.matchPredictions ?? defaultMatchPredictions(),
+            resultMatchScores: persisted.resultMatchScores ?? defaultResultMatchScores(),
+            results: {
+              groups: persisted.results?.groups ?? defaultResultsGroups(),
+              knockout: (persisted.results?.knockout ?? []).map((m: any) => ({
+                ...m,
+                homeScore: m.homeScore ?? null,
+                awayScore: m.awayScore ?? null,
+              })),
+              bonuses: persisted.results?.bonuses ?? { ...defaultBonuses },
+            },
+          }
+        }
+        return persisted
+      },
     }
   )
 )

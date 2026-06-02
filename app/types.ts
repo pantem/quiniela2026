@@ -23,6 +23,8 @@ export interface KnockoutMatch {
   round: 'r32' | 'r16' | 'qf' | 'sf' | 'final'
   homeTeam: string | null
   awayTeam: string | null
+  homeScore: number | null
+  awayScore: number | null
   winner: string | null
   label: string
   sourceMatchId?: string

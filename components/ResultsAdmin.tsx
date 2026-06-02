@@ -3,19 +3,29 @@
 import { useQuinielaStore } from "@/store/store"
 import { groups, getTeamsByGroup, getTeamById } from "@/utils/teams"
 import { getGroupMatches, buildGroupResultsFromScores, computeStandingsFromMatches } from "@/utils/matches"
-import { Shield, Lock, Calculator, CheckCircle } from "lucide-react"
+import { getMatchesByRound } from "@/utils/fifaMatrix"
+import { Shield, Lock, Calculator, CheckCircle, Swords } from "lucide-react"
 import { useState, useMemo } from "react"
+
+const ROUNDS = [
+  { key: "r32", label: "Dieciseisavos" },
+  { key: "r16", label: "Octavos" },
+  { key: "qf", label: "Cuartos" },
+  { key: "sf", label: "Semifinal" },
+  { key: "final", label: "Final" },
+] as const
 
 export default function ResultsAdmin() {
   const {
     results,
     resultMatchScores,
     setResultMatchScore,
-    setResultGroup,
+    setResultKnockoutScore,
     setResultWinner,
     setResultBonus,
     applyResultStandings,
     resetResultMatchScores,
+    knockout,
   } = useQuinielaStore()
   const [unlocked, setUnlocked] = useState(false)
 
@@ -38,13 +48,14 @@ export default function ResultsAdmin() {
     )
   }
 
-  const totalScores = resultMatchScores.filter(
+  const safeMatchScores = resultMatchScores ?? []
+  const totalScores = safeMatchScores.filter(
     (m) => m.homeScore !== null && m.awayScore !== null
   ).length
 
   const standings = useMemo(() => {
-    const byGroup = new Map<string, typeof resultMatchScores>()
-    for (const m of resultMatchScores) {
+    const byGroup = new Map<string, typeof safeMatchScores>()
+    for (const m of safeMatchScores) {
       if (!byGroup.has(m.groupId)) byGroup.set(m.groupId, [])
       byGroup.get(m.groupId)!.push(m)
     }
@@ -53,7 +64,9 @@ export default function ResultsAdmin() {
       result[gid] = computeStandingsFromMatches(ms)
     }
     return result
-  }, [resultMatchScores])
+  }, [safeMatchScores])
+
+  const safeKnockout = results.knockout ?? knockout
 
   return (
     <div className="space-y-8">
@@ -65,12 +78,13 @@ export default function ResultsAdmin() {
         </div>
       </div>
 
+      {/* Group stage scores */}
       <div className="flex items-center justify-between bg-gray-800/60 rounded-xl border border-gray-700/50 p-4">
         <div className="flex items-center gap-3">
           <Calculator className="w-5 h-5 text-blue-400" />
           <div>
             <p className="text-sm text-gray-300">
-              <span className="text-white font-bold">{totalScores}</span>/72 marcadores ingresados
+              <span className="text-white font-bold">{totalScores}</span>/72 marcadores de grupos ingresados
             </p>
             <p className="text-xs text-gray-500">
               Las posiciones se calculan automáticamente desde los marcadores
@@ -98,7 +112,7 @@ export default function ResultsAdmin() {
         <h3 className="text-lg font-semibold text-white mb-4">Marcadores por Grupo</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {groups.map((group) => {
-            const groupMatches = resultMatchScores.filter(
+            const groupMatches = safeMatchScores.filter(
               (m) => m.groupId === group.id
             )
             const groupStandings = standings[group.id] ?? []
@@ -178,6 +192,65 @@ export default function ResultsAdmin() {
         </div>
       </div>
 
+      {/* Knockout stage scores */}
+      {safeKnockout.length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold text-white mb-4">Marcadores Fase Eliminatoria</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {ROUNDS.map(({ key, label }) => {
+              const roundMatches = getMatchesByRound(safeKnockout, key)
+              if (roundMatches.length === 0) return null
+              return (
+                <div
+                  key={key}
+                  className="bg-gray-800/80 backdrop-blur rounded-xl border border-gray-700/50 overflow-hidden"
+                >
+                  <div className="px-4 py-3 bg-gradient-to-r from-gray-700 to-gray-800 border-b border-gray-600/50">
+                    <div className="flex items-center gap-2">
+                      <Swords className="w-4 h-4 text-emerald-400" />
+                      <h3 className="font-bold text-white">{label}</h3>
+                    </div>
+                  </div>
+                  <div className="p-3 space-y-1.5">
+                    {roundMatches.map((match) => {
+                      const home = getTeamById(match.homeTeam)
+                      const away = getTeamById(match.awayTeam)
+                      return (
+                        <div
+                          key={match.id}
+                          className="flex items-center gap-1 bg-gray-700/30 rounded-lg p-1.5"
+                        >
+                          <span className="text-xs w-24 truncate text-right text-gray-200">
+                            {home?.flag} {home?.name ?? "—"}
+                          </span>
+                          <AdminScoreSelect
+                            value={match.homeScore}
+                            onChange={(v) =>
+                              setResultKnockoutScore(match.id, v, match.awayScore)
+                            }
+                          />
+                          <span className="text-gray-500 text-xs">-</span>
+                          <AdminScoreSelect
+                            value={match.awayScore}
+                            onChange={(v) =>
+                              setResultKnockoutScore(match.id, match.homeScore, v)
+                            }
+                          />
+                          <span className="text-xs w-24 truncate text-left text-gray-200">
+                            {away?.flag} {away?.name ?? "—"}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Bonuses */}
       <div>
         <h3 className="text-lg font-semibold text-white mb-4">Bonos</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -197,7 +270,7 @@ export default function ResultsAdmin() {
                   {labels[key]}
                 </label>
                 <select
-                  value={results.bonuses[key] ?? ""}
+                  value={(results?.bonuses)?.[key] ?? ""}
                   onChange={(e) =>
                     setResultBonus(key, e.target.value || null)
                   }

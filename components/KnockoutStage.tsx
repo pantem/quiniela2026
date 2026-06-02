@@ -4,7 +4,7 @@ import { useQuinielaStore } from "@/store/store"
 import { getTeamById } from "@/utils/teams"
 import { getMatchesByRound } from "@/utils/fifaMatrix"
 import { KnockoutMatch } from "@/app/types"
-import { Trophy, ArrowRight } from "lucide-react"
+import { Trophy, Swords } from "lucide-react"
 
 interface Props {
   round: "r32" | "r16" | "qf" | "sf" | "final"
@@ -19,24 +19,20 @@ export default function KnockoutStage({ round, title, subtitle, icon }: Props) {
   const matches = getMatchesByRound(knockout, round)
 
   if (matches.length === 0) {
+    const { groups } = useQuinielaStore.getState()
+    const completed = groups.filter((g) => g.first && g.second && g.third && g.fourth).length
+
     return (
       <div className="bg-gray-800/60 backdrop-blur rounded-xl border border-gray-700/50 p-8 text-center">
-        <p className="text-gray-500">
-          Completa la fase de grupos para generar los cruces.
+        <Swords className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+        <h3 className="text-lg font-semibold text-white mb-2">
+          Fase Eliminatoria
+        </h3>
+        <p className="text-gray-400 text-sm max-w-md mx-auto">
+          Completa los <span className="text-white font-bold">12 grupos</span> con sus 4 posiciones para generar los cruces de la fase eliminatoria.
         </p>
-      </div>
-    )
-  }
-
-  const allHaveTeams = matches.every(
-    (m) => m.homeTeam && m.awayTeam
-  )
-
-  if (!allHaveTeams) {
-    return (
-      <div className="bg-gray-800/60 backdrop-blur rounded-xl border border-gray-700/50 p-8 text-center">
-        <p className="text-gray-500">
-          Definiendo cruces según mejores terceros...
+        <p className="text-gray-500 text-xs mt-3">
+          {completed}/12 grupos completados
         </p>
       </div>
     )
