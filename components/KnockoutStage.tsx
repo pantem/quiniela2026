@@ -16,7 +16,7 @@ interface Props {
 export default function KnockoutStage({ round, title, subtitle, icon }: Props) {
   const { knockout, setKnockoutWinner } = useQuinielaStore()
 
-  const matches = getMatchesByRound(knockout, round)
+  const matches = getMatchesByRound(knockout, round).filter((m) => m.homeTeam && m.awayTeam)
 
   if (matches.length === 0) {
     const { groups } = useQuinielaStore.getState()
@@ -68,8 +68,23 @@ function MatchCard({
   match: KnockoutMatch
   onSelectWinner: (matchId: string, teamId: string | null) => void
 }) {
+  if (!match.homeTeam || !match.awayTeam) {
+    return (
+      <div className="bg-gray-800/80 backdrop-blur rounded-xl border border-gray-700/50 overflow-hidden opacity-50">
+        <div className="px-4 py-2 bg-gray-700/50 border-b border-gray-600/50">
+          <span className="text-xs font-medium text-gray-500">{match.label}</span>
+        </div>
+        <div className="p-3 text-center text-sm text-gray-600">
+          Por definir
+        </div>
+      </div>
+    )
+  }
+
   const home = getTeamById(match.homeTeam)
   const away = getTeamById(match.awayTeam)
+  const homeSelected = match.winner === match.homeTeam
+  const awaySelected = match.winner === match.awayTeam
 
   return (
     <div className="bg-gray-800/80 backdrop-blur rounded-xl border border-gray-700/50 overflow-hidden">
@@ -80,20 +95,17 @@ function MatchCard({
       <div className="p-3 space-y-2">
         <div
           className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all ${
-            match.winner === match.homeTeam
+            homeSelected
               ? "bg-purple-900/30 border-purple-500/50 text-white"
               : "bg-gray-700/30 border-gray-600/30 text-gray-300 hover:border-gray-500"
           }`}
           onClick={() =>
-            onSelectWinner(
-              match.id,
-              match.winner === match.homeTeam ? null : match.homeTeam
-            )
+            onSelectWinner(match.id, homeSelected ? null : match.homeTeam)
           }
         >
           <span className="text-lg">{home?.flag}</span>
           <span className="flex-1 text-sm font-medium">{home?.name}</span>
-          {match.winner === match.homeTeam && (
+          {homeSelected && (
             <span className="text-xs text-purple-400 font-bold">GANADOR</span>
           )}
         </div>
@@ -104,20 +116,17 @@ function MatchCard({
 
         <div
           className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all ${
-            match.winner === match.awayTeam
+            awaySelected
               ? "bg-purple-900/30 border-purple-500/50 text-white"
               : "bg-gray-700/30 border-gray-600/30 text-gray-300 hover:border-gray-500"
           }`}
           onClick={() =>
-            onSelectWinner(
-              match.id,
-              match.winner === match.awayTeam ? null : match.awayTeam
-            )
+            onSelectWinner(match.id, awaySelected ? null : match.awayTeam)
           }
         >
           <span className="text-lg">{away?.flag}</span>
           <span className="flex-1 text-sm font-medium">{away?.name}</span>
-          {match.winner === match.awayTeam && (
+          {awaySelected && (
             <span className="text-xs text-purple-400 font-bold">GANADOR</span>
           )}
         </div>

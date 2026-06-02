@@ -10,7 +10,7 @@ import {
 } from "@/app/types"
 import { groups } from "@/utils/teams"
 import { getBestThirdPlaced } from "@/utils/bestThird"
-import { buildFifaMatrix } from "@/utils/fifaMatrix"
+import { buildFifaMatrix, propagateWinners } from "@/utils/fifaMatrix"
 import { calculateGroupPoints, calculateKnockoutPoints, calculateBonusPoints, calculateMatchScorePoints } from "@/utils/scoring"
 import { getAllGroupMatches, buildGroupResultsFromScores } from "@/utils/matches"
 import { saveParticipant, updateParticipant, fetchParticipants, fetchResults, saveResults } from "@/lib/api"
@@ -147,11 +147,12 @@ export const useQuinielaStore = create<QuinielaState>()(
       },
 
       setKnockoutWinner: (matchId, teamId) => {
-        set((state) => ({
-          knockout: state.knockout.map((m) =>
+        set((state) => {
+          const updated = state.knockout.map((m) =>
             m.id === matchId ? { ...m, winner: teamId } : m
-          ),
-        }))
+          )
+          return { knockout: propagateWinners(updated) }
+        })
       },
 
       setBonus: (key, value) => {

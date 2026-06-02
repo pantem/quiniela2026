@@ -152,29 +152,45 @@ export function getMatchesByRound(matches: KnockoutMatch[], round: string): Knoc
   return matches.filter((m) => m.round === round)
 }
 
+const PROPAGATION: [string, number, string, number][] = [
+  ["r32", 20, "r16", 10],
+  ["r16", 10, "qf", 5],
+  ["qf", 5, "sf", 2],
+  ["sf", 2, "final", 1],
+]
+
 export function propagateWinners(matches: KnockoutMatch[]): KnockoutMatch[] {
-  const updated = [...matches]
+  const byId = new Map(matches.map((m) => [m.id, { ...m }]))
+  const sortKey = (id: string) => {
+    const parts = id.split("_")
+    return parseInt(parts[1]) || 0
+  }
 
-  const r32Matches = matches.filter((m) => m.round === "r32")
-  const r16Matches = matches.filter((m) => m.round === "r16")
+  for (const [fromRound, fromCount, toRound, toCount] of PROPAGATION) {
+    const fromMatches = matches
+      .filter((m) => m.round === fromRound)
+      .sort((a, b) => sortKey(a.id) - sortKey(b.id))
+    const toMatches = matches
+      .filter((m) => m.round === toRound)
+      .sort((a, b) => sortKey(a.id) - sortKey(b.id))
 
-  for (let i = 0; i < r16Matches.length && i < r32Matches.length / 2; i++) {
-    const r16 = r16Matches[i]
-    const homeIdx = i * 2
-    const awayIdx = i * 2 + 1
-    if (homeIdx < r32Matches.length && r32Matches[homeIdx].winner) {
-      updated[updated.indexOf(r16)] = {
-        ...r16,
-        homeTeam: r32Matches[homeIdx].winner,
-      }
-    }
-    if (awayIdx < r32Matches.length && r32Matches[awayIdx].winner) {
-      updated[updated.indexOf(r16)] = {
-        ...r16,
-        awayTeam: r32Matches[awayIdx].winner,
+    for (let i = 0; i < toMatches.length && i * 2 + 1 < fromMatches.length; i++) {
+      const target = toMatches[i]
+      const homeSource = fromMatches[i * 2]
+      const awaySource = fromMatches[i * 2 + 1]
+
+      const updated: Partial<KnockoutMatch> = {}
+      if (homeSource.winner) updated.homeTeam = homeSource.winner
+      if (awaySource.winner) updated.awayTeam = awaySource.winner
+
+      if (Object.keys(updated).length > 0) {
+        const existing = byId.get(target.id)
+        if (existing) {
+          byId.set(target.id, { ...existing, ...updated })
+        }
       }
     }
   }
 
-  return updated
+  return matches.map((m) => byId.get(m.id) ?? m)
 }
