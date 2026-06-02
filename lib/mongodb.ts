@@ -1,6 +1,18 @@
 import mongoose from "mongoose"
 
-const MONGO_URI = process.env.MONGO_URI!
+function getMongoUri(): string {
+  const uri = process.env.MONGO_URI
+  if (!uri) {
+    throw new Error(
+      "MONGO_URI no está definida. " +
+      "En desarrollo: crea un archivo .env.local con MONGO_URI. " +
+      "En Vercel: agrega MONGO_URI en Settings → Environment Variables."
+    )
+  }
+  return uri
+}
+
+const MONGO_URI = getMongoUri()
 
 interface MongooseCache {
   conn: typeof mongoose | null
