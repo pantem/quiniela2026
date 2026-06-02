@@ -1,104 +1,111 @@
-const POINTS = {
-  GROUP_EXACT: 8,
-  GROUP_OUTCOME: 3,
-  R32_WINNER: 4,
-  R16_WINNER: 5,
-  QF_WINNER: 6,
-  SF_WINNER: 8,
-  FINAL_WINNER: 10,
-  FINALIST_BONUS: 16,
-  CHAMPION_BONUS: 32,
-  TOP_SCORER_BONUS: 10,
-  MATCH_EXACT: 8,
-  MATCH_OUTCOME: 3,
+import { ScoringConfig, DEFAULT_SCORING } from "@/app/types"
+import { connectDB } from "./mongodb"
+import { ResultModel } from "@/models/Result"
+
+let cachedConfig: ScoringConfig | null = null
+
+export async function getScoringConfig(): Promise<ScoringConfig> {
+  if (cachedConfig) return cachedConfig
+  try {
+    await connectDB()
+    const result = await ResultModel.findOne().sort({ updatedAt: -1 }).lean() as any
+    if (result?.scoringConfig) {
+      cachedConfig = { ...DEFAULT_SCORING, ...result.scoringConfig }
+      return cachedConfig!
+    }
+  } catch {}
+  return { ...DEFAULT_SCORING }
 }
 
-function getRoundWinnerPoints(round: string): number {
+function points(cfg: ScoringConfig, round: string): { winner: number; exact: number } {
   switch (round) {
-    case "r32": return POINTS.R32_WINNER
-    case "r16": return POINTS.R16_WINNER
-    case "qf": return POINTS.QF_WINNER
-    case "sf": return POINTS.SF_WINNER
-    case "final": return POINTS.FINAL_WINNER
-    default: return 0
+    case "r32": return { winner: cfg.r32Winner, exact: cfg.r32Exact }
+    case "r16": return { winner: cfg.r16Winner, exact: cfg.r16Exact }
+    case "qf": return { winner: cfg.qfWinner, exact: cfg.qfExact }
+    case "sf": return { winner: cfg.sfWinner, exact: cfg.sfExact }
+    case "final": return { winner: cfg.finalWinner, exact: cfg.finalExact }
+    default: return { winner: 0, exact: 0 }
   }
 }
 
-export function calculateMatchScorePoints(
+export async function calculateMatchScorePoints(
   predictions: Array<{ id: string; homeScore: number | null; awayScore: number | null }>,
   results: Array<{ id: string; homeScore: number | null; awayScore: number | null }>
-): number {
+): Promise<number> {
+  const cfg = await getScoringConfig()
   let points = 0
   for (const pred of predictions) {
     if (pred.homeScore === null || pred.awayScore === null) continue
     const actual = results.find((r) => r.id === pred.id)
     if (!actual || actual.homeScore === null || actual.awayScore === null) continue
-
     if (pred.homeScore === actual.homeScore && pred.awayScore === actual.awayScore) {
-      points += POINTS.MATCH_EXACT
+      points += cfg.matchExact
     } else {
-      const predWinner =
-        pred.homeScore > pred.awayScore ? "home" : pred.homeScore < pred.awayScore ? "away" : "draw"
-      const actualWinner =
-        actual.homeScore > actual.awayScore ? "home" : actual.homeScore < actual.awayScore ? "away" : "draw"
+      const predWinner = pred.homeScore > pred.awayScore ? "home" : pred.homeScore < pred.awayScore ? "away" : "draw"
+      const actualWinner = actual.homeScore > actual.awayScore ? "home" : actual.homeScore < actual.awayScore ? "away" : "draw"
       if (predWinner === actualWinner) {
-        points += POINTS.MATCH_OUTCOME
+        points += cfg.matchOutcome
       }
     }
   }
   return points
 }
 
-export function calculateGroupPoints(
+export async function calculateGroupPoints(
   prediction: { first: string | null; second: string | null; third: string | null; fourth: string | null },
   result: { first: string | null; second: string | null; third: string | null; fourth: string | null }
-): number {
+): Promise<number> {
+  const cfg = await getScoringConfig()
   let points = 0
   const positions: Array<"first" | "second" | "third" | "fourth"> = ["first", "second", "third", "fourth"]
-
   for (const pos of positions) {
     const pred = prediction[pos]
     const actual = result[pos]
     if (!pred || !actual) continue
-
     if (pred === actual) {
-      points += POINTS.GROUP_EXACT
+      points += cfg.groupExact
     } else {
       const actualTeams = positions.map((p) => prediction[p])
       if (actualTeams.includes(actual)) {
-        points += POINTS.GROUP_OUTCOME
+        points += cfg.groupOutcome
       }
     }
   }
-
   return points
 }
 
-export function calculateKnockoutPoints(
-  predictions: Array<{ id: string; round: string; winner: string | null }>,
-  results: Array<{ id: string; winner: string | null }>
-): number {
-  let points = 0
-
+export async function calculateKnockoutPoints(
+  predictions: Array<{ id: string; round: string; winner: string | null; homeScore?: number | null; awayScore?: number | null }>,
+  results: Array<{ id: string; winner: string | null; homeScore?: number | null; awayScore?: number | null }>
+): Promise<number> {
+  const cfg = await getScoringConfig()
+  let total = 0
   for (const pred of predictions) {
     const actual = results.find((r) => r.id === pred.id)
-    if (!actual?.winner) continue
-
+    if (!actual) continue
+    const pts = points(cfg, pred.round)
     if (pred.winner === actual.winner) {
-      points += getRoundWinnerPoints(pred.round)
+      total += pts.winner
+    }
+    if (
+      pred.homeScore != null && pred.awayScore != null &&
+      actual.homeScore != null && actual.awayScore != null &&
+      pred.homeScore === actual.homeScore && pred.awayScore === actual.awayScore
+    ) {
+      total += pts.exact
     }
   }
-
-  return points
+  return total
 }
 
-export function calculateBonusPoints(
+export async function calculateBonusPoints(
   predictions: { finalist: string | null; champion: string | null; topScorer: string | null },
   results: { finalist: string | null; champion: string | null; topScorer: string | null }
-): number {
+): Promise<number> {
+  const cfg = await getScoringConfig()
   let points = 0
-  if (predictions.finalist === results.finalist) points += POINTS.FINALIST_BONUS
-  if (predictions.champion === results.champion) points += POINTS.CHAMPION_BONUS
-  if (predictions.topScorer === results.topScorer) points += POINTS.TOP_SCORER_BONUS
+  if (predictions.finalist === results.finalist) points += cfg.finalistBonus
+  if (predictions.champion === results.champion) points += cfg.championBonus
+  if (predictions.topScorer === results.topScorer) points += cfg.topScorerBonus
   return points
 }

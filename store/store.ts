@@ -7,6 +7,7 @@ import {
   KnockoutMatch,
   BonusPrediction,
   MatchScore,
+  ScoringConfig,
 } from "@/app/types"
 import { groups } from "@/utils/teams"
 import { getBestThirdPlaced } from "@/utils/bestThird"
@@ -25,6 +26,7 @@ interface QuinielaState {
     groups: GroupPrediction[]
     knockout: KnockoutMatch[]
     bonuses: BonusPrediction
+    scoringConfig: ScoringConfig | null
   }
   resultMatchScores: MatchScore[]
   allParticipants: Array<{ name: string }>
@@ -42,6 +44,7 @@ interface QuinielaState {
   setResultWinner: (matchId: string, teamId: string | null) => void
   setResultBonus: (key: keyof BonusPrediction, value: string | null) => void
   applyResultStandings: () => void
+  generateResultsKnockout: () => void
   resetResultMatchScores: () => void
   refreshKnockout: () => void
   getTotalPoints: () => number
@@ -54,6 +57,7 @@ interface QuinielaState {
   loadFromMongo: (name: string) => Promise<void>
   loadResultsFromMongo: () => Promise<void>
   loadAllParticipants: () => Promise<void>
+  setScoringConfig: (config: ScoringConfig) => void
   saveResultsToMongo: () => Promise<void>
 }
 
@@ -121,6 +125,7 @@ export const useQuinielaStore = create<QuinielaState>()(
         groups: defaultResultsGroups(),
         knockout: [],
         bonuses: { ...defaultBonuses },
+        scoringConfig: null,
       },
       resultMatchScores: defaultResultMatchScores(),
       allParticipants: [],
@@ -211,6 +216,15 @@ export const useQuinielaStore = create<QuinielaState>()(
         }))
       },
 
+      setScoringConfig: (config) => {
+        set((state) => ({
+          results: {
+            ...state.results,
+            scoringConfig: config,
+          },
+        }))
+      },
+
       applyResultStandings: () => {
         const { resultMatchScores } = get()
         const standings = buildGroupResultsFromScores(resultMatchScores)
@@ -218,6 +232,23 @@ export const useQuinielaStore = create<QuinielaState>()(
           results: {
             ...state.results,
             groups: standings,
+          },
+        }))
+      },
+
+      generateResultsKnockout: () => {
+        const { resultMatchScores, results } = get()
+        const groups = results.groups.some((g) => g.first)
+          ? results.groups
+          : buildGroupResultsFromScores(resultMatchScores)
+        const bestThird = getBestThirdPlaced(groups, resultMatchScores)
+        const thirdQualifiers = bestThird.map((t) => t.teamId).filter(Boolean) as string[]
+        const matrix = buildFifaMatrix(groups, thirdQualifiers)
+        set((state) => ({
+          results: {
+            ...state.results,
+            groups,
+            knockout: matrix,
           },
         }))
       },
@@ -290,6 +321,7 @@ export const useQuinielaStore = create<QuinielaState>()(
             groups: defaultResultsGroups(),
             knockout: [],
             bonuses: { ...defaultBonuses },
+            scoringConfig: null,
           },
           resultMatchScores: defaultResultMatchScores(),
         }),
@@ -367,6 +399,7 @@ export const useQuinielaStore = create<QuinielaState>()(
                 groups: data.groups,
                 knockout: data.knockout ?? [],
                 bonuses: data.bonuses,
+                scoringConfig: data.scoringConfig ?? null,
               },
             })
             if (data.matchScores) {
@@ -395,6 +428,7 @@ export const useQuinielaStore = create<QuinielaState>()(
             knockout: results.knockout,
             bonuses: results.bonuses,
             matchScores: resultMatchScores,
+            scoringConfig: results.scoringConfig ?? undefined,
           })
         } catch (err) {
           console.error("Save results error:", err)

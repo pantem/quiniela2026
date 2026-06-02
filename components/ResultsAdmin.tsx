@@ -4,8 +4,10 @@ import { useQuinielaStore } from "@/store/store"
 import { groups, getTeamsByGroup, getTeamById } from "@/utils/teams"
 import { getGroupMatches, buildGroupResultsFromScores, computeStandingsFromMatches } from "@/utils/matches"
 import { getMatchesByRound } from "@/utils/fifaMatrix"
-import { Shield, Lock, Calculator, CheckCircle, Swords, AlertCircle } from "lucide-react"
-import { useState, useMemo } from "react"
+import { DEFAULT_SCORING } from "@/app/types"
+import ScoringConfigurator from "./ScoringConfigurator"
+import { Shield, Lock, Calculator, CheckCircle, Swords, Settings, AlertCircle } from "lucide-react"
+import { useState } from "react"
 
 const ROUNDS = [
   { key: "r32", label: "Dieciseisavos" },
@@ -24,6 +26,7 @@ export default function ResultsAdmin() {
     setResultKnockoutScore,
     setResultBonus,
     applyResultStandings,
+    generateResultsKnockout,
     resetResultMatchScores,
     knockout,
   } = store
@@ -109,7 +112,10 @@ export default function ResultsAdmin() {
               Limpiar
             </button>
             <button
-              onClick={() => applyResultStandings?.()}
+              onClick={() => {
+                applyResultStandings?.()
+                generateResultsKnockout?.()
+              }}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors"
             >
               <CheckCircle className="w-3.5 h-3.5" />
@@ -202,9 +208,18 @@ export default function ResultsAdmin() {
           </div>
         </div>
 
-        {safeKnockout.length > 0 && (
+        {(safeKnockout.length > 0 || totalScores > 0) && (
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4">Marcadores Fase Eliminatoria</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white">Marcadores Fase Eliminatoria</h3>
+              <button
+                onClick={() => generateResultsKnockout?.()}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-amber-600 hover:bg-amber-500 text-white rounded-lg transition-colors"
+              >
+                <Swords className="w-3.5 h-3.5" />
+                Generar eliminatoria
+              </button>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {ROUNDS.map(({ key, label }) => {
                 const roundMatches = getMatchesByRound(safeKnockout, key)
@@ -258,6 +273,11 @@ export default function ResultsAdmin() {
             </div>
           </div>
         )}
+
+        <ScoringConfigurator
+          config={safeResults.scoringConfig ?? DEFAULT_SCORING}
+          onChange={(c) => store.setScoringConfig(c)}
+        />
 
         <div>
           <h3 className="text-lg font-semibold text-white mb-4">Bonos</h3>

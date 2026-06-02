@@ -20,7 +20,7 @@ export async function POST(req: Request) {
   try {
     await connectDB()
     const body = await req.json()
-    const { groups, matchScores, knockout, bonuses } = body
+    const { groups, matchScores, knockout, bonuses, scoringConfig } = body
 
     if (!groups || !bonuses) {
       return NextResponse.json(
@@ -35,6 +35,7 @@ export async function POST(req: Request) {
       result.matchScores = matchScores ?? []
       result.knockout = knockout ?? []
       result.bonuses = bonuses
+      result.scoringConfig = scoringConfig ?? null
       await result.save()
       return NextResponse.json(result)
     }
@@ -44,6 +45,7 @@ export async function POST(req: Request) {
       matchScores: matchScores ?? [],
       knockout: knockout ?? [],
       bonuses,
+      scoringConfig: scoringConfig ?? null,
     })
 
     return NextResponse.json(result, { status: 201 })

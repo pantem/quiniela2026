@@ -32,13 +32,57 @@ export interface IBonusResult {
   topScorer: string | null
 }
 
+export interface IScoringConfig {
+  groupExact: number
+  groupOutcome: number
+  matchExact: number
+  matchOutcome: number
+  r32Winner: number
+  r32Exact: number
+  r16Winner: number
+  r16Exact: number
+  qfWinner: number
+  qfExact: number
+  sfWinner: number
+  sfExact: number
+  finalWinner: number
+  finalExact: number
+  finalistBonus: number
+  championBonus: number
+  topScorerBonus: number
+}
+
 export interface IResult extends Document {
   groups: IGroupResult[]
   matchScores: IMatchScoreResult[]
   knockout: IKnockoutResult[]
   bonuses: IBonusResult
+  scoringConfig: IScoringConfig | null
   updatedAt: Date
 }
+
+const ScoringConfigSchema = new Schema<IScoringConfig>(
+  {
+    groupExact: { type: Number, default: 8 },
+    groupOutcome: { type: Number, default: 3 },
+    matchExact: { type: Number, default: 8 },
+    matchOutcome: { type: Number, default: 3 },
+    r32Winner: { type: Number, default: 4 },
+    r32Exact: { type: Number, default: 10 },
+    r16Winner: { type: Number, default: 5 },
+    r16Exact: { type: Number, default: 12 },
+    qfWinner: { type: Number, default: 6 },
+    qfExact: { type: Number, default: 16 },
+    sfWinner: { type: Number, default: 8 },
+    sfExact: { type: Number, default: 20 },
+    finalWinner: { type: Number, default: 10 },
+    finalExact: { type: Number, default: 24 },
+    finalistBonus: { type: Number, default: 16 },
+    championBonus: { type: Number, default: 32 },
+    topScorerBonus: { type: Number, default: 10 },
+  },
+  { _id: false }
+)
 
 const GroupResultSchema = new Schema<IGroupResult>(
   {
@@ -90,6 +134,7 @@ const ResultSchema = new Schema<IResult>(
     matchScores: { type: [MatchScoreResultSchema], default: [] },
     knockout: { type: [KnockoutResultSchema], default: [] },
     bonuses: { type: BonusResultSchema, required: true },
+    scoringConfig: { type: ScoringConfigSchema, default: null },
   },
   { timestamps: true }
 )

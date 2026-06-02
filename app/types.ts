@@ -64,6 +64,46 @@ export interface MatchScore {
   awayScore: number | null
 }
 
+export interface ScoringConfig {
+  groupExact: number
+  groupOutcome: number
+  matchExact: number
+  matchOutcome: number
+  r32Winner: number
+  r32Exact: number
+  r16Winner: number
+  r16Exact: number
+  qfWinner: number
+  qfExact: number
+  sfWinner: number
+  sfExact: number
+  finalWinner: number
+  finalExact: number
+  finalistBonus: number
+  championBonus: number
+  topScorerBonus: number
+}
+
+export const DEFAULT_SCORING: ScoringConfig = {
+  groupExact: 8,
+  groupOutcome: 3,
+  matchExact: 8,
+  matchOutcome: 3,
+  r32Winner: 4,
+  r32Exact: 10,
+  r16Winner: 5,
+  r16Exact: 12,
+  qfWinner: 6,
+  qfExact: 16,
+  sfWinner: 8,
+  sfExact: 20,
+  finalWinner: 10,
+  finalExact: 24,
+  finalistBonus: 16,
+  championBonus: 32,
+  topScorerBonus: 10,
+}
+
 export type TabId =
   | 'grupos'
   | 'marcadores'

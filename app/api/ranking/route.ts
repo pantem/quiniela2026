@@ -29,37 +29,39 @@ export async function GET() {
       })
     }
 
-    const ranking = participants.map((p) => {
-      const matchPoints = calculateMatchScorePoints(
-        p.matchPredictions ?? [],
-        result.matchScores ?? []
-      )
-      const groupPoints = calculateGroupPointsForAll(
-        p.groups,
-        result.groups
-      )
-      const knockoutPoints = calculateKnockoutPoints(
-        p.knockout,
-        result.knockout
-      )
-      const bonusPoints = calculateBonusPoints(
-        p.bonuses,
-        result.bonuses
-      )
+    const rankingData = await Promise.all(
+      participants.map(async (p) => {
+        const matchPoints = await calculateMatchScorePoints(
+          p.matchPredictions ?? [],
+          result.matchScores ?? []
+        )
+        const groupPoints = await calculateGroupPointsForAll(
+          p.groups,
+          result.groups
+        )
+        const knockoutPoints = await calculateKnockoutPoints(
+          p.knockout,
+          result.knockout
+        )
+        const bonusPoints = await calculateBonusPoints(
+          p.bonuses,
+          result.bonuses
+        )
 
-      return {
-        name: p.name,
-        matchPoints,
-        groupPoints,
-        knockoutPoints,
-        bonusPoints,
-        total: matchPoints + groupPoints + knockoutPoints + bonusPoints,
-      }
-    })
+        return {
+          name: p.name,
+          matchPoints,
+          groupPoints,
+          knockoutPoints,
+          bonusPoints,
+          total: matchPoints + groupPoints + knockoutPoints + bonusPoints,
+        }
+      })
+    )
 
-    ranking.sort((a, b) => b.total - a.total)
+    rankingData.sort((a, b) => b.total - a.total)
 
-    return NextResponse.json({ ranking, hasResults: true })
+    return NextResponse.json({ ranking: rankingData, hasResults: true })
   } catch (error) {
     console.error("Error computing ranking:", error)
     return NextResponse.json(
@@ -69,7 +71,7 @@ export async function GET() {
   }
 }
 
-function calculateGroupPointsForAll(
+async function calculateGroupPointsForAll(
   predictions: Array<{
     groupId: string
     first: string | null
@@ -84,12 +86,12 @@ function calculateGroupPointsForAll(
     third: string | null
     fourth: string | null
   }>
-): number {
+): Promise<number> {
   let total = 0
   for (const pred of predictions) {
     const actual = results.find((r) => r.groupId === pred.groupId)
     if (actual) {
-      total += calculateGroupPoints(pred, actual)
+      total += await calculateGroupPoints(pred, actual)
     }
   }
   return total
