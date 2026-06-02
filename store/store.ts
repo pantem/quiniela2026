@@ -157,11 +157,23 @@ export const useQuinielaStore = create<QuinielaState>()(
       },
 
       setMatchScore: (matchId, homeScore, awayScore) => {
-        set((state) => ({
-          matchPredictions: state.matchPredictions.map((m) =>
+        set((state) => {
+          const updatedPredictions = state.matchPredictions.map((m) =>
             m.id === matchId ? { ...m, homeScore, awayScore } : m
-          ),
-        }))
+          )
+          const computedGroups = buildGroupResultsFromScores(updatedPredictions).map((cg) => ({
+            groupId: cg.groupId,
+            first: cg.first,
+            second: cg.second,
+            third: cg.third,
+            fourth: cg.fourth,
+          }))
+          return {
+            matchPredictions: updatedPredictions,
+            groups: computedGroups,
+          }
+        })
+        get().refreshKnockout()
       },
 
       setKnockoutWinner: (matchId, teamId) => {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useQuinielaStore } from "@/store/store"
+import { useAuth, AuthProvider } from "@/lib/auth-context"
 import GroupStage from "@/components/GroupStage"
 import GroupSummary from "@/components/GroupSummary"
 import GroupMatches from "@/components/GroupMatches"
@@ -10,7 +11,7 @@ import BonusSelector from "@/components/BonusSelector"
 import ResultsAdmin from "@/components/ResultsAdmin"
 import Ranking from "@/components/Ranking"
 import Dashboard from "@/components/Dashboard"
-import PredictionStats from "@/components/PredictionStats"
+import AuthModal from "@/components/AuthModal"
 import {
   Table2,
   Timer,
@@ -18,8 +19,9 @@ import {
   Trophy,
   ShieldCheck,
   BarChart3,
-  TrendingUp,
   UserCircle,
+  LogIn,
+  LogOut,
   Cloud,
   CloudOff,
   Loader2,
@@ -31,6 +33,7 @@ interface NavItem {
   label: string
   icon: React.ReactNode
   section: "predict" | "admin" | "stats"
+  adminOnly?: boolean
 }
 
 const navItems: NavItem[] = [
@@ -38,14 +41,16 @@ const navItems: NavItem[] = [
   { id: "marcadores", label: "Marcadores", icon: <Timer className="w-4 h-4" />, section: "predict" },
   { id: "eliminatoria", label: "Eliminatoria", icon: <Swords className="w-4 h-4" />, section: "predict" },
   { id: "campeon", label: "Campeón", icon: <Trophy className="w-4 h-4" />, section: "predict" },
-  { id: "resultados", label: "Resultados", icon: <ShieldCheck className="w-4 h-4" />, section: "admin" },
+  { id: "resultados", label: "Resultados", icon: <ShieldCheck className="w-4 h-4" />, section: "admin", adminOnly: true },
   { id: "ranking", label: "Ranking", icon: <BarChart3 className="w-4 h-4" />, section: "stats" },
   { id: "dashboard", label: "Dashboard", icon: <BarChart3 className="w-4 h-4" />, section: "stats" },
-  { id: "estadisticas", label: "Estadísticas", icon: <TrendingUp className="w-4 h-4" />, section: "stats" },
 ]
 
-export default function Home() {
+function HomePage() {
   const [activeTab, setActiveTab] = useState<TabId>("grupos")
+  const [showAuth, setShowAuth] = useState(false)
+  const { user, loading: authLoading, logout } = useAuth()
+
   const {
     participantName,
     setParticipantName,
@@ -59,23 +64,51 @@ export default function Home() {
   } = useQuinielaStore()
 
   useEffect(() => {
+    if (!user) setShowAuth(true)
+  }, [user])
+
+  useEffect(() => {
     loadResultsFromMongo()
     loadAllParticipants()
   }, [loadResultsFromMongo, loadAllParticipants])
 
   useEffect(() => {
-    if (participantName) {
+    if (user && user.name !== participantName) {
+      setParticipantName(user.name)
+    }
+  }, [user])
+
+  useEffect(() => {
+    if (participantName && !user) {
       loadFromMongo(participantName)
     }
-  }, [])
+  }, [participantName, user])
 
-  // refreshKnockout se llama automáticamente desde setGroupPrediction
+  useEffect(() => {
+    if (user) {
+      loadFromMongo(user.name)
+    }
+  }, [user?.name])
 
   const handleSync = useCallback(async () => {
     await syncToMongo()
   }, [syncToMongo])
 
+  const visibleNav = user?.role === "admin"
+    ? navItems
+    : navItems.filter((n) => !n.adminOnly)
+
   const renderContent = () => {
+    if (activeTab === "resultados" && user?.role !== "admin") {
+      return (
+        <div className="bg-gray-800/60 backdrop-blur rounded-xl border border-gray-700/50 p-12 text-center">
+          <ShieldCheck className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-white mb-2">Acceso restringido</h3>
+          <p className="text-gray-400 text-sm">Solo el administrador puede acceder a esta sección.</p>
+        </div>
+      )
+    }
+
     switch (activeTab) {
       case "grupos":
         return (
@@ -96,15 +129,48 @@ export default function Home() {
         return <Ranking />
       case "dashboard":
         return <Dashboard />
-      case "estadisticas":
-        return <PredictionStats />
       default:
         return null
     }
   }
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-900">
+        <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <AuthModal open={showAuth} onClose={() => setShowAuth(false)} closable={!!user} />
+        <div className="text-center space-y-6 animate-fade-in">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-purple-600/30 to-amber-600/30 border border-purple-500/30">
+            <Trophy className="w-10 h-10 text-amber-400" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">Quiniela Mundial 2026</h1>
+            <p className="text-gray-400 text-sm">Inicia sesión para acceder a tu quiniela</p>
+          </div>
+          {!showAuth && (
+            <button
+              onClick={() => setShowAuth(true)}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-sm font-medium transition-all"
+            >
+              <LogIn className="w-4 h-4" />
+              Iniciar Sesión
+            </button>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen">
+      <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
       <header className="sticky top-0 z-50 bg-gray-900/90 backdrop-blur-lg border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
@@ -115,29 +181,47 @@ export default function Home() {
               </h1>
             </div>
             <div className="flex items-center gap-2">
-              <UserCircle className="w-4 h-4 text-gray-400 shrink-0" />
-              <input
-                type="text"
-                placeholder="Tu nombre"
-                value={participantName}
-                onChange={(e) => setParticipantName(e.target.value)}
-                className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-gray-500 w-28 focus:outline-none focus:ring-2 focus:ring-purple-500/30"
-              />
-              <button
-                onClick={handleSync}
-                disabled={syncing || !participantName}
-                title={lastSync ? `Última sincronización: ${new Date(lastSync).toLocaleTimeString()}` : "Guardar en la nube"}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-purple-600/20 text-purple-300 border border-purple-500/30 hover:bg-purple-600/30"
-              >
-                {syncing ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : lastSync ? (
-                  <Cloud className="w-3.5 h-3.5" />
-                ) : (
-                  <CloudOff className="w-3.5 h-3.5" />
-                )}
-                {syncing ? "Guardando..." : lastSync ? "Guardado" : "Guardar"}
-              </button>
+              {user ? (
+                <>
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 rounded-lg border border-gray-700">
+                    <UserCircle className="w-4 h-4 text-purple-400 shrink-0" />
+                    <span className="text-sm text-white font-medium">{user.name}</span>
+                    {user.role === "admin" && (
+                      <span className="text-[10px] px-1.5 py-0.5 bg-amber-500/20 text-amber-400 rounded font-semibold">ADMIN</span>
+                    )}
+                  </div>
+                  <button
+                    onClick={handleSync}
+                    disabled={syncing}
+                    title={lastSync ? `Última sincronización: ${new Date(lastSync).toLocaleTimeString()}` : "Guardar en la nube"}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-purple-600/20 text-purple-300 border border-purple-500/30 hover:bg-purple-600/30"
+                  >
+                    {syncing ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : lastSync ? (
+                      <Cloud className="w-3.5 h-3.5" />
+                    ) : (
+                      <CloudOff className="w-3.5 h-3.5" />
+                    )}
+                    {syncing ? "Guardando..." : lastSync ? "Guardado" : "Guardar"}
+                  </button>
+                  <button
+                    onClick={logout}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-all"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    Salir
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setShowAuth(true)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-purple-600 hover:bg-purple-500 text-white transition-all"
+                >
+                  <LogIn className="w-4 h-4" />
+                  Iniciar Sesión
+                </button>
+              )}
             </div>
           </div>
           {syncError && (
@@ -156,7 +240,7 @@ export default function Home() {
             <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2">
               Predicción
             </div>
-            {navItems
+            {visibleNav
               .filter((n) => n.section === "predict")
               .map((item) => (
                 <button
@@ -175,7 +259,7 @@ export default function Home() {
             <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mt-4">
               Admin
             </div>
-            {navItems
+            {visibleNav
               .filter((n) => n.section === "admin")
               .map((item) => (
                 <button
@@ -194,7 +278,7 @@ export default function Home() {
             <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mt-4">
               Estadísticas
             </div>
-            {navItems
+            {visibleNav
               .filter((n) => n.section === "stats")
               .map((item) => (
                 <button
@@ -215,7 +299,7 @@ export default function Home() {
           <div className="flex-1 min-w-0">
             <div className="lg:hidden mb-4">
               <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide">
-                {navItems.map((item) => (
+                {visibleNav.map((item) => (
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
@@ -236,5 +320,13 @@ export default function Home() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function Home() {
+  return (
+    <AuthProvider>
+      <HomePage />
+    </AuthProvider>
   )
 }

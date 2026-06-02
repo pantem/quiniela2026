@@ -1,17 +1,21 @@
 "use client"
 
+import { useMemo } from "react"
 import { useQuinielaStore } from "@/store/store"
 import { groups, getTeamById } from "@/utils/teams"
+import { computeStandingsFromMatches } from "@/utils/matches"
 
 export default function GroupSummary() {
-  const { groups: predictions } = useQuinielaStore()
+  const matchPredictions = useQuinielaStore((s) => s.matchPredictions)
 
-  const positions: Array<{ key: "first" | "second" | "third" | "fourth"; label: string }> = [
-    { key: "first", label: "1°" },
-    { key: "second", label: "2°" },
-    { key: "third", label: "3°" },
-    { key: "fourth", label: "4°" },
-  ]
+  const summary = useMemo(() => {
+    return groups.map((group) => {
+      const matches = matchPredictions.filter((m) => m.groupId === group.id)
+      const standings = computeStandingsFromMatches(matches)
+      const isComplete = standings.length === 4
+      return { group, standings, isComplete }
+    })
+  }, [matchPredictions])
 
   return (
     <div className="bg-gray-800/60 backdrop-blur rounded-xl border border-gray-700/50 p-4">
@@ -19,9 +23,10 @@ export default function GroupSummary() {
         Resumen de Grupos
       </h3>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-        {groups.map((group) => {
-          const g = predictions.find((p) => p.groupId === group.id)
-          const isComplete = g?.first && g?.second && g?.third && g?.fourth
+        {summary.map(({ group, standings, isComplete }) => {
+          const ordered = standings.length === 4
+            ? standings
+            : []
           return (
             <div
               key={group.id}
@@ -32,20 +37,23 @@ export default function GroupSummary() {
               }`}
             >
               <div className="font-bold text-gray-400 mb-1">Grupo {group.id}</div>
-              {positions.map((pos) => {
-                const team = getTeamById(g?.[pos.key] ?? null)
+              {ordered.map((s, i) => {
+                const team = getTeamById(s.teamId)
+                const labels = ["1°", "2°", "3°", "4°"]
                 return (
                   <div
-                    key={pos.key}
-                    className={`flex items-center gap-1 py-0.5 ${
-                      team ? "text-gray-200" : "text-gray-600"
-                    }`}
+                    key={s.teamId}
+                    className="flex items-center gap-1 py-0.5 text-gray-200"
                   >
-                    <span className="w-4 text-gray-500">{pos.label}</span>
-                    <span>{team ? `${team.flag} ${team.name}` : "—"}</span>
+                    <span className="w-4 text-gray-500">{labels[i]}</span>
+                    <span>{team ? `${team.flag} ${team.name}` : s.teamId}</span>
+                    <span className="ml-auto text-gray-500">{s.points}pts</span>
                   </div>
                 )
               })}
+              {!isComplete && (
+                <div className="text-gray-600 py-0.5">—</div>
+              )}
             </div>
           )
         })}

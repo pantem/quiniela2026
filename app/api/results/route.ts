@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { connectDB } from "@/lib/mongodb"
 import { ResultModel } from "@/models/Result"
+import { verifyToken, getTokenFromRequest, unauthorized, forbidden } from "@/lib/auth"
 
 export async function GET() {
   try {
@@ -18,6 +19,12 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    const token = getTokenFromRequest(req)
+    if (!token) return unauthorized()
+    const payload = verifyToken(token)
+    if (!payload) return unauthorized()
+    if (payload.role !== "admin") return forbidden()
+
     await connectDB()
     const body = await req.json()
     const { groups, matchScores, knockout, bonuses, scoringConfig, locked } = body

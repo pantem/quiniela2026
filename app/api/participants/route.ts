@@ -1,11 +1,23 @@
 import { NextResponse } from "next/server"
 import { connectDB } from "@/lib/mongodb"
 import { Participant } from "@/models/Participant"
+import { User } from "@/models/User"
+import { verifyToken, getTokenFromRequest, unauthorized } from "@/lib/auth"
 
 const LOCK_DATE = new Date("2026-06-11T00:00:00Z")
 
 function isLocked(): boolean {
   return Date.now() >= LOCK_DATE.getTime()
+}
+
+async function getAuthedName(req: Request): Promise<string | null> {
+  const token = getTokenFromRequest(req)
+  if (!token) return null
+  const payload = verifyToken(token)
+  if (!payload) return null
+  await connectDB()
+  const user = await User.findById(payload.userId).select("name").lean()
+  return user?.name ?? null
 }
 
 export async function GET() {
@@ -24,6 +36,9 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    const authedName = await getAuthedName(req)
+    if (!authedName) return unauthorized()
+
     if (isLocked()) {
       return NextResponse.json(
         { error: "La quiniela está cerrada desde el 10 de junio. No se permiten más modificaciones." },
@@ -34,6 +49,17 @@ export async function POST(req: Request) {
     await connectDB()
     const body = await req.json()
     const { name, groups, matchPredictions, knockout, bonuses } = body
+
+    if (name !== authedName) {
+      return NextResponse.json({ error: "No puedes guardar datos de otro usuario" }, { status: 403 })
+    }
+
+    if (!name || !groups || !bonuses) {
+      return NextResponse.json(
+        { error: "Faltan datos requeridos (name, groups, bonuses)" },
+        { status: 400 }
+      )
+    }
 
     if (!name || !groups || !bonuses) {
       return NextResponse.json(
@@ -72,6 +98,9 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   try {
+    const authedName = await getAuthedName(req)
+    if (!authedName) return unauthorized()
+
     if (isLocked()) {
       return NextResponse.json(
         { error: "La quiniela está cerrada desde el 10 de junio. No se permiten más modificaciones." },
@@ -82,6 +111,10 @@ export async function PUT(req: Request) {
     await connectDB()
     const body = await req.json()
     const { name, groups, matchPredictions, knockout, bonuses } = body
+
+    if (name !== authedName) {
+      return NextResponse.json({ error: "No puedes modificar datos de otro usuario" }, { status: 403 })
+    }
 
     if (!name) {
       return NextResponse.json(

@@ -1,5 +1,10 @@
 const BASE = "/api"
 
+function authHeaders(): Record<string, string> {
+  const token = typeof window !== "undefined" ? localStorage.getItem("quiniela-token") : null
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
 export async function fetchParticipants() {
   const res = await fetch(`${BASE}/participants`)
   if (!res.ok) throw new Error("Error al obtener participantes")
@@ -15,7 +20,7 @@ export async function saveParticipant(data: {
 }) {
   const res = await fetch(`${BASE}/participants`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify(data),
   })
   if (!res.ok) throw new Error("Error al guardar participante")
@@ -31,7 +36,7 @@ export async function updateParticipant(data: {
 }) {
   const res = await fetch(`${BASE}/participants`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify(data),
   })
   if (!res.ok) throw new Error("Error al actualizar participante")
@@ -62,7 +67,7 @@ export async function saveResults(data: {
 }) {
   const res = await fetch(`${BASE}/results`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify(data),
   })
   if (!res.ok) throw new Error("Error al guardar resultados")
