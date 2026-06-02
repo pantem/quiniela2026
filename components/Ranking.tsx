@@ -15,10 +15,19 @@ interface ParticipantScore {
 }
 
 export default function Ranking() {
-  const { participantName, getTotalPoints, getGroupPoints } = useQuinielaStore()
+  const store = useQuinielaStore()
   const [apiScores, setApiScores] = useState<ParticipantScore[] | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const localScore: ParticipantScore = {
+    name: store.participantName || "Tú",
+    matchPoints: store.getMatchPoints(),
+    groupPoints: store.getGroupPoints(),
+    knockoutPoints: store.getKnockoutPoints(),
+    bonusPoints: store.getBonusPoints(),
+    total: store.getTotalPoints(),
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -42,18 +51,13 @@ export default function Ranking() {
     return () => { cancelled = true }
   }, [])
 
-  const localScore: ParticipantScore = {
-    name: participantName || "Tú",
-    matchPoints: 0,
-    groupPoints: getGroupPoints(),
-    knockoutPoints: 0,
-    bonusPoints: 0,
-    total: getTotalPoints(),
-  }
+  const hasLocalResults =
+    store.results?.groups?.some((g) => g.first) ||
+    store.resultMatchScores?.some((m) => m.homeScore !== null)
 
   const scores: ParticipantScore[] = apiScores && apiScores.length > 0
     ? apiScores
-    : [localScore]
+    : hasLocalResults ? [localScore] : []
 
   const hasResults = scores.some((s) => s.total > 0)
 
@@ -67,29 +71,32 @@ export default function Ranking() {
     )
   }
 
-  if (error && !apiScores) {
-    return (
-      <div className="bg-gray-800/60 backdrop-blur rounded-xl border border-gray-700/50 p-12 text-center space-y-4">
-        <AlertCircle className="w-8 h-8 text-red-400 mx-auto" />
-        <h2 className="text-xl font-bold text-white">Ranking</h2>
-        <p className="text-gray-400 text-sm max-w-md mx-auto">
-          No se pudo cargar el ranking desde el servidor. {error}
-        </p>
-        {getTotalPoints() > 0 && (
-          <RankingTable scores={[localScore]} />
-        )}
-      </div>
-    )
-  }
-
   if (!hasResults) {
     return (
       <div className="bg-gray-800/60 backdrop-blur rounded-xl border border-gray-700/50 p-12 text-center">
         <TrendingUp className="w-12 h-12 text-gray-600 mx-auto mb-4" />
         <h2 className="text-xl font-bold text-white mb-2">Ranking</h2>
-        <p className="text-gray-400 text-sm max-w-md mx-auto">
-          Los puntajes aparecerán aquí cuando se capturen los resultados oficiales.
-        </p>
+        {error ? (
+          <div className="space-y-2">
+            <p className="text-gray-400 text-sm max-w-md mx-auto">
+              No se pudieron cargar los puntajes desde el servidor.
+            </p>
+            <p className="text-red-400 text-xs">{error}</p>
+            {hasLocalResults && (
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-2 px-4 py-1.5 text-xs bg-purple-600 hover:bg-purple-500 text-white rounded-lg"
+              >
+                Reintentar
+              </button>
+            )}
+          </div>
+        ) : (
+          <p className="text-gray-400 text-sm max-w-md mx-auto">
+            Los puntajes aparecerán aquí cuando se capturen los resultados
+            oficiales.
+          </p>
+        )}
       </div>
     )
   }

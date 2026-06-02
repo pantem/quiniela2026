@@ -32,6 +32,8 @@ export default function ResultsAdmin() {
     knockout,
     locked,
     setLocked,
+    saveResultsToMongo,
+    loadResultsFromMongo,
   } = store
   const [unlocked, setUnlocked] = useState(false)
   const [renderError, setRenderError] = useState<string | null>(null)
@@ -145,6 +147,18 @@ export default function ResultsAdmin() {
               }`}
             >
               {locked ? "🔒" : "🔓"} {locked ? "Desbloquear" : "Bloquear"}
+            </button>
+            <button
+              onClick={() => loadResultsFromMongo?.()}
+              className="px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors"
+            >
+              Cargar
+            </button>
+            <button
+              onClick={() => saveResultsToMongo?.()}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
+            >
+              Guardar resultados
             </button>
           </div>
         </div>
