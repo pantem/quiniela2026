@@ -40,13 +40,17 @@ export default function ResultsAdmin() {
   ).length
 
   const derivedKnockout = useMemo(() => {
-    const existing = Array.isArray(results?.knockout) ? results.knockout : (Array.isArray(knockout) ? knockout : [])
-    if (existing.length > 0) return existing
-    if (totalScores === 0 && (!results?.groups || !results.groups.some((g) => g.first))) return []
-    const groups = results?.groups?.some((g) => g.first) ? results.groups : buildGroupResultsFromScores(safeMatchScores)
-    const bestThird = getBestThirdPlaced(groups, safeMatchScores)
-    const thirdQualifiers = bestThird.map((t) => t.teamId).filter(Boolean) as string[]
-    return buildFifaMatrix(groups, thirdQualifiers)
+    try {
+      const existing = Array.isArray(results?.knockout) ? results.knockout : (Array.isArray(knockout) ? knockout : [])
+      if (existing.length > 0) return existing
+      if (totalScores === 0 && (!results?.groups || !results.groups.some((g) => g.first))) return []
+      const groups = results?.groups?.some((g) => g.first) ? results.groups : buildGroupResultsFromScores(safeMatchScores)
+      const bestThird = getBestThirdPlaced(groups, safeMatchScores)
+      const thirdQualifiers = bestThird.map((t) => t.teamId).filter(Boolean) as string[]
+      return buildFifaMatrix(groups, thirdQualifiers)
+    } catch {
+      return []
+    }
   }, [results?.knockout, knockout, totalScores, results?.groups, safeMatchScores])
 
   if (!unlocked) {
@@ -228,15 +232,9 @@ export default function ResultsAdmin() {
               Generar eliminatoria
             </button>
           </div>
-          {derivedKnockout.length === 0 ? (
-            <p className="text-gray-500 text-sm text-center py-8">
-              Ingresa marcadores de grupos para generar automáticamente la eliminatoria
-            </p>
-          ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {ROUNDS.map(({ key, label }) => {
                 const roundMatches = getMatchesByRound(derivedKnockout, key)
-                if (roundMatches.length === 0) return null
                 return (
                   <div
                     key={key}
@@ -249,42 +247,47 @@ export default function ResultsAdmin() {
                       </div>
                     </div>
                     <div className="p-3 space-y-1.5">
-                      {roundMatches.map((match: any) => {
-                        const home = getTeamById(match?.homeTeam)
-                        const away = getTeamById(match?.awayTeam)
-                        return (
-                          <div
-                            key={match?.id ?? Math.random()}
-                            className="flex items-center gap-1 bg-gray-700/30 rounded-lg p-1.5"
-                          >
-                            <span className="text-xs w-24 truncate text-right text-gray-200">
-                              {home?.flag} {home?.name ?? "—"}
-                            </span>
-                            <AdminScoreSelect
-                              value={match?.homeScore ?? null}
-                              onChange={(v) =>
-                                setResultKnockoutScore?.(match.id, v, match?.awayScore ?? null)
-                              }
-                            />
-                            <span className="text-gray-500 text-xs">-</span>
-                            <AdminScoreSelect
-                              value={match?.awayScore ?? null}
-                              onChange={(v) =>
-                                setResultKnockoutScore?.(match.id, match?.homeScore ?? null, v)
-                              }
-                            />
-                            <span className="text-xs w-24 truncate text-left text-gray-200">
-                              {away?.flag} {away?.name ?? "—"}
-                            </span>
-                          </div>
-                        )
-                      })}
+                      {roundMatches.length === 0 ? (
+                        <p className="text-gray-500 text-xs text-center py-4">
+                          Ingresa marcadores de grupos primero
+                        </p>
+                      ) : (
+                        roundMatches.map((match: any) => {
+                          const home = getTeamById(match?.homeTeam)
+                          const away = getTeamById(match?.awayTeam)
+                          return (
+                            <div
+                              key={match?.id ?? Math.random()}
+                              className="flex items-center gap-1 bg-gray-700/30 rounded-lg p-1.5"
+                            >
+                              <span className="text-xs w-24 truncate text-right text-gray-200">
+                                {home?.flag} {home?.name ?? "—"}
+                              </span>
+                              <AdminScoreSelect
+                                value={match?.homeScore ?? null}
+                                onChange={(v) =>
+                                  setResultKnockoutScore?.(match.id, v, match?.awayScore ?? null)
+                                }
+                              />
+                              <span className="text-gray-500 text-xs">-</span>
+                              <AdminScoreSelect
+                                value={match?.awayScore ?? null}
+                                onChange={(v) =>
+                                  setResultKnockoutScore?.(match.id, match?.homeScore ?? null, v)
+                                }
+                              />
+                              <span className="text-xs w-24 truncate text-left text-gray-200">
+                                {away?.flag} {away?.name ?? "—"}
+                              </span>
+                            </div>
+                          )
+                        })
+                      )}
                     </div>
                   </div>
                 )
               })}
             </div>
-          )}
         </div>
 
         <ScoringConfigurator

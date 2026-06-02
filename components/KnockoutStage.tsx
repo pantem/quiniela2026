@@ -14,7 +14,7 @@ interface Props {
 }
 
 export default function KnockoutStage({ round, title, subtitle, icon }: Props) {
-  const { knockout, setKnockoutWinner } = useQuinielaStore()
+  const { knockout, setKnockoutWinner, setKnockoutScore } = useQuinielaStore()
 
   const matches = getMatchesByRound(knockout, round).filter((m) => m.homeTeam && m.awayTeam)
 
@@ -61,6 +61,7 @@ export default function KnockoutStage({ round, title, subtitle, icon }: Props) {
             key={match.id}
             match={match}
             onSelectWinner={setKnockoutWinner}
+            onSetScore={setKnockoutScore}
           />
         ))}
       </div>
@@ -68,12 +69,37 @@ export default function KnockoutStage({ round, title, subtitle, icon }: Props) {
   )
 }
 
+function ScoreSelect({
+  value,
+  onChange,
+}: {
+  value: number | null
+  onChange: (v: number | null) => void
+}) {
+  return (
+    <select
+      value={value ?? ""}
+      onChange={(e) =>
+        onChange(e.target.value === "" ? null : parseInt(e.target.value))
+      }
+      className="w-12 text-center bg-gray-700 border border-gray-600 rounded text-xs text-white py-1 appearance-none cursor-pointer hover:border-purple-500/50 focus:outline-none focus:ring-2 focus:ring-purple-500/30"
+    >
+      <option value="">-</option>
+      {Array.from({ length: 16 }, (_, i) => (
+        <option key={i} value={i}>{i}</option>
+      ))}
+    </select>
+  )
+}
+
 function MatchCard({
   match,
   onSelectWinner,
+  onSetScore,
 }: {
   match: KnockoutMatch
   onSelectWinner: (matchId: string, teamId: string | null) => void
+  onSetScore: (matchId: string, homeScore: number | null, awayScore: number | null) => void
 }) {
   if (!match.homeTeam || !match.awayTeam) {
     return (
@@ -92,6 +118,7 @@ function MatchCard({
   const away = getTeamById(match.awayTeam)
   const homeSelected = match.winner === match.homeTeam
   const awaySelected = match.winner === match.awayTeam
+  const hasScores = match.homeScore !== null || match.awayScore !== null
 
   return (
     <div className="bg-gray-800/80 backdrop-blur rounded-xl border border-gray-700/50 overflow-hidden">
@@ -118,7 +145,15 @@ function MatchCard({
         </div>
 
         <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
-          <span>VS</span>
+          <ScoreSelect
+            value={match.homeScore}
+            onChange={(v) => onSetScore(match.id, v, match.awayScore)}
+          />
+          <span>-</span>
+          <ScoreSelect
+            value={match.awayScore}
+            onChange={(v) => onSetScore(match.id, match.homeScore, v)}
+          />
         </div>
 
         <div

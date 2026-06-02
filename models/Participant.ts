@@ -22,6 +22,8 @@ export interface IKnockoutPrediction {
   round: string
   homeTeam: string | null
   awayTeam: string | null
+  homeScore: number | null
+  awayScore: number | null
   winner: string | null
   label: string
 }
@@ -71,6 +73,8 @@ const KnockoutPredictionSchema = new Schema<IKnockoutPrediction>(
     round: { type: String, required: true },
     homeTeam: { type: String, default: null },
     awayTeam: { type: String, default: null },
+    homeScore: { type: Number, default: null },
+    awayScore: { type: Number, default: null },
     winner: { type: String, default: null },
     label: { type: String, required: true },
   },

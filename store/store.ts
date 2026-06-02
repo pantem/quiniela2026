@@ -38,6 +38,7 @@ interface QuinielaState {
   setGroupPrediction: (groupId: string, position: "first" | "second" | "third" | "fourth", teamId: string | null) => void
   setMatchScore: (matchId: string, homeScore: number | null, awayScore: number | null) => void
   setKnockoutWinner: (matchId: string, teamId: string | null) => void
+  setKnockoutScore: (matchId: string, homeScore: number | null, awayScore: number | null) => void
   setBonus: (key: keyof BonusPrediction, value: string | null) => void
   setResultMatchScore: (matchId: string, homeScore: number | null, awayScore: number | null) => void
   setResultGroup: (groupId: string, position: "first" | "second" | "third" | "fourth", teamId: string | null) => void
@@ -160,6 +161,14 @@ export const useQuinielaStore = create<QuinielaState>()(
           )
           return { knockout: propagateWinners(updated) }
         })
+      },
+
+      setKnockoutScore: (matchId, homeScore, awayScore) => {
+        set((state) => ({
+          knockout: state.knockout.map((m) =>
+            m.id === matchId ? { ...m, homeScore, awayScore } : m
+          ),
+        }))
       },
 
       setBonus: (key, value) => {
