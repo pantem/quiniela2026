@@ -227,13 +227,16 @@ export const useQuinielaStore = create<QuinielaState>()(
       },
 
       refreshKnockout: () => {
-        const { groups, knockout: existing } = get()
+        const { groups, matchPredictions, resultMatchScores, knockout: existing } = get()
         const allComplete = groups.every((g) => g.first && g.second && g.third && g.fourth)
         if (!allComplete) {
           set({ knockout: [] })
           return
         }
-        const bestThird = getBestThirdPlaced(groups)
+        const scoresForThird = resultMatchScores.some((s) => s.homeScore !== null)
+          ? resultMatchScores
+          : matchPredictions
+        const bestThird = getBestThirdPlaced(groups, scoresForThird)
         const thirdQualifiers = bestThird.map((t) => t.teamId).filter(Boolean) as string[]
         const matrix = buildFifaMatrix(groups, thirdQualifiers)
         const merged = matrix.map((m) => {

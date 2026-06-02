@@ -94,7 +94,7 @@ function getR32Slots(): KnockoutSlot[] {
     { matchId: "R32_05", round: "r32", homeLabel: "1E", awayLabel: "3F", homeSource: "1E", awaySource: "3F", label: "R32-5" },
     { matchId: "R32_06", round: "r32", homeLabel: "1F", awayLabel: "3G", homeSource: "1F", awaySource: "3G", label: "R32-6" },
     { matchId: "R32_07", round: "r32", homeLabel: "1G", awayLabel: "3H", homeSource: "1G", awaySource: "3H", label: "R32-7" },
-    { matchId: "R32_08", round: "r32", homeLabel: "1H", awayLabel: "3I", homeSource: "1H", awaySource: "3I", label: "R32-8" },
+    { matchId: "R32_08", round: "r32", homeLabel: "1H", awayLabel: "3B", homeSource: "1H", awaySource: "3B", label: "R32-8" },
     { matchId: "R32_09", round: "r32", homeLabel: "1I", awayLabel: "2J", homeSource: "1I", awaySource: "2J", label: "R32-9" },
     { matchId: "R32_10", round: "r32", homeLabel: "1J", awayLabel: "2K", homeSource: "1J", awaySource: "2K", label: "R32-10" },
     { matchId: "R32_11", round: "r32", homeLabel: "1K", awayLabel: "2L", homeSource: "1K", awaySource: "2L", label: "R32-11" },

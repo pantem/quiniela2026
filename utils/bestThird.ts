@@ -1,5 +1,6 @@
-import { GroupPrediction, Team } from "@/app/types"
+import { GroupPrediction } from "@/app/types"
 import { getTeamById } from "./teams"
+import { computeStandingsFromMatches, MatchScore } from "./matches"
 
 export interface ThirdPlaceEntry {
   groupId: string
@@ -11,26 +12,56 @@ export interface ThirdPlaceEntry {
 }
 
 export function getBestThirdPlaced(
-  predictions: GroupPrediction[]
+  predictions: GroupPrediction[],
+  matchScores?: MatchScore[]
 ): ThirdPlaceEntry[] {
-  const thirdPlaced: ThirdPlaceEntry[] = predictions
-    .filter((g) => g.third !== null)
-    .map((g) => {
+  const withThird = predictions.filter((g) => g.third !== null)
+  if (withThird.length === 0) return []
+
+  if (matchScores && matchScores.length > 0) {
+    const allStandings = computeStandingsFromMatches(matchScores)
+    const byTeam = new Map(allStandings.map((s) => [s.teamId, s]))
+
+    const thirdPlaced: ThirdPlaceEntry[] = withThird.map((g) => {
       const team = getTeamById(g.third)
+      const stats = byTeam.get(g.third!)
       return {
         groupId: g.groupId,
         teamId: g.third,
         teamName: team?.name ?? "",
-        points: 3,
-        gd: 0,
-        gf: 1,
+        points: stats?.points ?? 3,
+        gd: stats?.gd ?? 0,
+        gf: stats?.gf ?? 1,
       }
     })
+
+    thirdPlaced.sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points
+      if (b.gd !== a.gd) return b.gd - a.gd
+      if (b.gf !== a.gf) return b.gf - a.gf
+      return a.groupId.localeCompare(b.groupId)
+    })
+
+    return thirdPlaced.slice(0, 8)
+  }
+
+  const thirdPlaced: ThirdPlaceEntry[] = withThird.map((g) => {
+    const team = getTeamById(g.third)
+    return {
+      groupId: g.groupId,
+      teamId: g.third,
+      teamName: team?.name ?? "",
+      points: 3,
+      gd: 0,
+      gf: 1,
+    }
+  })
 
   thirdPlaced.sort((a, b) => {
     if (b.points !== a.points) return b.points - a.points
     if (b.gd !== a.gd) return b.gd - a.gd
-    return b.gf - a.gf
+    if (b.gf !== a.gf) return b.gf - a.gf
+    return a.groupId.localeCompare(b.groupId)
   })
 
   return thirdPlaced.slice(0, 8)
