@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useQuinielaStore } from "@/store/store"
 import { fetchRanking } from "@/lib/api"
-import { Trophy, Medal, TrendingUp, AlertCircle, Loader2 } from "lucide-react"
+import { Trophy, Medal, AlertCircle, Loader2 } from "lucide-react"
 
 interface ParticipantScore {
   name: string
@@ -49,15 +49,9 @@ export default function Ranking() {
     return () => { cancelled = true }
   }, [])
 
-  const hasLocalResults =
-    store.results?.groups?.some((g) => g.first) ||
-    store.resultMatchScores?.some((m) => m.homeScore !== null)
-
   const scores: ParticipantScore[] = apiScores && apiScores.length > 0
     ? apiScores
-    : hasLocalResults ? [localScore] : []
-
-  const hasResults = scores.some((s) => s.total > 0)
+    : [localScore]
 
   if (loading) {
     return (
@@ -69,32 +63,21 @@ export default function Ranking() {
     )
   }
 
-  if (!hasResults) {
+  if (error && !apiScores) {
     return (
       <div className="bg-gray-800/60 backdrop-blur rounded-xl border border-gray-700/50 p-12 text-center">
-        <TrendingUp className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+        <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
         <h2 className="text-xl font-bold text-white mb-2">Ranking</h2>
-        {error ? (
-          <div className="space-y-2">
-            <p className="text-gray-400 text-sm max-w-md mx-auto">
-              No se pudieron cargar los puntajes desde el servidor.
-            </p>
-            <p className="text-red-400 text-xs">{error}</p>
-            {hasLocalResults && (
-              <button
-                onClick={() => window.location.reload()}
-                className="mt-2 px-4 py-1.5 text-xs bg-purple-600 hover:bg-purple-500 text-white rounded-lg"
-              >
-                Reintentar
-              </button>
-            )}
-          </div>
-        ) : (
-          <p className="text-gray-400 text-sm max-w-md mx-auto">
-            Los puntajes aparecerán aquí cuando se capturen los resultados
-            oficiales.
-          </p>
-        )}
+        <p className="text-gray-400 text-sm max-w-md mx-auto">
+          No se pudieron cargar los participantes desde el servidor.
+        </p>
+        <p className="text-red-400 text-xs mt-2">{error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-4 px-4 py-1.5 text-xs bg-purple-600 hover:bg-purple-500 text-white rounded-lg"
+        >
+          Reintentar
+        </button>
       </div>
     )
   }
