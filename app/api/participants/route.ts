@@ -48,22 +48,15 @@ export async function POST(req: Request) {
 
     await connectDB()
     const body = await req.json()
-    const { name, groups, matchPredictions, knockout, bonuses } = body
+    const { name, groups, matchPredictions, knockout } = body
 
     if (name !== authedName) {
       return NextResponse.json({ error: "No puedes guardar datos de otro usuario" }, { status: 403 })
     }
 
-    if (!name || !groups || !bonuses) {
+    if (!name || !groups) {
       return NextResponse.json(
-        { error: "Faltan datos requeridos (name, groups, bonuses)" },
-        { status: 400 }
-      )
-    }
-
-    if (!name || !groups || !bonuses) {
-      return NextResponse.json(
-        { error: "Faltan datos requeridos (name, groups, bonuses)" },
+        { error: "Faltan datos requeridos (name, groups)" },
         { status: 400 }
       )
     }
@@ -73,7 +66,6 @@ export async function POST(req: Request) {
       existing.groups = groups
       existing.matchPredictions = matchPredictions ?? []
       existing.knockout = knockout ?? []
-      existing.bonuses = bonuses
       await existing.save()
       return NextResponse.json(existing)
     }
@@ -83,7 +75,6 @@ export async function POST(req: Request) {
       groups,
       matchPredictions: matchPredictions ?? [],
       knockout: knockout ?? [],
-      bonuses,
     })
 
     return NextResponse.json(participant, { status: 201 })
@@ -110,7 +101,7 @@ export async function PUT(req: Request) {
 
     await connectDB()
     const body = await req.json()
-    const { name, groups, matchPredictions, knockout, bonuses } = body
+    const { name, groups, matchPredictions, knockout } = body
 
     if (name !== authedName) {
       return NextResponse.json({ error: "No puedes modificar datos de otro usuario" }, { status: 403 })
@@ -130,7 +121,6 @@ export async function PUT(req: Request) {
           groups,
           matchPredictions: matchPredictions ?? [],
           knockout: knockout ?? [],
-          bonuses,
         },
       },
       { new: true }

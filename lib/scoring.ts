@@ -98,18 +98,6 @@ export async function calculateKnockoutPoints(
   return total
 }
 
-export async function calculateBonusPoints(
-  predictions: { finalist: string | null; champion: string | null; topScorer: string | null },
-  results: { finalist: string | null; champion: string | null; topScorer: string | null }
-): Promise<number> {
-  const cfg = await getScoringConfig()
-  let points = 0
-  if (predictions.finalist === results.finalist) points += cfg.finalistBonus
-  if (predictions.champion === results.champion) points += cfg.championBonus
-  if (predictions.topScorer === results.topScorer) points += cfg.topScorerBonus
-  return points
-}
-
 export async function calculateMatchStats(
   predictions: Array<{ id: string; homeScore: number | null; awayScore: number | null }>,
   results: Array<{ id: string; homeScore: number | null; awayScore: number | null }>

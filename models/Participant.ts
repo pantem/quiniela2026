@@ -28,18 +28,11 @@ export interface IKnockoutPrediction {
   label: string
 }
 
-export interface IBonusPrediction {
-  finalist: string | null
-  champion: string | null
-  topScorer: string | null
-}
-
 export interface IParticipant extends Document {
   name: string
   groups: IGroupPrediction[]
   matchPredictions: IMatchScorePrediction[]
   knockout: IKnockoutPrediction[]
-  bonuses: IBonusPrediction
   createdAt: Date
   updatedAt: Date
 }
@@ -81,22 +74,12 @@ const KnockoutPredictionSchema = new Schema<IKnockoutPrediction>(
   { _id: false }
 )
 
-const BonusPredictionSchema = new Schema<IBonusPrediction>(
-  {
-    finalist: { type: String, default: null },
-    champion: { type: String, default: null },
-    topScorer: { type: String, default: null },
-  },
-  { _id: false }
-)
-
 const ParticipantSchema = new Schema<IParticipant>(
   {
     name: { type: String, required: true, unique: true },
     groups: { type: [GroupPredictionSchema], required: true },
     matchPredictions: { type: [MatchScorePredictionSchema], default: [] },
     knockout: { type: [KnockoutPredictionSchema], default: [] },
-    bonuses: { type: BonusPredictionSchema, required: true },
   },
   { timestamps: true }
 )

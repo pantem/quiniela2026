@@ -28,12 +28,6 @@ export interface IKnockoutResult {
   label: string
 }
 
-export interface IBonusResult {
-  finalist: string | null
-  champion: string | null
-  topScorer: string | null
-}
-
 export interface IScoringConfig {
   groupExact: number
   groupOutcome: number
@@ -49,16 +43,12 @@ export interface IScoringConfig {
   sfExact: number
   finalWinner: number
   finalExact: number
-  finalistBonus: number
-  championBonus: number
-  topScorerBonus: number
 }
 
 export interface IResult extends Document {
   groups: IGroupResult[]
   matchScores: IMatchScoreResult[]
   knockout: IKnockoutResult[]
-  bonuses: IBonusResult
   scoringConfig: IScoringConfig | null
   locked: boolean
   updatedAt: Date
@@ -80,9 +70,6 @@ const ScoringConfigSchema = new Schema<IScoringConfig>(
     sfExact: { type: Number, default: 20 },
     finalWinner: { type: Number, default: 10 },
     finalExact: { type: Number, default: 24 },
-    finalistBonus: { type: Number, default: 16 },
-    championBonus: { type: Number, default: 32 },
-    topScorerBonus: { type: Number, default: 10 },
   },
   { _id: false }
 )
@@ -124,21 +111,11 @@ const KnockoutResultSchema = new Schema<IKnockoutResult>(
   { _id: false }
 )
 
-const BonusResultSchema = new Schema<IBonusResult>(
-  {
-    finalist: { type: String, default: null },
-    champion: { type: String, default: null },
-    topScorer: { type: String, default: null },
-  },
-  { _id: false }
-)
-
 const ResultSchema = new Schema<IResult>(
   {
     groups: { type: [GroupResultSchema], required: true },
     matchScores: { type: [MatchScoreResultSchema], default: [] },
     knockout: { type: [KnockoutResultSchema], default: [] },
-    bonuses: { type: BonusResultSchema, required: true },
     scoringConfig: { type: ScoringConfigSchema, default: null },
     locked: { type: Boolean, default: false },
   },

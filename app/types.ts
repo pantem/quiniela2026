@@ -40,18 +40,11 @@ export interface ResultOfficial {
   winner: string | null
 }
 
-export interface BonusPrediction {
-  finalist: string | null
-  champion: string | null
-  topScorer: string | null
-}
-
 export interface Participant {
   id: string
   name: string
   groups: GroupPrediction[]
   knockout: KnockoutMatch[]
-  bonuses: BonusPrediction
   points: number
 }
 
@@ -79,9 +72,6 @@ export interface ScoringConfig {
   sfExact: number
   finalWinner: number
   finalExact: number
-  finalistBonus: number
-  championBonus: number
-  topScorerBonus: number
 }
 
 export const DEFAULT_SCORING: ScoringConfig = {
@@ -99,16 +89,12 @@ export const DEFAULT_SCORING: ScoringConfig = {
   sfExact: 20,
   finalWinner: 10,
   finalExact: 24,
-  finalistBonus: 16,
-  championBonus: 32,
-  topScorerBonus: 10,
 }
 
 export type TabId =
   | 'grupos'
   | 'marcadores'
   | 'eliminatoria'
-  | 'campeon'
   | 'resultados'
   | 'ranking'
   | 'dashboard'

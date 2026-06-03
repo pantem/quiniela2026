@@ -5,7 +5,6 @@ import { ResultModel } from "@/models/Result"
 import {
   calculateGroupPoints,
   calculateKnockoutPoints,
-  calculateBonusPoints,
   calculateMatchScorePoints,
   calculateMatchStats,
 } from "@/lib/scoring"
@@ -23,7 +22,6 @@ export async function GET() {
           name: p.name,
           groupPoints: 0,
           knockoutPoints: 0,
-          bonusPoints: 0,
           total: 0,
         })),
         hasResults: false,
@@ -44,11 +42,6 @@ export async function GET() {
           p.knockout,
           result.knockout
         )
-        const bonusPoints = await calculateBonusPoints(
-          p.bonuses,
-          result.bonuses
-        )
-
         const matchStats = await calculateMatchStats(
           p.matchPredictions ?? [],
           result.matchScores ?? []
@@ -60,8 +53,7 @@ export async function GET() {
           matchStats,
           groupPoints,
           knockoutPoints,
-          bonusPoints,
-          total: matchPoints + groupPoints + knockoutPoints + bonusPoints,
+          total: matchPoints + groupPoints + knockoutPoints,
         }
       })
     )

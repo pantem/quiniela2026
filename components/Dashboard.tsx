@@ -1,7 +1,7 @@
 "use client"
 
 import { useQuinielaStore } from "@/store/store"
-import { teams, getTeamById } from "@/utils/teams"
+import { getTeamById } from "@/utils/teams"
 import {
   BarChart,
   Bar,
@@ -9,44 +9,18 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
   Cell,
-  Legend,
 } from "recharts"
 import {
   BarChart3,
-  PieChart as PieChartIcon,
   TrendingUp,
   Trophy,
   Users,
 } from "lucide-react"
 
 export default function Dashboard() {
-  const { knockout, bonuses, getTotalPoints, groups: predictions } =
+  const { knockout, getTotalPoints, groups: predictions } =
     useQuinielaStore()
-
-  const allSelectedTeams = knockout
-    .filter((m) => m.winner)
-    .map((m) => m.winner)
-
-  const championCounts = new Map<string, number>()
-  if (bonuses.champion) {
-    championCounts.set(
-      bonuses.champion,
-      (championCounts.get(bonuses.champion) || 0) + 1
-    )
-  }
-
-  const championData = Array.from(championCounts.entries())
-    .map(([id, count]) => {
-      const team = getTeamById(id)
-      return {
-        name: team ? `${team.flag} ${team.name}` : id,
-        value: count,
-      }
-    })
-    .sort((a, b) => b.value - a.value)
 
   const teamPickCount = new Map<string, number>()
   for (const g of predictions) {
@@ -95,13 +69,6 @@ export default function Dashboard() {
       bg: "from-emerald-900/20 to-emerald-800/10",
       border: "border-emerald-700/30",
     },
-    {
-      icon: <Trophy className="w-5 h-5 text-purple-400" />,
-      label: "Campeón Elegido",
-      value: getTeamById(bonuses.champion)?.name ?? "—",
-      bg: "from-purple-900/20 to-purple-800/10",
-      border: "border-purple-700/30",
-    },
   ]
 
   const COLORS = [
@@ -142,7 +109,7 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6">
         <div className="bg-gray-800/80 backdrop-blur rounded-xl border border-gray-700/50 p-6">
           <div className="flex items-center gap-2 mb-4">
             <BarChart3 className="w-5 h-5 text-purple-400" />
@@ -199,54 +166,6 @@ export default function Dashboard() {
           )}
         </div>
 
-        <div className="bg-gray-800/80 backdrop-blur rounded-xl border border-gray-700/50 p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <PieChartIcon className="w-5 h-5 text-amber-400" />
-            <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
-              Campeones Más Seleccionados
-            </h3>
-          </div>
-          {championData.length > 0 ? (
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={championData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={2}
-                    dataKey="value"
-                    label={({ name, percent }) =>
-                      `${name} ${(percent * 100).toFixed(0)}%`
-                    }
-                    labelLine={false}
-                  >
-                    {championData.map((_, index) => (
-                      <Cell
-                        key={index}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#1f2937",
-                      border: "1px solid #374151",
-                      borderRadius: "8px",
-                      color: "#fff",
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          ) : (
-            <p className="text-gray-500 text-sm text-center py-8">
-              Selecciona un campeón para ver estadísticas.
-            </p>
-          )}
-        </div>
       </div>
     </div>
   )

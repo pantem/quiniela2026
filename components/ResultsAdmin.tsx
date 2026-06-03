@@ -25,7 +25,6 @@ export default function ResultsAdmin() {
     resultMatchScores,
     setResultMatchScore,
     setResultKnockoutScore,
-    setResultBonus,
     applyResultStandings,
     generateResultsKnockout,
     resetResultMatchScores,
@@ -96,7 +95,7 @@ export default function ResultsAdmin() {
   }
 
   try {
-    const safeResults = results ?? { groups: [], knockout: [], bonuses: { finalist: null, champion: null, topScorer: null } }
+    const safeResults = results ?? { groups: [], knockout: [] }
     const standings = buildStandings(safeMatchScores)
 
     return (
@@ -321,43 +320,6 @@ export default function ResultsAdmin() {
           onChange={(c) => store.setScoringConfig(c)}
         />
 
-        <div>
-          <h3 className="text-lg font-semibold text-white mb-4">Bonos</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {(["finalist", "champion", "topScorer"] as const).map((key) => {
-              const labels = {
-                finalist: "Finalista",
-                champion: "Campeón",
-                topScorer: "Goleador",
-              }
-              const allTeams = groups.flatMap((g) => getTeamsByGroup(g.id))
-              return (
-                <div
-                  key={key}
-                  className="bg-gray-800/80 rounded-xl border border-gray-700/50 p-4"
-                >
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    {labels[key]}
-                  </label>
-                  <select
-                    value={safeResults?.bonuses?.[key] ?? ""}
-                    onChange={(e) =>
-                      setResultBonus?.(key, e.target.value || null)
-                    }
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg text-sm"
-                  >
-                    <option value="">Seleccionar</option>
-                    {allTeams.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.flag} {t.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )
-            })}
-          </div>
-        </div>
       </div>
     )
   } catch (e: any) {

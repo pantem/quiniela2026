@@ -7,7 +7,7 @@ export async function GET() {
   try {
     await connectDB()
     const result = await ResultModel.findOne().sort({ updatedAt: -1 }).lean()
-    return NextResponse.json(result ?? { groups: [], matchScores: [], knockout: [], bonuses: { finalist: null, champion: null, topScorer: null }, locked: false })
+    return NextResponse.json(result ?? { groups: [], matchScores: [], knockout: [], locked: false })
   } catch (error) {
     console.error("Error fetching results:", error)
     return NextResponse.json(
@@ -27,9 +27,9 @@ export async function POST(req: Request) {
 
     await connectDB()
     const body = await req.json()
-    const { groups, matchScores, knockout, bonuses, scoringConfig, locked } = body
+    const { groups, matchScores, knockout, scoringConfig, locked } = body
 
-    if (!groups || !bonuses) {
+    if (!groups) {
       return NextResponse.json(
         { error: "Faltan datos requeridos" },
         { status: 400 }
@@ -41,7 +41,6 @@ export async function POST(req: Request) {
       result.groups = groups
       result.matchScores = matchScores ?? []
       result.knockout = knockout ?? []
-      result.bonuses = bonuses
       result.scoringConfig = scoringConfig ?? null
       if (typeof locked === "boolean") result.locked = locked
       await result.save()
@@ -52,7 +51,6 @@ export async function POST(req: Request) {
       groups,
       matchScores: matchScores ?? [],
       knockout: knockout ?? [],
-      bonuses,
       scoringConfig: scoringConfig ?? null,
     })
 

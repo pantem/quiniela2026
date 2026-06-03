@@ -98,18 +98,6 @@ export function calculateKnockoutPoints(
   return total
 }
 
-export function calculateBonusPoints(
-  predictions: { finalist: string | null; champion: string | null; topScorer: string | null },
-  results: { finalist: string | null; champion: string | null; topScorer: string | null },
-  cfg: ScoringConfig = DEFAULT_SCORING
-): number {
-  let points = 0
-  if (predictions.finalist === results.finalist) points += cfg.finalistBonus
-  if (predictions.champion === results.champion) points += cfg.championBonus
-  if (predictions.topScorer === results.topScorer) points += cfg.topScorerBonus
-  return points
-}
-
 export interface MatchPredictionStats {
   played: number
   exact: number

@@ -27,9 +27,6 @@ const FIELDS: Array<{
   { key: "sfExact", label: "Marcador exacto", phase: "Semifinal" },
   { key: "finalWinner", label: "Ganador del cruce", phase: "Final" },
   { key: "finalExact", label: "Marcador exacto", phase: "Final" },
-  { key: "finalistBonus", label: "Finalista", phase: "Bonos" },
-  { key: "championBonus", label: "Campeón", phase: "Bonos" },
-  { key: "topScorerBonus", label: "Goleador", phase: "Bonos" },
 ]
 
 export default function ScoringConfigurator({ config, onChange }: Props) {

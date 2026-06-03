@@ -1,0 +1,115 @@
+╔══════════════════════════════════════════════════╗
+║          QUINIELA MUNDIAL 2026 - MANUAL          ║
+╚══════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1.  INTRODUCCIÓN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Quiniela para el Mundial 2026. Los usuarios registran
+sus predicciones: resultados de fase de grupos y
+eliminatorias. Un admin ingresa los resultados reales
+y el sistema calcula el ranking.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2.  INSTALACIÓN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Requisitos: Node.js 18+
+
+  npm install
+  npm run dev         → http://localhost:3000
+
+Variables de entorno (.env.local):
+
+  MONGO_URI=mongodb+srv://...
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3.  ADMIN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Crear admin (solo la primera vez):
+
+  npm run seed
+
+Por defecto crea admin@quiniela.com / admin123.
+Personalizar con:
+
+  ADMIN_EMAIL=... ADMIN_PASSWORD=... npm run seed
+
+El admin puede:
+  - Ingresar resultados reales (pestaña Resultados)
+  - Ver Dashboard con estadísticas de participación
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4.  USUARIOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  - Registrarse con email, contraseña y nombre
+  - Iniciar sesión (el nombre se asigna automáticamente)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+5.  PREDICCIONES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+GRUPOS:
+  - Seleccionar 1° y 2° de cada grupo
+  - Se actualiza automáticamente el bracket de
+    eliminatorias
+
+MARCADORES:
+  - Ingresar marcador exacto de cada partido de
+    fase de grupos (ej: 2-1)
+
+ELIMINATORIA:
+  - Elegir ganador de cada llave
+  - Se van generando automáticamente las rondas
+    siguientes (octavos → cuartos → semis → final)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+6.  SINCRONIZACIÓN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Botón "Guardar" en el header: sube todas las
+predicciones a MongoDB.
+
+Al iniciar sesión, las predicciones se cargan
+automáticamente desde la nube.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+7.  RESULTADOS (solo admin)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+El admin ingresa los marcadores reales de cada
+partido. Al guardar, el sistema recalcula el ranking
+automáticamente.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+8.  RANKING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Muestra la tabla de posiciones de todos los
+participantes basada en sus predicciones vs los
+resultados reales.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+9.  DASHBOARD (solo admin)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Estadísticas globales: cantidad de predicciones por
+grupo, etc.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+10. DEPLOY EN VERCEL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  1. git push a GitHub
+  2. Importar repo en Vercel
+  3. Agregar variable de entorno MONGO_URI
+  4. Deployar
+  5. Ejecutar npm run seed localmente (con la misma
+     MONGO_URI de producción) para crear el admin
+
+     OPCIONAL: para hacer seed desde Vercel, crear un
+       script de one-off o usar MongoDB Compass para
+       insertar el admin manualmente.
