@@ -258,25 +258,29 @@ function HomePage() {
                   {item.label}
                 </button>
               ))}
-            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mt-4">
-              Admin
-            </div>
-            {visibleNav
-              .filter((n) => n.section === "admin")
-              .map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${
-                    activeTab === item.id
-                      ? "bg-emerald-600/20 text-emerald-300 border border-emerald-500/30"
-                      : "text-gray-400 hover:text-white hover:bg-gray-800"
-                  }`}
-                >
-                  {item.icon}
-                  {item.label}
-                </button>
-              ))}
+            {visibleNav.filter((n) => n.section === "admin").length > 0 && (
+              <>
+                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mt-4">
+                  Admin
+                </div>
+                {visibleNav
+                  .filter((n) => n.section === "admin")
+                  .map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveTab(item.id)}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${
+                        activeTab === item.id
+                          ? "bg-emerald-600/20 text-emerald-300 border border-emerald-500/30"
+                          : "text-gray-400 hover:text-white hover:bg-gray-800"
+                      }`}
+                    >
+                      {item.icon}
+                      {item.label}
+                    </button>
+                  ))}
+              </>
+            )}
             <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mt-4">
               Estadísticas
             </div>
