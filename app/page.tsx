@@ -66,6 +66,7 @@ function HomePage() {
 
   useEffect(() => {
     if (!user) setShowAuth(true)
+    else setShowAuth(false)
   }, [user])
 
   useEffect(() => {

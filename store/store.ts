@@ -497,11 +497,13 @@ export const useQuinielaStore = create<QuinielaState>()(
           : { ...DEFAULT_PHASE_LOCKS })
         const bonuses = persisted.bonuses ?? persisted.results?.bonuses ?? { ...defaultBonuses }
         return {
+          ...persisted,
           phaseLocks,
           bonuses,
           matchPredictions: persisted.matchPredictions ?? defaultMatchPredictions(),
           resultMatchScores: persisted.resultMatchScores ?? defaultResultMatchScores(),
           results: {
+            ...(persisted.results ?? {}),
             groups: persisted.results?.groups ?? defaultResultsGroups(),
             knockout: (persisted.results?.knockout ?? []).map((m: any) => ({
               ...m,
@@ -511,7 +513,6 @@ export const useQuinielaStore = create<QuinielaState>()(
             bonuses: persisted.results?.bonuses ?? { ...defaultBonuses },
             scoringConfig: persisted.results?.scoringConfig ?? null,
           },
-          ...persisted,
         }
       },
     }
