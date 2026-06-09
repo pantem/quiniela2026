@@ -483,7 +483,11 @@ export const useQuinielaStore = create<QuinielaState>()(
 
       calculateAutoBonuses: async () => {
         try {
-          const res = await fetch("/api/auto-bonuses", { method: "POST" })
+          const token = typeof window !== "undefined" ? localStorage.getItem("quiniela-token") : null
+          const res = await fetch("/api/auto-bonuses", {
+            method: "POST",
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          })
           if (!res.ok) throw new Error("Error al calcular bonos automáticos")
           const data = await res.json()
           set((state) => ({
