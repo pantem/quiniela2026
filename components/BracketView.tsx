@@ -162,45 +162,56 @@ export default function BracketView() {
             })}
           </div>
 
-          <div className="mt-6">
+          <div
+            className="grid gap-0 mt-2"
+            style={{
+              gridTemplateColumns: "1fr 24px 1fr 24px 1fr 24px 1fr 24px 1fr",
+              gridTemplateRows: "auto",
+            }}
+          >
             {roundData.filter((r) => r.key === "third").map((round) =>
               round.matches.map((match) => {
                 const home = match.homeTeam ? getTeamById(match.homeTeam) : undefined
                 const away = match.awayTeam ? getTeamById(match.awayTeam) : undefined
                 const pts = getRoundPoints(scoringConfig, match.round)
                 return (
-                  <div key={match.id} className="max-w-sm mx-auto">
-                    {!match.homeTeam || !match.awayTeam ? (
-                      <div className="bg-gray-800/60 border border-gray-700/30 rounded-lg py-3 text-center text-xs text-gray-600">
-                        <div className="text-emerald-400 font-semibold">{round.label}</div>
-                        <div className="mt-1">{match.label}</div>
-                        <div className="text-[10px] text-gray-500 mt-1">Esperando resultados de semifinales</div>
-                        <div className="text-[9px] text-gray-600 mt-1">Gan: {pts.winner}pts | Exacto: {pts.exact}pts</div>
-                      </div>
-                    ) : (
-                      <div className="bg-gray-800/80 border border-gray-700/50 rounded-lg overflow-hidden text-xs">
-                        <div className="px-2 py-0.5 bg-gray-700/50 text-[10px] font-mono flex items-center justify-between">
-                          <span className="text-emerald-300 font-semibold">{round.label}</span>
-                          <span className="text-gray-400">{match.label}</span>
-                          <span className="text-gray-600">G:{pts.winner} E:{pts.exact}</span>
+                  <div
+                    key={match.id}
+                    style={{ gridColumn: 9, gridRow: 1 }}
+                    className="flex items-center justify-center"
+                  >
+                    <div className="w-full max-w-[200px]">
+                      {!match.homeTeam || !match.awayTeam ? (
+                        <div className="bg-gray-800/60 border border-gray-700/30 rounded-lg py-2 text-center text-[10px] text-gray-600">
+                          <div className="text-emerald-400 font-semibold">{round.label}</div>
+                          <div className="mt-1 text-[9px] text-gray-500">Esperando semifinales</div>
+                          <div className="text-[9px] text-gray-600 mt-0.5">G: {pts.winner} | E: {pts.exact}</div>
                         </div>
-                        <div className={`flex items-center gap-1 px-2 py-1.5 ${phaseLocks[match.round] ? "opacity-60" : ""}`}>
-                          <span className="text-gray-200 text-xs shrink-0 w-24 truncate text-right">{home?.flag} {home?.name ?? "—"}</span>
-                          <ScoreSelect
-                            value={match.homeScore}
-                            disabled={phaseLocks[match.round]}
-                            onChange={(v) => setKnockoutScore(match.id, v, match.awayScore)}
-                          />
-                          <span className="text-gray-500 text-[10px]">-</span>
-                          <ScoreSelect
-                            value={match.awayScore}
-                            disabled={phaseLocks[match.round]}
-                            onChange={(v) => setKnockoutScore(match.id, match.homeScore, v)}
-                          />
-                          <span className="text-gray-200 text-xs shrink-0 w-24 truncate text-left">{away?.flag} {away?.name ?? "—"}</span>
+                      ) : (
+                        <div className="bg-gray-800/80 border border-gray-700/50 rounded-lg overflow-hidden text-xs">
+                          <div className="px-2 py-0.5 bg-gray-700/50 text-[10px] font-mono flex items-center justify-between">
+                            <span className="text-emerald-300 font-semibold">{round.label}</span>
+                            <span className="text-gray-400">{match.label}</span>
+                            <span className="text-gray-600">G:{pts.winner} E:{pts.exact}</span>
+                          </div>
+                          <div className={`flex items-center gap-1 px-2 py-1.5 ${phaseLocks[match.round] ? "opacity-60" : ""}`}>
+                            <span className="text-gray-200 text-[10px] shrink-0 w-20 truncate text-right">{home?.flag} {home?.name ?? "—"}</span>
+                            <ScoreSelect
+                              value={match.homeScore}
+                              disabled={phaseLocks[match.round]}
+                              onChange={(v) => setKnockoutScore(match.id, v, match.awayScore)}
+                            />
+                            <span className="text-gray-500 text-[10px]">-</span>
+                            <ScoreSelect
+                              value={match.awayScore}
+                              disabled={phaseLocks[match.round]}
+                              onChange={(v) => setKnockoutScore(match.id, match.homeScore, v)}
+                            />
+                            <span className="text-gray-200 text-[10px] shrink-0 w-20 truncate text-left">{away?.flag} {away?.name ?? "—"}</span>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 )
               })
