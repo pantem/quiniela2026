@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose"
+import type { PhaseLocks } from "@/app/types"
 
 export interface IGroupResult {
   groupId: string
@@ -51,6 +52,7 @@ export interface IResult extends Document {
   knockout: IKnockoutResult[]
   scoringConfig: IScoringConfig | null
   locked: boolean
+  phaseLocks: PhaseLocks
   updatedAt: Date
 }
 
@@ -111,6 +113,18 @@ const KnockoutResultSchema = new Schema<IKnockoutResult>(
   { _id: false }
 )
 
+const PhaseLocksSchema = new Schema<PhaseLocks>(
+  {
+    groups: { type: Boolean, default: false },
+    r32: { type: Boolean, default: false },
+    r16: { type: Boolean, default: false },
+    qf: { type: Boolean, default: false },
+    sf: { type: Boolean, default: false },
+    final: { type: Boolean, default: false },
+  },
+  { _id: false }
+)
+
 const ResultSchema = new Schema<IResult>(
   {
     groups: { type: [GroupResultSchema], required: true },
@@ -118,6 +132,7 @@ const ResultSchema = new Schema<IResult>(
     knockout: { type: [KnockoutResultSchema], default: [] },
     scoringConfig: { type: ScoringConfigSchema, default: null },
     locked: { type: Boolean, default: false },
+    phaseLocks: { type: PhaseLocksSchema, default: () => ({ groups: false, r32: false, r16: false, qf: false, sf: false, final: false }) },
   },
   { timestamps: true }
 )

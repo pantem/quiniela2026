@@ -91,6 +91,24 @@ export const DEFAULT_SCORING: ScoringConfig = {
   finalExact: 24,
 }
 
+export interface PhaseLocks {
+  groups: boolean
+  r32: boolean
+  r16: boolean
+  qf: boolean
+  sf: boolean
+  final: boolean
+}
+
+export const DEFAULT_PHASE_LOCKS: PhaseLocks = {
+  groups: false,
+  r32: false,
+  r16: false,
+  qf: false,
+  sf: false,
+  final: false,
+}
+
 export type TabId =
   | 'grupos'
   | 'marcadores'

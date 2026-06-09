@@ -5,7 +5,7 @@ import { groups, getTeamsByGroup, getTeamById } from "@/utils/teams"
 import { getGroupMatches, buildGroupResultsFromScores, computeStandingsFromMatches } from "@/utils/matches"
 import { getMatchesByRound, buildFifaMatrix } from "@/utils/fifaMatrix"
 import { getBestThirdPlaced } from "@/utils/bestThird"
-import { DEFAULT_SCORING } from "@/app/types"
+import { DEFAULT_SCORING, DEFAULT_PHASE_LOCKS, PhaseLocks } from "@/app/types"
 import ScoringConfigurator from "./ScoringConfigurator"
 import { Shield, Lock, Calculator, CheckCircle, Swords, AlertCircle } from "lucide-react"
 import { useState, useMemo } from "react"
@@ -29,8 +29,8 @@ export default function ResultsAdmin() {
     generateResultsKnockout,
     resetResultMatchScores,
     knockout,
-    locked,
-    setLocked,
+    phaseLocks,
+    setPhaseLock,
     saveResultsToMongo,
     loadResultsFromMongo,
   } = store
@@ -137,16 +137,24 @@ export default function ResultsAdmin() {
               <CheckCircle className="w-3.5 h-3.5" />
               Aplicar posiciones
             </button>
-            <button
-              onClick={() => setLocked?.(!locked)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-colors ${
-                locked
-                  ? "bg-red-600/20 text-red-300 border border-red-500/30 hover:bg-red-600/30"
-                  : "bg-gray-700 hover:bg-gray-600 text-gray-300"
-              }`}
-            >
-              {locked ? "🔒" : "🔓"} {locked ? "Desbloquear" : "Bloquear"}
-            </button>
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] text-gray-500 mr-1">Bloqueos:</span>
+              {(["groups", "r32", "r16", "qf", "sf", "final"] as const).map((phase) => (
+                <button
+                  key={phase}
+                  onClick={() => setPhaseLock?.(phase, !phaseLocks[phase])}
+                  className={`px-1.5 py-1 text-[10px] rounded transition-colors font-medium ${
+                    phaseLocks[phase]
+                      ? "bg-red-600/20 text-red-300 border border-red-500/30"
+                      : "bg-gray-700 text-gray-400 border border-transparent"
+                  }`}
+                  title={`${phaseLocks[phase] ? "Desbloquear" : "Bloquear"} fase ${phase}`}
+                >
+                  {phaseLocks[phase] ? "🔒" : "🔓"}{" "}
+                  {phase === "groups" ? "Grupos" : phase === "r32" ? "R32" : phase === "r16" ? "R16" : phase === "qf" ? "QF" : phase === "sf" ? "SF" : "FIN"}
+                </button>
+              ))}
+            </div>
             <button
               onClick={() => loadResultsFromMongo?.()}
               className="px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors"

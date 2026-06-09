@@ -27,7 +27,7 @@ export async function POST(req: Request) {
 
     await connectDB()
     const body = await req.json()
-    const { groups, matchScores, knockout, scoringConfig, locked } = body
+    const { groups, matchScores, knockout, scoringConfig, phaseLocks } = body
 
     if (!groups) {
       return NextResponse.json(
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
       result.matchScores = matchScores ?? []
       result.knockout = knockout ?? []
       result.scoringConfig = scoringConfig ?? null
-      if (typeof locked === "boolean") result.locked = locked
+      if (phaseLocks) result.phaseLocks = phaseLocks
       await result.save()
       return NextResponse.json(result)
     }
@@ -52,6 +52,7 @@ export async function POST(req: Request) {
       matchScores: matchScores ?? [],
       knockout: knockout ?? [],
       scoringConfig: scoringConfig ?? null,
+      phaseLocks: phaseLocks ?? { groups: false, r32: false, r16: false, qf: false, sf: false, final: false },
     })
 
     return NextResponse.json(result, { status: 201 })

@@ -7,6 +7,8 @@ import {
   KnockoutMatch,
   MatchScore,
   ScoringConfig,
+  PhaseLocks,
+  DEFAULT_PHASE_LOCKS,
 } from "@/app/types"
 import { groups } from "@/utils/teams"
 import { getBestThirdPlaced } from "@/utils/bestThird"
@@ -15,18 +17,12 @@ import { calculateGroupPoints, calculateKnockoutPoints, calculateMatchScorePoint
 import { getAllGroupMatches, buildGroupResultsFromScores } from "@/utils/matches"
 import { saveParticipant, updateParticipant, fetchParticipants, fetchResults, saveResults } from "@/lib/api"
 
-const LOCK_DATE = new Date("2026-06-11T00:00:00Z")
-
-function isPastLockDate(): boolean {
-  return Date.now() >= LOCK_DATE.getTime()
-}
-
 interface QuinielaState {
   participantName: string
   groups: GroupPrediction[]
   matchPredictions: MatchScore[]
   knockout: KnockoutMatch[]
-  locked: boolean
+  phaseLocks: PhaseLocks
   results: {
     groups: GroupPrediction[]
     knockout: KnockoutMatch[]
@@ -62,7 +58,7 @@ interface QuinielaState {
   loadResultsFromMongo: () => Promise<void>
   loadAllParticipants: () => Promise<void>
   setScoringConfig: (config: ScoringConfig) => void
-  setLocked: (locked: boolean) => void
+  setPhaseLock: (phase: keyof PhaseLocks, value: boolean) => void
   saveResultsToMongo: () => Promise<void>
 }
 
@@ -119,12 +115,12 @@ export const useQuinielaStore = create<QuinielaState>()(
       groups: defaultGroups(),
       matchPredictions: defaultMatchPredictions(),
       knockout: [],
+      phaseLocks: { ...DEFAULT_PHASE_LOCKS },
       results: {
         groups: defaultResultsGroups(),
         knockout: [],
         scoringConfig: null,
       },
-      locked: isPastLockDate(),
       resultMatchScores: defaultResultMatchScores(),
       allParticipants: [],
       syncing: false,
@@ -229,7 +225,10 @@ export const useQuinielaStore = create<QuinielaState>()(
         }))
       },
 
-      setLocked: (locked) => set({ locked }),
+      setPhaseLock: (phase, value) =>
+        set((state) => ({
+          phaseLocks: { ...state.phaseLocks, [phase]: value },
+        })),
 
       applyResultStandings: () => {
         const { resultMatchScores } = get()
@@ -316,7 +315,7 @@ export const useQuinielaStore = create<QuinielaState>()(
 
       resetAll: () =>
         set({
-          locked: false,
+          phaseLocks: { ...DEFAULT_PHASE_LOCKS },
           groups: defaultGroups(),
           matchPredictions: defaultMatchPredictions(),
           knockout: [],
@@ -331,11 +330,6 @@ export const useQuinielaStore = create<QuinielaState>()(
       syncToMongo: async () => {
         const { participantName, groups, matchPredictions, knockout } = get()
         if (!participantName) return
-
-        if (isPastLockDate()) {
-          set({ locked: true, syncError: "La quiniela está cerrada desde el 10 de junio. No se permiten más modificaciones." })
-          return
-        }
 
         set({ syncing: true })
         try {
@@ -377,7 +371,6 @@ export const useQuinielaStore = create<QuinielaState>()(
             const loaded: Partial<QuinielaState> = {
               participantName: participant.name,
               groups: participant.groups,
-              locked: isPastLockDate(),
             }
             if (participant.matchPredictions) {
               loaded.matchPredictions = participant.matchPredictions
@@ -407,7 +400,7 @@ export const useQuinielaStore = create<QuinielaState>()(
             knockout: data.knockout ?? [],
             scoringConfig: data.scoringConfig ?? null,
           },
-          locked: data.locked ?? false,
+          phaseLocks: data.phaseLocks ?? { ...DEFAULT_PHASE_LOCKS },
         })
         if (data.matchScores) {
           set({ resultMatchScores: data.matchScores })
@@ -428,14 +421,14 @@ export const useQuinielaStore = create<QuinielaState>()(
       },
 
       saveResultsToMongo: async () => {
-        const { results, resultMatchScores } = get()
+        const { results, resultMatchScores, phaseLocks } = get()
         try {
           await saveResults({
             groups: results.groups,
             knockout: results.knockout,
             matchScores: resultMatchScores,
             scoringConfig: results.scoringConfig ?? undefined,
-            locked: get().locked,
+            phaseLocks,
           })
           set({ syncError: null })
         } catch (err) {
@@ -447,10 +440,13 @@ export const useQuinielaStore = create<QuinielaState>()(
     }),
     {
       name: "quiniela-2026",
-      version: 2,
+      version: 3,
       migrate: (persisted: any, version: number) => {
+        const phaseLocks = persisted.phaseLocks ?? (persisted.locked != null
+          ? { groups: persisted.locked, r32: persisted.locked, r16: persisted.locked, qf: persisted.locked, sf: persisted.locked, final: persisted.locked }
+          : { ...DEFAULT_PHASE_LOCKS })
         return {
-          locked: persisted.locked ?? false,
+          phaseLocks,
           matchPredictions: persisted.matchPredictions ?? defaultMatchPredictions(),
           resultMatchScores: persisted.resultMatchScores ?? defaultResultMatchScores(),
           results: {

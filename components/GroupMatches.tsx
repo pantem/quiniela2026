@@ -7,7 +7,7 @@ import type { MatchScore } from "@/app/types"
 import { Timer } from "lucide-react"
 
 export default function GroupMatches() {
-  const { matchPredictions, setMatchScore, locked } = useQuinielaStore()
+  const { matchPredictions, setMatchScore, phaseLocks } = useQuinielaStore()
 
   const totalPredicted = matchPredictions.filter(
     (m) => m.homeScore !== null && m.awayScore !== null
@@ -38,7 +38,7 @@ export default function GroupMatches() {
             groupName={`Grupo ${group.id}`}
             predictions={matchPredictions.filter((m) => m.groupId === group.id)}
             onSetScore={setMatchScore}
-            disabled={locked}
+            disabled={phaseLocks.groups}
           />
         ))}
       </div>

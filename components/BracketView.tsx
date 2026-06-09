@@ -27,7 +27,7 @@ function isDraw(match: { homeScore: number | null; awayScore: number | null }): 
 }
 
 export default function BracketView() {
-  const { knockout, setKnockoutWinner, setKnockoutScore, locked } = useQuinielaStore()
+  const { knockout, setKnockoutWinner, setKnockoutScore, phaseLocks } = useQuinielaStore()
 
   const allComplete = knockout.some((m) => m.homeTeam && m.awayTeam)
 
@@ -85,7 +85,7 @@ export default function BracketView() {
                 const rowEnd = rowStart + round.span
 
                 const handleSelectWinner = (teamId: string) => {
-                  if (locked) return
+                  if (phaseLocks[match.round]) return
                   const same = match.winner === teamId
                   const nextTeam = same ? null : teamId
                   if (nextTeam && !isValidWinner(match, nextTeam)) return
@@ -113,7 +113,7 @@ export default function BracketView() {
                       </div>
                       <div
                         className={`flex items-center gap-1 px-2 py-1 transition-colors ${
-                          locked ? "cursor-not-allowed opacity-70" : "cursor-pointer"
+                          phaseLocks[match.round] ? "cursor-not-allowed opacity-70" : "cursor-pointer"
                         } ${
                           homeInvalid
                             ? "bg-red-900/30 text-red-300"
@@ -131,19 +131,19 @@ export default function BracketView() {
                       <div className="flex items-center justify-center gap-0.5 border-t border-gray-700/30 py-0.5">
                         <ScoreSelect
                           value={match.homeScore}
-                          disabled={locked}
+                          disabled={phaseLocks[match.round]}
                           onChange={(v) => setKnockoutScore(match.id, v, match.awayScore)}
                         />
                         <span className="text-gray-600 text-[10px]">-</span>
                         <ScoreSelect
                           value={match.awayScore}
-                          disabled={locked}
+                          disabled={phaseLocks[match.round]}
                           onChange={(v) => setKnockoutScore(match.id, match.homeScore, v)}
                         />
                       </div>
                       <div
                         className={`flex items-center gap-1 px-2 py-1 transition-colors border-t border-gray-700/30 ${
-                          locked ? "cursor-not-allowed opacity-70" : "cursor-pointer"
+                          phaseLocks[match.round] ? "cursor-not-allowed opacity-70" : "cursor-pointer"
                         } ${
                           awayInvalid
                             ? "bg-red-900/30 text-red-300"

@@ -1,14 +1,11 @@
 import { NextResponse } from "next/server"
 import { connectDB } from "@/lib/mongodb"
 import { Participant } from "@/models/Participant"
+import { ResultModel } from "@/models/Result"
 import { User } from "@/models/User"
 import { verifyToken, getTokenFromRequest, unauthorized } from "@/lib/auth"
-
-const LOCK_DATE = new Date("2026-06-11T00:00:00Z")
-
-function isLocked(): boolean {
-  return Date.now() >= LOCK_DATE.getTime()
-}
+import type { PhaseLocks, KnockoutMatch } from "@/app/types"
+import { DEFAULT_PHASE_LOCKS } from "@/app/types"
 
 async function getAuthedName(req: Request): Promise<string | null> {
   const token = getTokenFromRequest(req)
@@ -34,21 +31,23 @@ export async function GET() {
   }
 }
 
+async function getPhaseLocks(): Promise<PhaseLocks> {
+  try {
+    const result = await ResultModel.findOne().sort({ updatedAt: -1 }).lean() as any
+    return result?.phaseLocks ?? { ...DEFAULT_PHASE_LOCKS }
+  } catch {
+    return { ...DEFAULT_PHASE_LOCKS }
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const authedName = await getAuthedName(req)
     if (!authedName) return unauthorized()
 
-    if (isLocked()) {
-      return NextResponse.json(
-        { error: "La quiniela está cerrada desde el 10 de junio. No se permiten más modificaciones." },
-        { status: 403 }
-      )
-    }
-
     await connectDB()
     const body = await req.json()
-    const { name, groups, matchPredictions, knockout } = body
+    let { name, groups, matchPredictions, knockout } = body
 
     if (name !== authedName) {
       return NextResponse.json({ error: "No puedes guardar datos de otro usuario" }, { status: 403 })
@@ -61,8 +60,21 @@ export async function POST(req: Request) {
       )
     }
 
+    const locks = await getPhaseLocks()
+
     const existing = await Participant.findOne({ name })
     if (existing) {
+      if (locks.groups) {
+        groups = existing.groups
+        matchPredictions = existing.matchPredictions ?? []
+      }
+      const existingKnockout = existing.knockout ?? []
+      knockout = (knockout ?? []).map((m: KnockoutMatch) => {
+        if (locks[m.round as keyof PhaseLocks]) {
+          return existingKnockout.find((e: KnockoutMatch) => e.id === m.id) ?? m
+        }
+        return m
+      })
       existing.groups = groups
       existing.matchPredictions = matchPredictions ?? []
       existing.knockout = knockout ?? []
@@ -92,16 +104,9 @@ export async function PUT(req: Request) {
     const authedName = await getAuthedName(req)
     if (!authedName) return unauthorized()
 
-    if (isLocked()) {
-      return NextResponse.json(
-        { error: "La quiniela está cerrada desde el 10 de junio. No se permiten más modificaciones." },
-        { status: 403 }
-      )
-    }
-
     await connectDB()
     const body = await req.json()
-    const { name, groups, matchPredictions, knockout } = body
+    let { name, groups, matchPredictions, knockout } = body
 
     if (name !== authedName) {
       return NextResponse.json({ error: "No puedes modificar datos de otro usuario" }, { status: 403 })
@@ -112,6 +117,23 @@ export async function PUT(req: Request) {
         { error: "Nombre requerido" },
         { status: 400 }
       )
+    }
+
+    const locks = await getPhaseLocks()
+    const existing = await Participant.findOne({ name })
+
+    if (existing) {
+      if (locks.groups) {
+        groups = existing.groups
+        matchPredictions = existing.matchPredictions ?? []
+      }
+      const existingKnockout = existing.knockout ?? []
+      knockout = (knockout ?? []).map((m: KnockoutMatch) => {
+        if (locks[m.round as keyof PhaseLocks]) {
+          return existingKnockout.find((e: KnockoutMatch) => e.id === m.id) ?? m
+        }
+        return m
+      })
     }
 
     const participant = await Participant.findOneAndUpdate(

@@ -14,7 +14,7 @@ interface Props {
 }
 
 export default function KnockoutStage({ round, title, subtitle, icon }: Props) {
-  const { knockout, setKnockoutWinner, setKnockoutScore, locked } = useQuinielaStore()
+  const { knockout, setKnockoutWinner, setKnockoutScore, phaseLocks } = useQuinielaStore()
 
   const matches = getMatchesByRound(knockout, round).filter((m) => m.homeTeam && m.awayTeam)
 
@@ -62,7 +62,7 @@ export default function KnockoutStage({ round, title, subtitle, icon }: Props) {
             match={match}
             onSelectWinner={setKnockoutWinner}
             onSetScore={setKnockoutScore}
-            disabled={locked}
+            disabled={phaseLocks[round]}
           />
         ))}
       </div>
