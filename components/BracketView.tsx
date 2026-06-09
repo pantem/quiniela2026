@@ -4,6 +4,7 @@ import { useQuinielaStore } from "@/store/store"
 import { getTeamById } from "@/utils/teams"
 import { getMatchesByRound } from "@/utils/fifaMatrix"
 import { Swords } from "lucide-react"
+import { DEFAULT_SCORING } from "@/app/types"
 
 const ROUNDS = [
   { key: "r32" as const, label: "Dieciseisavos", matches: 16, span: 1 },
@@ -12,6 +13,17 @@ const ROUNDS = [
   { key: "sf" as const, label: "Semifinales", matches: 2, span: 8 },
   { key: "final" as const, label: "Final", matches: 1, span: 16 },
 ]
+
+function getRoundPoints(cfg: typeof DEFAULT_SCORING, round: string): { winner: number; exact: number } {
+  switch (round) {
+    case "r32": return { winner: cfg.r32Winner, exact: cfg.r32Exact }
+    case "r16": return { winner: cfg.r16Winner, exact: cfg.r16Exact }
+    case "qf": return { winner: cfg.qfWinner, exact: cfg.qfExact }
+    case "sf": return { winner: cfg.sfWinner, exact: cfg.sfExact }
+    case "final": return { winner: cfg.finalWinner, exact: cfg.finalExact }
+    default: return { winner: 0, exact: 0 }
+  }
+}
 
 function isValidWinner(match: { homeScore: number | null; awayScore: number | null; homeTeam: string | null; awayTeam: string | null }, teamId: string | null): boolean {
   if (!teamId) return true
@@ -27,7 +39,8 @@ function isDraw(match: { homeScore: number | null; awayScore: number | null }): 
 }
 
 export default function BracketView() {
-  const { knockout, setKnockoutWinner, setKnockoutScore, phaseLocks } = useQuinielaStore()
+  const { knockout, setKnockoutWinner, setKnockoutScore, phaseLocks, results } = useQuinielaStore()
+  const scoringConfig = results.scoringConfig ?? DEFAULT_SCORING
 
   const allComplete = knockout.some((m) => m.homeTeam && m.awayTeam)
 
@@ -92,6 +105,7 @@ export default function BracketView() {
                   setKnockoutWinner(match.id, nextTeam)
                 }
 
+                const pts = getRoundPoints(scoringConfig, match.round)
                 return (
                   <div
                     key={match.id}
@@ -103,13 +117,19 @@ export default function BracketView() {
                   >
                     {!match.homeTeam || !match.awayTeam ? (
                       <div className="w-full bg-gray-800/60 border border-gray-700/30 rounded-lg py-3 text-center text-xs text-gray-600">
-                        {match.label}
+                        <div className="text-emerald-400 font-semibold">{round.label}</div>
+                        <div className="mt-1">{match.label}</div>
                         <div className="text-[10px] text-gray-500 mt-1">Por definir</div>
+                        <div className="text-[9px] text-gray-600 mt-1">Gan: {pts.winner}pts | Exacto: {pts.exact}pts</div>
                       </div>
                     ) : (
                     <div className="w-full bg-gray-800/80 border border-gray-700/50 rounded-lg overflow-hidden text-xs">
-                      <div className="px-2 py-0.5 bg-gray-700/50 text-[10px] text-gray-500 font-mono">
-                        {match.label}
+                      <div className="px-2 py-0.5 bg-gray-700/50 text-[10px] font-mono">
+                        <div className="flex items-center justify-between">
+                          <span className="text-emerald-300 font-semibold truncate">{round.label}</span>
+                          <span className="text-gray-400 ml-1 shrink-0">{match.label}</span>
+                        </div>
+                        <div className="text-[9px] text-gray-600 mt-0.5">Gan: {pts.winner}pts | Exacto: {pts.exact}pts</div>
                       </div>
                       <div
                         className={`flex items-center gap-1 px-2 py-1 transition-colors ${
