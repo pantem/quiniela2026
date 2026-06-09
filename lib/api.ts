@@ -16,6 +16,7 @@ export async function saveParticipant(data: {
   groups: any[]
   matchPredictions?: any[]
   knockout: any[]
+  bonuses?: any
 }) {
   const res = await fetch(`${BASE}/participants`, {
     method: "POST",
@@ -31,6 +32,7 @@ export async function updateParticipant(data: {
   groups: any[]
   matchPredictions?: any[]
   knockout: any[]
+  bonuses?: any
 }) {
   const res = await fetch(`${BASE}/participants`, {
     method: "PUT",
