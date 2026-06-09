@@ -81,6 +81,8 @@ const ScoringConfigSchema = new Schema<IScoringConfig>(
     qfExact: { type: Number, default: 16 },
     sfWinner: { type: Number, default: 8 },
     sfExact: { type: Number, default: 20 },
+    thirdWinner: { type: Number, default: 4 },
+    thirdExact: { type: Number, default: 10 },
     finalWinner: { type: Number, default: 10 },
     finalExact: { type: Number, default: 24 },
     goalkeeperBonus: { type: Number, default: 10 },
@@ -134,6 +136,7 @@ const PhaseLocksSchema = new Schema<PhaseLocks>(
     r16: { type: Boolean, default: false },
     qf: { type: Boolean, default: false },
     sf: { type: Boolean, default: false },
+    third: { type: Boolean, default: false },
     final: { type: Boolean, default: false },
   },
   { _id: false }

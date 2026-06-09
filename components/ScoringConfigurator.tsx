@@ -25,6 +25,8 @@ const FIELDS: Array<{
   { key: "qfExact", label: "Marcador exacto", phase: "Cuartos" },
   { key: "sfWinner", label: "Ganador del cruce", phase: "Semifinal" },
   { key: "sfExact", label: "Marcador exacto", phase: "Semifinal" },
+  { key: "thirdWinner", label: "Ganador 3er/4to Lugar", phase: "3er Lugar" },
+  { key: "thirdExact", label: "Marcador exacto", phase: "3er Lugar" },
   { key: "finalWinner", label: "Ganador del cruce", phase: "Final" },
   { key: "finalExact", label: "Marcador exacto", phase: "Final" },
   { key: "goalkeeperBonus", label: "Acertar Mejor Portero", phase: "Bonos" },

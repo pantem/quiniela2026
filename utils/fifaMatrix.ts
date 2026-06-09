@@ -81,7 +81,14 @@ function getKnockoutSlots(): KnockoutSlot[] {
     ...getR16Slots(),
     ...getQfSlots(),
     ...getSfSlots(),
+    ...getThirdSlots(),
     ...getFinalSlots(),
+  ]
+}
+
+function getThirdSlots(): KnockoutSlot[] {
+  return [
+    { matchId: "3RD_01", round: "third", homeLabel: "L SF-1", awayLabel: "L SF-2", homeSource: "L29", awaySource: "L30", label: "3rd Place" },
   ]
 }
 
@@ -183,5 +190,27 @@ export function propagateWinners(matches: KnockoutMatch[]): KnockoutMatch[] {
     }
   }
 
+  const sfMatches = Array.from(byId.values()).filter((m) => m.round === "sf")
+  if (sfMatches.length === 2) {
+    const thirdMatch = Array.from(byId.values()).find((m) => m.round === "third")
+    if (thirdMatch) {
+      const updated: Partial<KnockoutMatch> = {}
+      const sf1Loser = findLoser(sfMatches[0])
+      const sf2Loser = findLoser(sfMatches[1])
+      if (sf1Loser) updated.homeTeam = sf1Loser
+      if (sf2Loser) updated.awayTeam = sf2Loser
+      if (Object.keys(updated).length > 0) {
+        byId.set(thirdMatch.id, { ...thirdMatch, ...updated })
+      }
+    }
+  }
+
   return matches.map((m) => byId.get(m.id) ?? m)
+}
+
+function findLoser(match: KnockoutMatch): string | null {
+  if (!match.winner) return null
+  if (match.homeTeam === match.winner) return match.awayTeam
+  if (match.awayTeam === match.winner) return match.homeTeam
+  return null
 }

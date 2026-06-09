@@ -528,7 +528,7 @@ export const useQuinielaStore = create<QuinielaState>()(
       version: 4,
       migrate: (persisted: any, version: number) => {
         const phaseLocks = persisted.phaseLocks ?? (persisted.locked != null
-          ? { groups: persisted.locked, r32: persisted.locked, r16: persisted.locked, qf: persisted.locked, sf: persisted.locked, final: persisted.locked }
+          ? { groups: persisted.locked, r32: persisted.locked, r16: persisted.locked, qf: persisted.locked, sf: persisted.locked, third: persisted.locked, final: persisted.locked }
           : { ...DEFAULT_PHASE_LOCKS })
         const bonuses = persisted.bonuses ?? persisted.results?.bonuses ?? { ...defaultBonuses }
         return {

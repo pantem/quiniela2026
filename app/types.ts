@@ -20,7 +20,7 @@ export interface GroupPrediction {
 
 export interface KnockoutMatch {
   id: string
-  round: 'r32' | 'r16' | 'qf' | 'sf' | 'final'
+  round: 'r32' | 'r16' | 'qf' | 'sf' | 'third' | 'final'
   homeTeam: string | null
   awayTeam: string | null
   homeScore: number | null
@@ -77,6 +77,8 @@ export interface ScoringConfig {
   qfExact: number
   sfWinner: number
   sfExact: number
+  thirdWinner: number
+  thirdExact: number
   finalWinner: number
   finalExact: number
   goalkeeperBonus: number
@@ -97,6 +99,8 @@ export const DEFAULT_SCORING: ScoringConfig = {
   qfExact: 16,
   sfWinner: 8,
   sfExact: 20,
+  thirdWinner: 4,
+  thirdExact: 10,
   finalWinner: 10,
   finalExact: 24,
   goalkeeperBonus: 10,
@@ -110,6 +114,7 @@ export interface PhaseLocks {
   r16: boolean
   qf: boolean
   sf: boolean
+  third: boolean
   final: boolean
 }
 
@@ -119,6 +124,7 @@ export const DEFAULT_PHASE_LOCKS: PhaseLocks = {
   r16: false,
   qf: false,
   sf: false,
+  third: false,
   final: false,
 }
 

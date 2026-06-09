@@ -23,6 +23,7 @@ function points(cfg: ScoringConfig, round: string): { winner: number; exact: num
     case "r16": return { winner: cfg.r16Winner, exact: cfg.r16Exact }
     case "qf": return { winner: cfg.qfWinner, exact: cfg.qfExact }
     case "sf": return { winner: cfg.sfWinner, exact: cfg.sfExact }
+    case "third": return { winner: cfg.thirdWinner, exact: cfg.thirdExact }
     case "final": return { winner: cfg.finalWinner, exact: cfg.finalExact }
     default: return { winner: 0, exact: 0 }
   }

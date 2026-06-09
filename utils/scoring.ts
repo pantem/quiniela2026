@@ -9,6 +9,7 @@ function getRoundPoints(
     case "r16": return { exact: cfg.r16Exact, winner: cfg.r16Winner }
     case "qf": return { exact: cfg.qfExact, winner: cfg.qfWinner }
     case "sf": return { exact: cfg.sfExact, winner: cfg.sfWinner }
+    case "third": return { exact: cfg.thirdExact, winner: cfg.thirdWinner }
     case "final": return { exact: cfg.finalExact, winner: cfg.finalWinner }
     default: return { exact: 0, winner: 0 }
   }

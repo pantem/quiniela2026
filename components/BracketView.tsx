@@ -12,6 +12,7 @@ const ROUNDS = [
   { key: "qf" as const, label: "Cuartos", matches: 4, span: 4 },
   { key: "sf" as const, label: "Semifinales", matches: 2, span: 8 },
   { key: "final" as const, label: "Final", matches: 1, span: 16 },
+  { key: "third" as const, label: "3er Lugar", matches: 1, span: 0 },
 ]
 
 function getRoundPoints(cfg: typeof DEFAULT_SCORING, round: string): { winner: number; exact: number } {
@@ -20,6 +21,7 @@ function getRoundPoints(cfg: typeof DEFAULT_SCORING, round: string): { winner: n
     case "r16": return { winner: cfg.r16Winner, exact: cfg.r16Exact }
     case "qf": return { winner: cfg.qfWinner, exact: cfg.qfExact }
     case "sf": return { winner: cfg.sfWinner, exact: cfg.sfExact }
+    case "third": return { winner: cfg.thirdWinner, exact: cfg.thirdExact }
     case "final": return { winner: cfg.finalWinner, exact: cfg.finalExact }
     default: return { winner: 0, exact: 0 }
   }
@@ -75,7 +77,7 @@ export default function BracketView() {
               gridTemplateRows: `repeat(16, minmax(0, 1fr))`,
             }}
           >
-            {roundData.map((round, ri) => {
+            {roundData.filter((r) => r.key !== "third").map((round, ri) => {
               const col = ri * 2 + 1
               return round.matches.map((match, mi) => {
                 const home = match.homeTeam ? getTeamById(match.homeTeam) : undefined
@@ -129,9 +131,9 @@ export default function BracketView() {
               })
             })}
 
-            {roundData.slice(0, -1).map((round, ri) => {
+            {roundData.filter((r) => r.key !== "third").slice(0, -1).map((round, ri) => {
               const col = ri * 2 + 2
-              const nextRound = roundData[ri + 1]
+              const nextRound = roundData.filter((r) => r.key !== "third")[ri + 1]
               const s = round.span
               const pairCount = nextRound.matches.length
               return Array.from({ length: pairCount }, (_, ci) => {
@@ -158,6 +160,51 @@ export default function BracketView() {
                 )
               })
             })}
+          </div>
+
+          <div className="mt-6">
+            {roundData.filter((r) => r.key === "third").map((round) =>
+              round.matches.map((match) => {
+                const home = match.homeTeam ? getTeamById(match.homeTeam) : undefined
+                const away = match.awayTeam ? getTeamById(match.awayTeam) : undefined
+                const pts = getRoundPoints(scoringConfig, match.round)
+                return (
+                  <div key={match.id} className="max-w-sm mx-auto">
+                    {!match.homeTeam || !match.awayTeam ? (
+                      <div className="bg-gray-800/60 border border-gray-700/30 rounded-lg py-3 text-center text-xs text-gray-600">
+                        <div className="text-emerald-400 font-semibold">{round.label}</div>
+                        <div className="mt-1">{match.label}</div>
+                        <div className="text-[10px] text-gray-500 mt-1">Esperando resultados de semifinales</div>
+                        <div className="text-[9px] text-gray-600 mt-1">Gan: {pts.winner}pts | Exacto: {pts.exact}pts</div>
+                      </div>
+                    ) : (
+                      <div className="bg-gray-800/80 border border-gray-700/50 rounded-lg overflow-hidden text-xs">
+                        <div className="px-2 py-0.5 bg-gray-700/50 text-[10px] font-mono flex items-center justify-between">
+                          <span className="text-emerald-300 font-semibold">{round.label}</span>
+                          <span className="text-gray-400">{match.label}</span>
+                          <span className="text-gray-600">G:{pts.winner} E:{pts.exact}</span>
+                        </div>
+                        <div className={`flex items-center gap-1 px-2 py-1.5 ${phaseLocks[match.round] ? "opacity-60" : ""}`}>
+                          <span className="text-gray-200 text-xs shrink-0 w-24 truncate text-right">{home?.flag} {home?.name ?? "—"}</span>
+                          <ScoreSelect
+                            value={match.homeScore}
+                            disabled={phaseLocks[match.round]}
+                            onChange={(v) => setKnockoutScore(match.id, v, match.awayScore)}
+                          />
+                          <span className="text-gray-500 text-[10px]">-</span>
+                          <ScoreSelect
+                            value={match.awayScore}
+                            disabled={phaseLocks[match.round]}
+                            onChange={(v) => setKnockoutScore(match.id, match.homeScore, v)}
+                          />
+                          <span className="text-gray-200 text-xs shrink-0 w-24 truncate text-left">{away?.flag} {away?.name ?? "—"}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })
+            )}
           </div>
         </div>
       </div>
