@@ -19,7 +19,7 @@ export default function GroupMatches() {
         <div className="flex items-center gap-3">
           <Timer className="w-6 h-6 text-blue-400" />
           <div>
-            <h2 className="text-2xl font-bold text-white">Marcadores Fase de Grupos</h2>
+            <h2 className="text-2xl font-bold text-white">Resultados de Fase de Grupos</h2>
             <p className="text-sm text-gray-400">
               Predice el marcador exacto de los 72 partidos
             </p>
