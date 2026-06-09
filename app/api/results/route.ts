@@ -7,7 +7,7 @@ export async function GET() {
   try {
     await connectDB()
     const result = await ResultModel.findOne().sort({ updatedAt: -1 }).lean()
-    return NextResponse.json(result ?? { groups: [], matchScores: [], knockout: [], bonuses: { bestGoalkeeper: null, topScorer: null, bestPlayer: null }, locked: false })
+    return NextResponse.json(result ?? { groups: [], matchScores: [], knockout: [], bonuses: { bestGoalkeeper: null, topScorer: null, bestPlayer: null }, locked: false, autoBonuses: {} })
   } catch (error) {
     console.error("Error fetching results:", error)
     return NextResponse.json(
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
 
     await connectDB()
     const body = await req.json()
-    const { groups, matchScores, knockout, bonuses, scoringConfig, phaseLocks } = body
+    const { groups, matchScores, knockout, bonuses, scoringConfig, phaseLocks, autoBonuses } = body
 
     if (!groups) {
       return NextResponse.json(
@@ -44,6 +44,7 @@ export async function POST(req: Request) {
       result.bonuses = bonuses ?? { bestGoalkeeper: null, topScorer: null, bestPlayer: null }
       result.scoringConfig = scoringConfig ?? null
       if (phaseLocks) result.phaseLocks = phaseLocks
+      if (autoBonuses) result.autoBonuses = autoBonuses
       await result.save()
       return NextResponse.json(result)
     }

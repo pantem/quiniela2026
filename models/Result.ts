@@ -63,6 +63,7 @@ export interface IResult extends Document {
   scoringConfig: IScoringConfig | null
   locked: boolean
   phaseLocks: PhaseLocks
+  autoBonuses: Record<string, number>
   updatedAt: Date
 }
 
@@ -156,6 +157,7 @@ const ResultSchema = new Schema<IResult>(
     scoringConfig: { type: ScoringConfigSchema, default: null },
     locked: { type: Boolean, default: false },
     phaseLocks: { type: PhaseLocksSchema, default: () => ({ groups: false, r32: false, r16: false, qf: false, sf: false, final: false }) },
+    autoBonuses: { type: Schema.Types.Mixed, default: {} },
   },
   { timestamps: true }
 )

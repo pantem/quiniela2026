@@ -122,6 +122,8 @@ export const DEFAULT_PHASE_LOCKS: PhaseLocks = {
   final: false,
 }
 
+export type AutoBonuses = Record<string, number>
+
 export type TabId =
   | 'grupos'
   | 'marcadores'

@@ -47,6 +47,7 @@ export async function GET() {
           p.bonuses ?? { bestGoalkeeper: null, topScorer: null, bestPlayer: null },
           result.bonuses ?? { bestGoalkeeper: null, topScorer: null, bestPlayer: null }
         )
+        const autoBonusPoints = (result.autoBonuses as Record<string, number>)?.[p.name] ?? 0
         const matchStats = await calculateMatchStats(
           p.matchPredictions ?? [],
           result.matchScores ?? []
@@ -59,7 +60,8 @@ export async function GET() {
           groupPoints,
           knockoutPoints,
           bonusPoints,
-          total: matchPoints + groupPoints + knockoutPoints + bonusPoints,
+          autoBonusPoints,
+          total: matchPoints + groupPoints + knockoutPoints + bonusPoints + autoBonusPoints,
         }
       })
     )

@@ -9,6 +9,7 @@ import {
   ScoringConfig,
   PhaseLocks,
   BonusPrediction,
+  AutoBonuses,
   DEFAULT_PHASE_LOCKS,
 } from "@/app/types"
 import { groups } from "@/utils/teams"
@@ -30,6 +31,7 @@ interface QuinielaState {
     knockout: KnockoutMatch[]
     bonuses: BonusPrediction
     scoringConfig: ScoringConfig | null
+    autoBonuses: AutoBonuses
   }
   resultMatchScores: MatchScore[]
   allParticipants: Array<{ name: string }>
@@ -65,6 +67,8 @@ interface QuinielaState {
   loadAllParticipants: () => Promise<void>
   setScoringConfig: (config: ScoringConfig) => void
   setPhaseLock: (phase: keyof PhaseLocks, value: boolean) => void
+  calculateAutoBonuses: () => void
+  getAutoBonusPoints: (participantName: string) => number
   saveResultsToMongo: () => Promise<void>
 }
 
@@ -134,6 +138,7 @@ export const useQuinielaStore = create<QuinielaState>()(
         knockout: [],
         bonuses: { ...defaultBonuses },
         scoringConfig: null,
+        autoBonuses: {},
       },
       resultMatchScores: defaultResultMatchScores(),
       allParticipants: [],
@@ -327,7 +332,8 @@ export const useQuinielaStore = create<QuinielaState>()(
           calculateMatchScorePoints(state.matchPredictions, state.resultMatchScores) +
           calculateGroupPointsForAll(state.groups, state.results.groups) +
           calculateKnockoutPoints(state.knockout, state.results.knockout) +
-          calculateBonusPoints(state.bonuses, state.results.bonuses)
+          calculateBonusPoints(state.bonuses, state.results.bonuses) +
+          (state.results.autoBonuses?.[state.participantName] ?? 0)
         )
       },
 
@@ -351,6 +357,10 @@ export const useQuinielaStore = create<QuinielaState>()(
         return calculateBonusPoints(state.bonuses, state.results.bonuses)
       },
 
+      getAutoBonusPoints: (participantName: string) => {
+        return get().results.autoBonuses?.[participantName] ?? 0
+      },
+
       getMatchStats: () => {
         const state = get()
         return calculateMatchStats(state.matchPredictions, state.resultMatchScores)
@@ -368,6 +378,7 @@ export const useQuinielaStore = create<QuinielaState>()(
             knockout: [],
             bonuses: { ...defaultBonuses },
             scoringConfig: null,
+            autoBonuses: {},
           },
           resultMatchScores: defaultResultMatchScores(),
         }),
@@ -448,6 +459,7 @@ export const useQuinielaStore = create<QuinielaState>()(
             knockout: data.knockout ?? [],
             bonuses: data.bonuses ?? { ...defaultBonuses },
             scoringConfig: data.scoringConfig ?? null,
+            autoBonuses: data.autoBonuses ?? {},
           },
           phaseLocks: data.phaseLocks ?? { ...DEFAULT_PHASE_LOCKS },
         })
@@ -469,6 +481,28 @@ export const useQuinielaStore = create<QuinielaState>()(
         }
       },
 
+      calculateAutoBonuses: async () => {
+        try {
+          const res = await fetch("/api/auto-bonuses", { method: "POST" })
+          if (!res.ok) throw new Error("Error al calcular bonos automáticos")
+          const data = await res.json()
+          set((state) => ({
+            results: {
+              ...state.results,
+              autoBonuses: data.autoBonuses ?? {},
+            },
+          }))
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : "Error al calcular bonos automáticos"
+          console.error("AutoBonuses error:", err)
+          set({ syncError: msg })
+        }
+      },
+
+      getAutoBonusPoints: (participantName: string) => {
+        return get().results.autoBonuses[participantName] ?? 0
+      },
+
       saveResultsToMongo: async () => {
         const { results, resultMatchScores, phaseLocks } = get()
         try {
@@ -479,6 +513,7 @@ export const useQuinielaStore = create<QuinielaState>()(
             matchScores: resultMatchScores,
             scoringConfig: results.scoringConfig ?? undefined,
             phaseLocks,
+            autoBonuses: results.autoBonuses,
           })
           set({ syncError: null })
         } catch (err) {
@@ -512,6 +547,7 @@ export const useQuinielaStore = create<QuinielaState>()(
             })),
             bonuses: persisted.results?.bonuses ?? { ...defaultBonuses },
             scoringConfig: persisted.results?.scoringConfig ?? null,
+            autoBonuses: persisted.results?.autoBonuses ?? {},
           },
         }
       },

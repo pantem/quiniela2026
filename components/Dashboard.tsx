@@ -17,10 +17,11 @@ import {
   Trophy,
   Users,
   Star,
+  Gift,
 } from "lucide-react"
 
 export default function Dashboard() {
-  const { knockout, getTotalPoints, getBonusPoints, groups: predictions } =
+  const { knockout, getTotalPoints, getBonusPoints, getAutoBonusPoints, participantName, results, groups: predictions } =
     useQuinielaStore()
 
   const teamPickCount = new Map<string, number>()
@@ -62,6 +63,13 @@ export default function Dashboard() {
       value: getBonusPoints().toString(),
       bg: "from-amber-900/20 to-amber-800/10",
       border: "border-amber-700/30",
+    },
+    {
+      icon: <Gift className="w-5 h-5 text-purple-400" />,
+      label: "Auto Asignación",
+      value: getAutoBonusPoints(participantName).toString(),
+      bg: "from-purple-900/20 to-purple-800/10",
+      border: "border-purple-700/30",
     },
     {
       icon: <Users className="w-5 h-5 text-blue-400" />,

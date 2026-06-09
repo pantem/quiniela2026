@@ -349,6 +349,51 @@ export default function ResultsAdmin() {
           </div>
         </div>
 
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-semibold text-white">Asignación automática de puntos extra</h3>
+              <p className="text-sm text-gray-400">Suma una única vez puntos por posición en el ranking general</p>
+            </div>
+            <button
+              onClick={() => store.calculateAutoBonuses?.()}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-amber-600 hover:bg-amber-500 text-white rounded-lg transition-colors"
+            >
+              Calcular puntos extra
+            </button>
+          </div>
+          <div className="bg-gray-800/80 backdrop-blur rounded-xl border border-gray-700/50 overflow-hidden">
+            {store.results.autoBonuses && Object.keys(store.results.autoBonuses).length > 0 ? (
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-700">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Posición</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Participante</th>
+                    <th className="text-right px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Pts Extra</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-700/50">
+                  {Object.entries(store.results.autoBonuses)
+                    .sort(([, a], [, b]) => b - a)
+                    .map(([name, pts], i) => (
+                      <tr key={name} className="hover:bg-gray-700/30 transition-colors">
+                        <td className="px-4 py-3 text-sm text-gray-400">
+                          {pts >= 30 ? "Último" : pts >= 20 ? "Penúltimo" : pts >= 10 && i === 0 ? "Primero" : "Antepenúltimo"}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-white">{name}</td>
+                        <td className="px-4 py-3 text-sm text-right text-amber-400 font-bold">+{pts}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="p-8 text-center">
+                <p className="text-gray-500 text-sm">No hay puntos extra asignados. Ingresa los marcadores de grupos y haz clic en "Calcular puntos extra".</p>
+              </div>
+            )}
+          </div>
+        </div>
+
         <ScoringConfigurator
           config={safeResults.scoringConfig ?? DEFAULT_SCORING}
           onChange={(c) => store.setScoringConfig(c)}

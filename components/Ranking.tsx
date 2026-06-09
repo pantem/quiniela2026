@@ -11,6 +11,7 @@ interface ParticipantScore {
   groupPoints: number
   knockoutPoints: number
   bonusPoints?: number
+  autoBonusPoints?: number
   total: number
 }
 
@@ -26,6 +27,7 @@ export default function Ranking() {
     groupPoints: store.getGroupPoints(),
     knockoutPoints: store.getKnockoutPoints(),
     bonusPoints: store.getBonusPoints(),
+    autoBonusPoints: store.getAutoBonusPoints(store.participantName),
     total: store.getTotalPoints(),
   }
 
@@ -120,6 +122,7 @@ function RankingTable({ scores }: { scores: ParticipantScore[] }) {
                 <th className="text-center px-3 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Grupos</th>
                 <th className="text-center px-3 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Fases Finales</th>
                 <th className="text-center px-3 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Bonos</th>
+                <th className="text-center px-3 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Auto</th>
                 <th className="text-right px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Total</th>
               </tr>
             </thead>
@@ -138,6 +141,7 @@ function RankingTable({ scores }: { scores: ParticipantScore[] }) {
                   <td className="px-3 py-4 text-center text-sm text-gray-300">{p.groupPoints}</td>
                   <td className="px-3 py-4 text-center text-sm text-gray-300">{p.knockoutPoints}</td>
                   <td className="px-3 py-4 text-center text-sm text-gray-300">{p.bonusPoints ?? 0}</td>
+                  <td className="px-3 py-4 text-center text-sm text-purple-400">{p.autoBonusPoints ?? 0}</td>
                   <td className="px-4 py-4 text-right">
                     <span className="text-lg font-bold text-white">{p.total}</span>
                   </td>

@@ -64,6 +64,7 @@ export async function saveResults(data: {
   bonuses?: any
   scoringConfig?: any
   phaseLocks?: any
+  autoBonuses?: any
 }) {
   const res = await fetch(`${BASE}/results`, {
     method: "POST",
