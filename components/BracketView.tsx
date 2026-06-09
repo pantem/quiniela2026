@@ -73,6 +73,9 @@ export default function BracketView() {
           <p className="text-sm text-gray-400">
             Visualización tipo bracket — predice marcadores y ganadores
           </p>
+          <p className="text-sm text-gray-400">
+            Recuerden que la eliminación directa incluye el resultado final incluyendo si hay tiempos extras y penaltis
+          </p>
         </div>
       </div>
 
@@ -123,62 +126,58 @@ export default function BracketView() {
                         <div className="text-[9px] text-gray-600 mt-1">Gan: {pts.winner}pts | Exacto: {pts.exact}pts</div>
                       </div>
                     ) : (
-                    <div className="w-full bg-gray-800/80 border border-gray-700/50 rounded-lg overflow-hidden text-xs">
-                      <div className="px-2 py-0.5 bg-gray-700/50 text-[10px] font-mono">
-                        <div className="flex items-center justify-between">
-                          <span className="text-emerald-300 font-semibold truncate">{round.label}</span>
-                          <span className="text-gray-400 ml-1 shrink-0">{match.label}</span>
+                      <div className="w-full bg-gray-800/80 border border-gray-700/50 rounded-lg overflow-hidden text-xs">
+                        <div className="px-2 py-0.5 bg-gray-700/50 text-[10px] font-mono">
+                          <div className="flex items-center justify-between">
+                            <span className="text-emerald-300 font-semibold truncate">{round.label}</span>
+                            <span className="text-gray-400 ml-1 shrink-0">{match.label}</span>
+                          </div>
+                          <div className="text-[9px] text-gray-600 mt-0.5">Gan: {pts.winner}pts | Exacto: {pts.exact}pts</div>
                         </div>
-                        <div className="text-[9px] text-gray-600 mt-0.5">Gan: {pts.winner}pts | Exacto: {pts.exact}pts</div>
+                        <div
+                          className={`flex items-center gap-1 px-2 py-1 transition-colors ${phaseLocks[match.round] ? "cursor-not-allowed opacity-70" : "cursor-pointer"
+                            } ${homeInvalid
+                              ? "bg-red-900/30 text-red-300"
+                              : homeWinner
+                                ? "bg-purple-900/30 text-white font-semibold"
+                                : "hover:bg-gray-700/50 text-gray-300"
+                            }`}
+                          onClick={() => handleSelectWinner(match.homeTeam!)}
+                        >
+                          <span>{home?.flag}</span>
+                          <span className="flex-1 truncate">{home?.name ?? "—"}</span>
+                          {homeWinner && !homeInvalid && <span className="text-purple-400 text-[10px]">✓</span>}
+                          {homeInvalid && <span className="text-red-400 text-[10px]">✗</span>}
+                        </div>
+                        <div className="flex items-center justify-center gap-0.5 border-t border-gray-700/30 py-0.5">
+                          <ScoreSelect
+                            value={match.homeScore}
+                            disabled={phaseLocks[match.round]}
+                            onChange={(v) => setKnockoutScore(match.id, v, match.awayScore)}
+                          />
+                          <span className="text-gray-600 text-[10px]">-</span>
+                          <ScoreSelect
+                            value={match.awayScore}
+                            disabled={phaseLocks[match.round]}
+                            onChange={(v) => setKnockoutScore(match.id, match.homeScore, v)}
+                          />
+                        </div>
+                        <div
+                          className={`flex items-center gap-1 px-2 py-1 transition-colors border-t border-gray-700/30 ${phaseLocks[match.round] ? "cursor-not-allowed opacity-70" : "cursor-pointer"
+                            } ${awayInvalid
+                              ? "bg-red-900/30 text-red-300"
+                              : awayWinner
+                                ? "bg-purple-900/30 text-white font-semibold"
+                                : "hover:bg-gray-700/50 text-gray-300"
+                            }`}
+                          onClick={() => handleSelectWinner(match.awayTeam!)}
+                        >
+                          <span>{away?.flag}</span>
+                          <span className="flex-1 truncate">{away?.name ?? "—"}</span>
+                          {awayWinner && !awayInvalid && <span className="text-purple-400 text-[10px]">✓</span>}
+                          {awayInvalid && <span className="text-red-400 text-[10px]">✗</span>}
+                        </div>
                       </div>
-                      <div
-                        className={`flex items-center gap-1 px-2 py-1 transition-colors ${
-                          phaseLocks[match.round] ? "cursor-not-allowed opacity-70" : "cursor-pointer"
-                        } ${
-                          homeInvalid
-                            ? "bg-red-900/30 text-red-300"
-                            : homeWinner
-                            ? "bg-purple-900/30 text-white font-semibold"
-                            : "hover:bg-gray-700/50 text-gray-300"
-                        }`}
-                        onClick={() => handleSelectWinner(match.homeTeam!)}
-                      >
-                        <span>{home?.flag}</span>
-                        <span className="flex-1 truncate">{home?.name ?? "—"}</span>
-                        {homeWinner && !homeInvalid && <span className="text-purple-400 text-[10px]">✓</span>}
-                        {homeInvalid && <span className="text-red-400 text-[10px]">✗</span>}
-                      </div>
-                      <div className="flex items-center justify-center gap-0.5 border-t border-gray-700/30 py-0.5">
-                        <ScoreSelect
-                          value={match.homeScore}
-                          disabled={phaseLocks[match.round]}
-                          onChange={(v) => setKnockoutScore(match.id, v, match.awayScore)}
-                        />
-                        <span className="text-gray-600 text-[10px]">-</span>
-                        <ScoreSelect
-                          value={match.awayScore}
-                          disabled={phaseLocks[match.round]}
-                          onChange={(v) => setKnockoutScore(match.id, match.homeScore, v)}
-                        />
-                      </div>
-                      <div
-                        className={`flex items-center gap-1 px-2 py-1 transition-colors border-t border-gray-700/30 ${
-                          phaseLocks[match.round] ? "cursor-not-allowed opacity-70" : "cursor-pointer"
-                        } ${
-                          awayInvalid
-                            ? "bg-red-900/30 text-red-300"
-                            : awayWinner
-                            ? "bg-purple-900/30 text-white font-semibold"
-                            : "hover:bg-gray-700/50 text-gray-300"
-                        }`}
-                        onClick={() => handleSelectWinner(match.awayTeam!)}
-                      >
-                        <span>{away?.flag}</span>
-                        <span className="flex-1 truncate">{away?.name ?? "—"}</span>
-                        {awayWinner && !awayInvalid && <span className="text-purple-400 text-[10px]">✓</span>}
-                        {awayInvalid && <span className="text-red-400 text-[10px]">✗</span>}
-                      </div>
-                    </div>
                     )}
                   </div>
                 )
