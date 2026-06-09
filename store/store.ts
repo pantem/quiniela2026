@@ -357,10 +357,6 @@ export const useQuinielaStore = create<QuinielaState>()(
         return calculateBonusPoints(state.bonuses, state.results.bonuses)
       },
 
-      getAutoBonusPoints: (participantName: string) => {
-        return get().results.autoBonuses?.[participantName] ?? 0
-      },
-
       getMatchStats: () => {
         const state = get()
         return calculateMatchStats(state.matchPredictions, state.resultMatchScores)
