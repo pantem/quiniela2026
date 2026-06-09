@@ -59,6 +59,7 @@ export async function saveResults(data: {
   groups: any[]
   matchScores?: any[]
   knockout: any[]
+  bonuses?: any
   scoringConfig?: any
   phaseLocks?: any
 }) {

@@ -16,10 +16,11 @@ import {
   TrendingUp,
   Trophy,
   Users,
+  Star,
 } from "lucide-react"
 
 export default function Dashboard() {
-  const { knockout, getTotalPoints, groups: predictions } =
+  const { knockout, getTotalPoints, getBonusPoints, groups: predictions } =
     useQuinielaStore()
 
   const teamPickCount = new Map<string, number>()
@@ -52,6 +53,13 @@ export default function Dashboard() {
       icon: <Trophy className="w-5 h-5 text-amber-400" />,
       label: "Puntaje Total",
       value: getTotalPoints().toString(),
+      bg: "from-amber-900/20 to-amber-800/10",
+      border: "border-amber-700/30",
+    },
+    {
+      icon: <Star className="w-5 h-5 text-amber-400" />,
+      label: "Puntos Bonos",
+      value: getBonusPoints().toString(),
       bg: "from-amber-900/20 to-amber-800/10",
       border: "border-amber-700/30",
     },

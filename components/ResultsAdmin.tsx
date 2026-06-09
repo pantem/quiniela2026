@@ -1,7 +1,7 @@
 "use client"
 
 import { useQuinielaStore } from "@/store/store"
-import { groups, getTeamsByGroup, getTeamById } from "@/utils/teams"
+import { groups, getTeamsByGroup, getTeamById, teams as allTeams } from "@/utils/teams"
 import { getGroupMatches, buildGroupResultsFromScores, computeStandingsFromMatches } from "@/utils/matches"
 import { getMatchesByRound, buildFifaMatrix } from "@/utils/fifaMatrix"
 import { getBestThirdPlaced } from "@/utils/bestThird"
@@ -25,6 +25,7 @@ export default function ResultsAdmin() {
     resultMatchScores,
     setResultMatchScore,
     setResultKnockoutScore,
+    setResultBonus,
     applyResultStandings,
     generateResultsKnockout,
     resetResultMatchScores,
@@ -95,7 +96,7 @@ export default function ResultsAdmin() {
   }
 
   try {
-    const safeResults = results ?? { groups: [], knockout: [] }
+    const safeResults = results ?? { groups: [], knockout: [], bonuses: { bestGoalkeeper: null, topScorer: null, bestPlayer: null } }
     const standings = buildStandings(safeMatchScores)
 
     return (
@@ -321,6 +322,31 @@ export default function ResultsAdmin() {
                 )
               })}
             </div>
+        </div>
+
+        <div>
+          <h3 className="text-lg font-semibold text-white mb-4">Bonos</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {(["bestGoalkeeper", "topScorer", "bestPlayer"] as const).map((key) => (
+              <div key={key} className="bg-gray-800/80 backdrop-blur rounded-xl border border-gray-700/50 p-4">
+                <label className="text-sm font-medium text-gray-300 block mb-2">
+                  {key === "bestGoalkeeper" ? "Mejor Portero" : key === "topScorer" ? "Goleador" : "Mejor Jugador"}
+                </label>
+                <select
+                  value={(safeResults.bonuses?.[key] as string) ?? ""}
+                  onChange={(e) => setResultBonus?.(key, e.target.value || null)}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg text-sm"
+                >
+                  <option value="">Seleccionar</option>
+                  {[...allTeams].sort((a, b) => a.name.localeCompare(b.name)).map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.flag} {t.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ))}
+          </div>
         </div>
 
         <ScoringConfigurator

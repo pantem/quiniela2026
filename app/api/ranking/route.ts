@@ -7,6 +7,7 @@ import {
   calculateKnockoutPoints,
   calculateMatchScorePoints,
   calculateMatchStats,
+  calculateBonusPoints,
 } from "@/lib/scoring"
 
 export async function GET() {
@@ -42,6 +43,10 @@ export async function GET() {
           p.knockout,
           result.knockout
         )
+        const bonusPoints = await calculateBonusPoints(
+          p.bonuses ?? { bestGoalkeeper: null, topScorer: null, bestPlayer: null },
+          result.bonuses ?? { bestGoalkeeper: null, topScorer: null, bestPlayer: null }
+        )
         const matchStats = await calculateMatchStats(
           p.matchPredictions ?? [],
           result.matchScores ?? []
@@ -53,7 +58,8 @@ export async function GET() {
           matchStats,
           groupPoints,
           knockoutPoints,
-          total: matchPoints + groupPoints + knockoutPoints,
+          bonusPoints,
+          total: matchPoints + groupPoints + knockoutPoints + bonusPoints,
         }
       })
     )

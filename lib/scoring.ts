@@ -74,6 +74,18 @@ export async function calculateGroupPoints(
   return points
 }
 
+export async function calculateBonusPoints(
+  predictions: { bestGoalkeeper: string | null; topScorer: string | null; bestPlayer: string | null },
+  results: { bestGoalkeeper: string | null; topScorer: string | null; bestPlayer: string | null }
+): Promise<number> {
+  const cfg = await getScoringConfig()
+  let points = 0
+  if (predictions.bestGoalkeeper === results.bestGoalkeeper) points += cfg.goalkeeperBonus
+  if (predictions.topScorer === results.topScorer) points += cfg.topScorerBonus
+  if (predictions.bestPlayer === results.bestPlayer) points += cfg.playerBonus
+  return points
+}
+
 export async function calculateKnockoutPoints(
   predictions: Array<{ id: string; round: string; winner: string | null; homeScore?: number | null; awayScore?: number | null }>,
   results: Array<{ id: string; winner: string | null; homeScore?: number | null; awayScore?: number | null }>

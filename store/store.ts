@@ -8,12 +8,13 @@ import {
   MatchScore,
   ScoringConfig,
   PhaseLocks,
+  BonusPrediction,
   DEFAULT_PHASE_LOCKS,
 } from "@/app/types"
 import { groups } from "@/utils/teams"
 import { getBestThirdPlaced } from "@/utils/bestThird"
 import { buildFifaMatrix, propagateWinners } from "@/utils/fifaMatrix"
-import { calculateGroupPoints, calculateKnockoutPoints, calculateMatchScorePoints, calculateMatchStats } from "@/utils/scoring"
+import { calculateGroupPoints, calculateKnockoutPoints, calculateMatchScorePoints, calculateMatchStats, calculateBonusPoints } from "@/utils/scoring"
 import { getAllGroupMatches, buildGroupResultsFromScores } from "@/utils/matches"
 import { saveParticipant, updateParticipant, fetchParticipants, fetchResults, saveResults } from "@/lib/api"
 
@@ -22,10 +23,12 @@ interface QuinielaState {
   groups: GroupPrediction[]
   matchPredictions: MatchScore[]
   knockout: KnockoutMatch[]
+  bonuses: BonusPrediction
   phaseLocks: PhaseLocks
   results: {
     groups: GroupPrediction[]
     knockout: KnockoutMatch[]
+    bonuses: BonusPrediction
     scoringConfig: ScoringConfig | null
   }
   resultMatchScores: MatchScore[]
@@ -39,10 +42,12 @@ interface QuinielaState {
   setMatchScore: (matchId: string, homeScore: number | null, awayScore: number | null) => void
   setKnockoutWinner: (matchId: string, teamId: string | null) => void
   setKnockoutScore: (matchId: string, homeScore: number | null, awayScore: number | null) => void
+  setBonus: (key: keyof BonusPrediction, value: string | null) => void
   setResultMatchScore: (matchId: string, homeScore: number | null, awayScore: number | null) => void
   setResultGroup: (groupId: string, position: "first" | "second" | "third" | "fourth", teamId: string | null) => void
   setResultKnockoutScore: (matchId: string, homeScore: number | null, awayScore: number | null) => void
   setResultWinner: (matchId: string, teamId: string | null) => void
+  setResultBonus: (key: keyof BonusPrediction, value: string | null) => void
   applyResultStandings: () => void
   generateResultsKnockout: () => void
   resetResultMatchScores: () => void
@@ -51,6 +56,7 @@ interface QuinielaState {
   getGroupPoints: () => number
   getMatchPoints: () => number
   getKnockoutPoints: () => number
+  getBonusPoints: () => number
   getMatchStats: () => ReturnType<typeof calculateMatchStats>
   resetAll: () => void
   syncToMongo: () => Promise<void>
@@ -85,6 +91,12 @@ const defaultMatchPredictions = () =>
     })
   )
 
+const defaultBonuses: BonusPrediction = {
+  bestGoalkeeper: null,
+  topScorer: null,
+  bestPlayer: null,
+}
+
 const defaultResultMatchScores = () =>
   getAllGroupMatches().map(
     (m): MatchScore => ({
@@ -115,10 +127,12 @@ export const useQuinielaStore = create<QuinielaState>()(
       groups: defaultGroups(),
       matchPredictions: defaultMatchPredictions(),
       knockout: [],
+      bonuses: { ...defaultBonuses },
       phaseLocks: { ...DEFAULT_PHASE_LOCKS },
       results: {
         groups: defaultResultsGroups(),
         knockout: [],
+        bonuses: { ...defaultBonuses },
         scoringConfig: null,
       },
       resultMatchScores: defaultResultMatchScores(),
@@ -198,6 +212,21 @@ export const useQuinielaStore = create<QuinielaState>()(
             knockout: state.results.knockout.map((m) =>
               m.id === matchId ? { ...m, homeScore, awayScore } : m
             ),
+          },
+        }))
+      },
+
+      setBonus: (key, value) => {
+        set((state) => ({
+          bonuses: { ...state.bonuses, [key]: value },
+        }))
+      },
+
+      setResultBonus: (key, value) => {
+        set((state) => ({
+          results: {
+            ...state.results,
+            bonuses: { ...state.results.bonuses, [key]: value },
           },
         }))
       },
@@ -297,7 +326,8 @@ export const useQuinielaStore = create<QuinielaState>()(
         return (
           calculateMatchScorePoints(state.matchPredictions, state.resultMatchScores) +
           calculateGroupPointsForAll(state.groups, state.results.groups) +
-          calculateKnockoutPoints(state.knockout, state.results.knockout)
+          calculateKnockoutPoints(state.knockout, state.results.knockout) +
+          calculateBonusPoints(state.bonuses, state.results.bonuses)
         )
       },
 
@@ -316,6 +346,11 @@ export const useQuinielaStore = create<QuinielaState>()(
         return calculateKnockoutPoints(state.knockout, state.results.knockout)
       },
 
+      getBonusPoints: () => {
+        const state = get()
+        return calculateBonusPoints(state.bonuses, state.results.bonuses)
+      },
+
       getMatchStats: () => {
         const state = get()
         return calculateMatchStats(state.matchPredictions, state.resultMatchScores)
@@ -327,16 +362,18 @@ export const useQuinielaStore = create<QuinielaState>()(
           groups: defaultGroups(),
           matchPredictions: defaultMatchPredictions(),
           knockout: [],
+          bonuses: { ...defaultBonuses },
           results: {
             groups: defaultResultsGroups(),
             knockout: [],
+            bonuses: { ...defaultBonuses },
             scoringConfig: null,
           },
           resultMatchScores: defaultResultMatchScores(),
         }),
 
       syncToMongo: async () => {
-        const { participantName, groups, matchPredictions, knockout } = get()
+        const { participantName, groups, matchPredictions, knockout, bonuses } = get()
         if (!participantName) return
 
         set({ syncing: true })
@@ -350,6 +387,7 @@ export const useQuinielaStore = create<QuinielaState>()(
               groups,
               matchPredictions,
               knockout,
+              bonuses,
             })
           } else {
             await saveParticipant({
@@ -357,6 +395,7 @@ export const useQuinielaStore = create<QuinielaState>()(
               groups,
               matchPredictions,
               knockout,
+              bonuses,
             })
           }
 
@@ -379,6 +418,7 @@ export const useQuinielaStore = create<QuinielaState>()(
             const loaded: Partial<QuinielaState> = {
               participantName: participant.name,
               groups: participant.groups,
+              bonuses: participant.bonuses,
             }
             if (participant.matchPredictions) {
               loaded.matchPredictions = participant.matchPredictions
@@ -406,6 +446,7 @@ export const useQuinielaStore = create<QuinielaState>()(
           results: {
             groups: data.groups,
             knockout: data.knockout ?? [],
+            bonuses: data.bonuses ?? { ...defaultBonuses },
             scoringConfig: data.scoringConfig ?? null,
           },
           phaseLocks: data.phaseLocks ?? { ...DEFAULT_PHASE_LOCKS },
@@ -434,6 +475,7 @@ export const useQuinielaStore = create<QuinielaState>()(
           await saveResults({
             groups: results.groups,
             knockout: results.knockout,
+            bonuses: results.bonuses,
             matchScores: resultMatchScores,
             scoringConfig: results.scoringConfig ?? undefined,
             phaseLocks,
@@ -448,13 +490,15 @@ export const useQuinielaStore = create<QuinielaState>()(
     }),
     {
       name: "quiniela-2026",
-      version: 3,
+      version: 4,
       migrate: (persisted: any, version: number) => {
         const phaseLocks = persisted.phaseLocks ?? (persisted.locked != null
           ? { groups: persisted.locked, r32: persisted.locked, r16: persisted.locked, qf: persisted.locked, sf: persisted.locked, final: persisted.locked }
           : { ...DEFAULT_PHASE_LOCKS })
+        const bonuses = persisted.bonuses ?? persisted.results?.bonuses ?? { ...defaultBonuses }
         return {
           phaseLocks,
+          bonuses,
           matchPredictions: persisted.matchPredictions ?? defaultMatchPredictions(),
           resultMatchScores: persisted.resultMatchScores ?? defaultResultMatchScores(),
           results: {
@@ -464,6 +508,7 @@ export const useQuinielaStore = create<QuinielaState>()(
               homeScore: m.homeScore ?? null,
               awayScore: m.awayScore ?? null,
             })),
+            bonuses: persisted.results?.bonuses ?? { ...defaultBonuses },
             scoringConfig: persisted.results?.scoringConfig ?? null,
           },
           ...persisted,

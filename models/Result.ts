@@ -29,6 +29,12 @@ export interface IKnockoutResult {
   label: string
 }
 
+export interface IBonusResult {
+  bestGoalkeeper: string | null
+  topScorer: string | null
+  bestPlayer: string | null
+}
+
 export interface IScoringConfig {
   groupExact: number
   groupOutcome: number
@@ -44,12 +50,16 @@ export interface IScoringConfig {
   sfExact: number
   finalWinner: number
   finalExact: number
+  goalkeeperBonus: number
+  topScorerBonus: number
+  playerBonus: number
 }
 
 export interface IResult extends Document {
   groups: IGroupResult[]
   matchScores: IMatchScoreResult[]
   knockout: IKnockoutResult[]
+  bonuses: IBonusResult
   scoringConfig: IScoringConfig | null
   locked: boolean
   phaseLocks: PhaseLocks
@@ -72,6 +82,9 @@ const ScoringConfigSchema = new Schema<IScoringConfig>(
     sfExact: { type: Number, default: 20 },
     finalWinner: { type: Number, default: 10 },
     finalExact: { type: Number, default: 24 },
+    goalkeeperBonus: { type: Number, default: 10 },
+    topScorerBonus: { type: Number, default: 10 },
+    playerBonus: { type: Number, default: 10 },
   },
   { _id: false }
 )
@@ -125,11 +138,21 @@ const PhaseLocksSchema = new Schema<PhaseLocks>(
   { _id: false }
 )
 
+const BonusResultSchema = new Schema<IBonusResult>(
+  {
+    bestGoalkeeper: { type: String, default: null },
+    topScorer: { type: String, default: null },
+    bestPlayer: { type: String, default: null },
+  },
+  { _id: false }
+)
+
 const ResultSchema = new Schema<IResult>(
   {
     groups: { type: [GroupResultSchema], required: true },
     matchScores: { type: [MatchScoreResultSchema], default: [] },
     knockout: { type: [KnockoutResultSchema], default: [] },
+    bonuses: { type: BonusResultSchema, default: () => ({ bestGoalkeeper: null, topScorer: null, bestPlayer: null }) },
     scoringConfig: { type: ScoringConfigSchema, default: null },
     locked: { type: Boolean, default: false },
     phaseLocks: { type: PhaseLocksSchema, default: () => ({ groups: false, r32: false, r16: false, qf: false, sf: false, final: false }) },

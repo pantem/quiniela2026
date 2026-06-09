@@ -30,6 +30,12 @@ export interface KnockoutMatch {
   sourceMatchId?: string
 }
 
+export interface BonusPrediction {
+  bestGoalkeeper: string | null
+  topScorer: string | null
+  bestPlayer: string | null
+}
+
 export interface ResultOfficial {
   matchId: string
   round: string
@@ -45,6 +51,7 @@ export interface Participant {
   name: string
   groups: GroupPrediction[]
   knockout: KnockoutMatch[]
+  bonuses: BonusPrediction
   points: number
 }
 
@@ -72,6 +79,9 @@ export interface ScoringConfig {
   sfExact: number
   finalWinner: number
   finalExact: number
+  goalkeeperBonus: number
+  topScorerBonus: number
+  playerBonus: number
 }
 
 export const DEFAULT_SCORING: ScoringConfig = {
@@ -89,6 +99,9 @@ export const DEFAULT_SCORING: ScoringConfig = {
   sfExact: 20,
   finalWinner: 10,
   finalExact: 24,
+  goalkeeperBonus: 10,
+  topScorerBonus: 10,
+  playerBonus: 10,
 }
 
 export interface PhaseLocks {
@@ -113,6 +126,7 @@ export type TabId =
   | 'grupos'
   | 'marcadores'
   | 'eliminatoria'
+  | 'campeon'
   | 'resultados'
   | 'ranking'
   | 'dashboard'

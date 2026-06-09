@@ -7,6 +7,7 @@ import GroupStage from "@/components/GroupStage"
 import GroupSummary from "@/components/GroupSummary"
 import GroupMatches from "@/components/GroupMatches"
 import BracketView from "@/components/BracketView"
+import BonusSelector from "@/components/BonusSelector"
 import ResultsAdmin from "@/components/ResultsAdmin"
 import Ranking from "@/components/Ranking"
 import Dashboard from "@/components/Dashboard"
@@ -24,6 +25,7 @@ import {
   Cloud,
   CloudOff,
   Loader2,
+  Star,
 } from "lucide-react"
 import type { TabId } from "./types"
 
@@ -39,6 +41,7 @@ const navItems: NavItem[] = [
   { id: "grupos", label: "Grupos", icon: <Table2 className="w-4 h-4" />, section: "predict" },
   { id: "marcadores", label: "Marcadores", icon: <Timer className="w-4 h-4" />, section: "predict" },
   { id: "eliminatoria", label: "Fases Finales", icon: <Swords className="w-4 h-4" />, section: "predict" },
+  { id: "campeon", label: "Bonos", icon: <Star className="w-4 h-4" />, section: "predict" },
   { id: "resultados", label: "Resultados", icon: <ShieldCheck className="w-4 h-4" />, section: "admin", adminOnly: true },
   { id: "ranking", label: "Ranking", icon: <BarChart3 className="w-4 h-4" />, section: "stats" },
   { id: "dashboard", label: "Dashboard", icon: <BarChart3 className="w-4 h-4" />, section: "stats" },
@@ -119,6 +122,8 @@ function HomePage() {
         return <GroupMatches />
       case "eliminatoria":
         return <BracketView />
+      case "campeon":
+        return <BonusSelector />
       case "resultados":
         return <ResultsAdmin />
       case "ranking":

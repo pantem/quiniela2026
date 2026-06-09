@@ -47,7 +47,7 @@ export async function POST(req: Request) {
 
     await connectDB()
     const body = await req.json()
-    let { name, groups, matchPredictions, knockout } = body
+    let { name, groups, matchPredictions, knockout, bonuses } = body
 
     if (name !== authedName) {
       return NextResponse.json({ error: "No puedes guardar datos de otro usuario" }, { status: 403 })
@@ -67,6 +67,7 @@ export async function POST(req: Request) {
       if (locks.groups) {
         groups = existing.groups
         matchPredictions = existing.matchPredictions ?? []
+        bonuses = existing.bonuses
       }
       const existingKnockout = existing.knockout ?? []
       knockout = (knockout ?? []).map((m: KnockoutMatch) => {
@@ -78,6 +79,7 @@ export async function POST(req: Request) {
       existing.groups = groups
       existing.matchPredictions = matchPredictions ?? []
       existing.knockout = knockout ?? []
+      existing.bonuses = bonuses
       await existing.save()
       return NextResponse.json(existing)
     }
@@ -87,6 +89,7 @@ export async function POST(req: Request) {
       groups,
       matchPredictions: matchPredictions ?? [],
       knockout: knockout ?? [],
+      bonuses,
     })
 
     return NextResponse.json(participant, { status: 201 })
@@ -106,7 +109,7 @@ export async function PUT(req: Request) {
 
     await connectDB()
     const body = await req.json()
-    let { name, groups, matchPredictions, knockout } = body
+    let { name, groups, matchPredictions, knockout, bonuses } = body
 
     if (name !== authedName) {
       return NextResponse.json({ error: "No puedes modificar datos de otro usuario" }, { status: 403 })
@@ -126,6 +129,7 @@ export async function PUT(req: Request) {
       if (locks.groups) {
         groups = existing.groups
         matchPredictions = existing.matchPredictions ?? []
+        bonuses = existing.bonuses
       }
       const existingKnockout = existing.knockout ?? []
       knockout = (knockout ?? []).map((m: KnockoutMatch) => {
@@ -143,6 +147,7 @@ export async function PUT(req: Request) {
           groups,
           matchPredictions: matchPredictions ?? [],
           knockout: knockout ?? [],
+          bonuses,
         },
       },
       { new: true }

@@ -1,4 +1,4 @@
-import { KnockoutMatch, GroupPrediction, MatchScore, ScoringConfig, DEFAULT_SCORING } from "@/app/types"
+import { KnockoutMatch, GroupPrediction, MatchScore, BonusPrediction, ScoringConfig, DEFAULT_SCORING } from "@/app/types"
 
 function getRoundPoints(
   cfg: ScoringConfig,
@@ -66,6 +66,18 @@ export function calculateGroupPoints(
     }
   }
 
+  return points
+}
+
+export function calculateBonusPoints(
+  predictions: BonusPrediction,
+  results: BonusPrediction,
+  cfg: ScoringConfig = DEFAULT_SCORING
+): number {
+  let points = 0
+  if (predictions.bestGoalkeeper === results.bestGoalkeeper) points += cfg.goalkeeperBonus
+  if (predictions.topScorer === results.topScorer) points += cfg.topScorerBonus
+  if (predictions.bestPlayer === results.bestPlayer) points += cfg.playerBonus
   return points
 }
 
