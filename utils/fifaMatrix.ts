@@ -2,7 +2,7 @@ import { KnockoutMatch, GroupPrediction } from "@/app/types"
 
 interface KnockoutSlot {
   matchId: string
-  round: 'r32' | 'r16' | 'qf' | 'sf' | 'final'
+  round: 'r32' | 'r16' | 'qf' | 'sf' | 'third' | 'final'
   homeLabel: string
   awayLabel: string
   homeSource: string
@@ -69,6 +69,11 @@ function resolveTeam(
 
   const wMatch = source.match(/^W(\d+)$/)
   if (wMatch) {
+    return null
+  }
+
+  const lMatch = source.match(/^L(\d+)$/)
+  if (lMatch) {
     return null
   }
 

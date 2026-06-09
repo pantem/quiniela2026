@@ -48,6 +48,8 @@ export interface IScoringConfig {
   qfExact: number
   sfWinner: number
   sfExact: number
+  thirdWinner: number
+  thirdExact: number
   finalWinner: number
   finalExact: number
   goalkeeperBonus: number
