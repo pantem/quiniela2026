@@ -116,7 +116,7 @@ function RankingTable({ scores }: { scores: ParticipantScore[] }) {
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Nombre</th>
                 <th className="text-center px-3 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Marcadores</th>
                 <th className="text-center px-3 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Grupos</th>
-                <th className="text-center px-3 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Eliminatoria</th>
+                <th className="text-center px-3 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Fases Finales</th>
                 <th className="text-right px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Total</th>
               </tr>
             </thead>

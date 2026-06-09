@@ -27,7 +27,7 @@ export default function KnockoutStage({ round, title, subtitle, icon }: Props) {
       <div className="bg-gray-800/60 backdrop-blur rounded-xl border border-gray-700/50 p-8 text-center">
         <Swords className="w-12 h-12 text-gray-600 mx-auto mb-4" />
         <h3 className="text-lg font-semibold text-white mb-2">
-          Fase Eliminatoria
+          Fases Finales
         </h3>
         {allComplete ? (
           <p className="text-gray-400 text-sm max-w-md mx-auto">

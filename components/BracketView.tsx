@@ -48,7 +48,7 @@ export default function BracketView() {
     return (
       <div className="bg-gray-800/60 backdrop-blur rounded-xl border border-gray-700/50 p-8 text-center">
         <Swords className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-white mb-2">Fase Eliminatoria</h3>
+        <h3 className="text-lg font-semibold text-white mb-2">Fases Finales</h3>
         <p className="text-gray-400 text-sm max-w-md mx-auto">
           Completa los grupos con sus 4 posiciones para visualizar el bracket eliminatorio.
         </p>
@@ -69,7 +69,7 @@ export default function BracketView() {
       <div className="flex items-center gap-3">
         <Swords className="w-6 h-6 text-emerald-400" />
         <div>
-          <h2 className="text-2xl font-bold text-white">Fase Eliminatoria</h2>
+          <h2 className="text-2xl font-bold text-white">Fases Finales</h2>
           <p className="text-sm text-gray-400">
             Visualización tipo bracket — predice marcadores y ganadores
           </p>

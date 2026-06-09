@@ -64,7 +64,7 @@ export default function Dashboard() {
     },
     {
       icon: <TrendingUp className="w-5 h-5 text-emerald-400" />,
-      label: "Ganadores Eliminatoria",
+      label: "Ganadores Fases Finales",
       value: `${knockoutCount}`,
       bg: "from-emerald-900/20 to-emerald-800/10",
       border: "border-emerald-700/30",

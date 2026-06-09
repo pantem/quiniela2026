@@ -38,7 +38,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { id: "grupos", label: "Grupos", icon: <Table2 className="w-4 h-4" />, section: "predict" },
   { id: "marcadores", label: "Marcadores", icon: <Timer className="w-4 h-4" />, section: "predict" },
-  { id: "eliminatoria", label: "Eliminatoria", icon: <Swords className="w-4 h-4" />, section: "predict" },
+  { id: "eliminatoria", label: "Fases Finales", icon: <Swords className="w-4 h-4" />, section: "predict" },
   { id: "resultados", label: "Resultados", icon: <ShieldCheck className="w-4 h-4" />, section: "admin", adminOnly: true },
   { id: "ranking", label: "Ranking", icon: <BarChart3 className="w-4 h-4" />, section: "stats" },
   { id: "dashboard", label: "Dashboard", icon: <BarChart3 className="w-4 h-4" />, section: "stats" },

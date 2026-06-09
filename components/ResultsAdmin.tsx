@@ -256,7 +256,7 @@ export default function ResultsAdmin() {
 
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white">Marcadores Fase Eliminatoria</h3>
+            <h3 className="text-lg font-semibold text-white">Marcadores Fases Finales</h3>
             <button
               onClick={() => generateResultsKnockout?.()}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-amber-600 hover:bg-amber-500 text-white rounded-lg transition-colors"
