@@ -48,10 +48,25 @@ export default function BracketView() {
   const getMatches = (round: string) =>
     getMatchesByRound(knockout, round)
 
-  const roundData = ROUNDS.map((r) => ({
-    ...r,
-    matches: getMatches(r.key),
-  }))
+  const roundData = ROUNDS.map((r) => {
+    const matches = getMatches(r.key)
+    if (r.key === "third" && matches.length === 0) {
+      return {
+        ...r,
+        matches: [{
+          id: "3RD_01",
+          round: "third" as const,
+          homeTeam: null,
+          awayTeam: null,
+          homeScore: null,
+          awayScore: null,
+          winner: null,
+          label: "3rd Place",
+        }],
+      }
+    }
+    return { ...r, matches }
+  })
 
   return (
     <div className="space-y-4">
