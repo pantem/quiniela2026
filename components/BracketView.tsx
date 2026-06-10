@@ -191,7 +191,6 @@ export default function BracketView() {
                 )
               })
             })}
-          </div>
 
             {roundData.filter((r) => r.key === "third").map((round) =>
               round.matches.map((match) => {
@@ -241,6 +240,7 @@ export default function BracketView() {
                 )
               })
             )}
+          </div>
         </div>
       </div>
     </div>
