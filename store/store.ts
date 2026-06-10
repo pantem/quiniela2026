@@ -195,9 +195,21 @@ export const useQuinielaStore = create<QuinielaState>()(
               winner = homeScore > awayScore ? match.homeTeam : match.awayTeam
             }
           }
-          const updated = state.knockout.map((m) =>
+          let updated = state.knockout.map((m) =>
             m.id === matchId ? { ...m, homeScore, awayScore, winner } : m
           )
+          if (!updated.some((m) => m.id === "3RD_01")) {
+            updated = [...updated, {
+              id: "3RD_01",
+              round: "third" as const,
+              homeTeam: null,
+              awayTeam: null,
+              homeScore: null,
+              awayScore: null,
+              winner: null,
+              label: "3rd Place",
+            }]
+          }
           return { knockout: propagateWinners(updated) }
         })
       },

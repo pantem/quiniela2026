@@ -2,9 +2,10 @@
 
 import { useQuinielaStore } from "@/store/store"
 import { getTeamById } from "@/utils/teams"
-import { getMatchesByRound } from "@/utils/fifaMatrix"
+import { getMatchesByRound, propagateWinners } from "@/utils/fifaMatrix"
 import { Swords } from "lucide-react"
-import { DEFAULT_SCORING } from "@/app/types"
+import { DEFAULT_SCORING, KnockoutMatch } from "@/app/types"
+import { useEffect } from "react"
 
 const ROUNDS = [
   { key: "r32" as const, label: "Dieciseisavos", matches: 16, span: 1 },
@@ -28,8 +29,24 @@ function getRoundPoints(cfg: typeof DEFAULT_SCORING, round: string): { winner: n
 }
 
 export default function BracketView() {
-  const { knockout, setKnockoutScore, phaseLocks, results } = useQuinielaStore()
+  const store = useQuinielaStore()
+  const { knockout, setKnockoutScore, phaseLocks, results } = store
   const scoringConfig = results.scoringConfig ?? DEFAULT_SCORING
+
+  useEffect(() => {
+    if (!knockout.some((m) => m.id === "3RD_01")) {
+      store.setState({ knockout: propagateWinners([...knockout, {
+        id: "3RD_01",
+        round: "third" as const,
+        homeTeam: null,
+        awayTeam: null,
+        homeScore: null,
+        awayScore: null,
+        winner: null,
+        label: "3rd Place",
+      }])})
+    }
+  }, [])
 
   const allComplete = knockout.some((m) => m.homeTeam && m.awayTeam)
 
@@ -89,7 +106,7 @@ export default function BracketView() {
             className="grid gap-0"
             style={{
               gridTemplateColumns: "1fr 24px 1fr 24px 1fr 24px 1fr 24px 1fr",
-              gridTemplateRows: `repeat(16, minmax(0, 1fr))`,
+              gridTemplateRows: `repeat(17, minmax(0, 1fr))`,
             }}
           >
             {roundData.filter((r) => r.key !== "third").map((round, ri) => {
@@ -177,13 +194,6 @@ export default function BracketView() {
             })}
           </div>
 
-          <div
-            className="grid gap-0 mt-2"
-            style={{
-              gridTemplateColumns: "1fr 24px 1fr 24px 1fr 24px 1fr 24px 1fr",
-              gridTemplateRows: "auto",
-            }}
-          >
             {roundData.filter((r) => r.key === "third").map((round) =>
               round.matches.map((match) => {
                 const home = match.homeTeam ? getTeamById(match.homeTeam) : undefined
@@ -192,14 +202,15 @@ export default function BracketView() {
                 return (
                   <div
                     key={match.id}
-                    style={{ gridColumn: 9, gridRow: 1 }}
-                    className="flex items-center justify-center"
+                    style={{ gridColumn: 9, gridRow: 17 }}
+                    className="flex items-center"
                   >
-                    <div className="w-full max-w-[200px]">
+                    <div className="w-full">
                       {!match.homeTeam || !match.awayTeam ? (
                         <div className="bg-gray-800/60 border border-gray-700/30 rounded-lg py-2 text-center text-[10px] text-gray-600">
                           <div className="text-emerald-400 font-semibold">{round.label}</div>
-                          <div className="mt-1 text-[9px] text-gray-500">Esperando semifinales</div>
+                          <div className="mt-1 text-[9px]">{match.label}</div>
+                          <div className="text-[9px] text-gray-500 mt-1">Esperando semifinales</div>
                           <div className="text-[9px] text-gray-600 mt-0.5">G: {pts.winner} | E: {pts.exact}</div>
                         </div>
                       ) : (
@@ -210,7 +221,7 @@ export default function BracketView() {
                             <span className="text-gray-600">G:{pts.winner} E:{pts.exact}</span>
                           </div>
                           <div className={`flex items-center gap-1 px-2 py-1.5 ${phaseLocks[match.round] ? "opacity-60" : ""}`}>
-                            <span className="text-gray-200 text-[10px] shrink-0 w-20 truncate text-right">{home?.flag} {home?.name ?? "—"}</span>
+                            <span className="text-gray-200 text-xs shrink-0 w-24 truncate text-right">{home?.flag} {home?.name ?? "—"}</span>
                             <ScoreSelect
                               value={match.homeScore}
                               disabled={phaseLocks[match.round]}
@@ -222,7 +233,7 @@ export default function BracketView() {
                               disabled={phaseLocks[match.round]}
                               onChange={(v) => setKnockoutScore(match.id, match.homeScore, v)}
                             />
-                            <span className="text-gray-200 text-[10px] shrink-0 w-20 truncate text-left">{away?.flag} {away?.name ?? "—"}</span>
+                            <span className="text-gray-200 text-xs shrink-0 w-24 truncate text-left">{away?.flag} {away?.name ?? "—"}</span>
                           </div>
                         </div>
                       )}
@@ -231,7 +242,6 @@ export default function BracketView() {
                 )
               })
             )}
-          </div>
         </div>
       </div>
     </div>
