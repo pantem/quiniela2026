@@ -201,7 +201,7 @@ export default function BracketView() {
                   <div
                     key={match.id}
                     style={{ gridColumn: 9, gridRow: 17 / 20 }}
-                    className="flex items-center"
+                    className="flex items-start pt-1"
                   >
                     <div className="w-full">
                       {!match.homeTeam || !match.awayTeam ? (
