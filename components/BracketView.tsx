@@ -105,7 +105,7 @@ export default function BracketView() {
             className="grid gap-0"
             style={{
               gridTemplateColumns: "1fr 24px 1fr 24px 1fr 24px 1fr 24px 1fr",
-              gridTemplateRows: `repeat(17, minmax(0, 1fr))`,
+              gridTemplateRows: `repeat(20, minmax(0, 1fr))`,
             }}
           >
             {roundData.filter((r) => r.key !== "third").map((round, ri) => {
@@ -201,7 +201,7 @@ export default function BracketView() {
                 return (
                   <div
                     key={match.id}
-                    style={{ gridColumn: 9, gridRow: 17 }}
+                    style={{ gridColumn: 9, gridRow: 17 / 20 }}
                     className="flex items-center"
                   >
                     <div className="w-full">
