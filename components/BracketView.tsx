@@ -4,7 +4,7 @@ import { useQuinielaStore } from "@/store/store"
 import { getTeamById } from "@/utils/teams"
 import { getMatchesByRound, propagateWinners } from "@/utils/fifaMatrix"
 import { Swords } from "lucide-react"
-import { DEFAULT_SCORING, KnockoutMatch } from "@/app/types"
+import { DEFAULT_SCORING } from "@/app/types"
 import { useEffect } from "react"
 
 const ROUNDS = [
@@ -29,13 +29,12 @@ function getRoundPoints(cfg: typeof DEFAULT_SCORING, round: string): { winner: n
 }
 
 export default function BracketView() {
-  const store = useQuinielaStore()
-  const { knockout, setKnockoutScore, phaseLocks, results } = store
+  const { knockout, setKnockoutScore, phaseLocks, results } = useQuinielaStore()
   const scoringConfig = results.scoringConfig ?? DEFAULT_SCORING
 
   useEffect(() => {
     if (!knockout.some((m) => m.id === "3RD_01")) {
-      store.setState({ knockout: propagateWinners([...knockout, {
+      useQuinielaStore.setState({ knockout: propagateWinners([...knockout, {
         id: "3RD_01",
         round: "third" as const,
         homeTeam: null,
