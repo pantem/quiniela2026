@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react"
+import { useQuinielaStore } from "@/store/store"
 
 interface User {
   id: string
@@ -72,6 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(() => {
     localStorage.removeItem("quiniela-token")
+    useQuinielaStore.getState().resetAll()
     setToken(null)
     setUser(null)
   }, [])

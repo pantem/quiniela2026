@@ -376,6 +376,7 @@ export const useQuinielaStore = create<QuinielaState>()(
 
       resetAll: () =>
         set({
+          participantName: "",
           phaseLocks: { ...DEFAULT_PHASE_LOCKS },
           groups: defaultGroups(),
           matchPredictions: defaultMatchPredictions(),
@@ -389,6 +390,10 @@ export const useQuinielaStore = create<QuinielaState>()(
             autoBonuses: {},
           },
           resultMatchScores: defaultResultMatchScores(),
+          allParticipants: [],
+          syncing: false,
+          lastSync: null,
+          syncError: null,
         }),
 
       syncToMongo: async () => {
