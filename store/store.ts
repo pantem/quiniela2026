@@ -21,6 +21,7 @@ import { saveParticipant, updateParticipant, fetchParticipants, fetchResults, sa
 
 interface QuinielaState {
   participantName: string
+  canEdit: boolean
   groups: GroupPrediction[]
   matchPredictions: MatchScore[]
   knockout: KnockoutMatch[]
@@ -40,6 +41,7 @@ interface QuinielaState {
   syncError: string | null
 
   setParticipantName: (name: string) => void
+  setCanEdit: (canEdit: boolean) => void
   setGroupPrediction: (groupId: string, position: "first" | "second" | "third" | "fourth", teamId: string | null) => void
   setMatchScore: (matchId: string, homeScore: number | null, awayScore: number | null) => void
   setKnockoutWinner: (matchId: string, teamId: string | null) => void
@@ -129,6 +131,7 @@ export const useQuinielaStore = create<QuinielaState>()(
   persist(
     (set, get) => ({
       participantName: "",
+      canEdit: true,
       groups: defaultGroups(),
       matchPredictions: defaultMatchPredictions(),
       knockout: [],
@@ -148,9 +151,10 @@ export const useQuinielaStore = create<QuinielaState>()(
       syncError: null,
 
       setParticipantName: (name) => set({ participantName: name }),
+      setCanEdit: (canEdit) => set({ canEdit }),
 
       setGroupPrediction: (groupId, position, teamId) => {
-        if (get().phaseLocks.groups) return
+        if (!get().canEdit || get().phaseLocks.groups) return
         set((state) => ({
           groups: state.groups.map((g) =>
             g.groupId === groupId ? { ...g, [position]: teamId } : g
@@ -160,7 +164,7 @@ export const useQuinielaStore = create<QuinielaState>()(
       },
 
       setMatchScore: (matchId, homeScore, awayScore) => {
-        if (get().phaseLocks.groups) return
+        if (!get().canEdit || get().phaseLocks.groups) return
         set((state) => {
           const updatedPredictions = state.matchPredictions.map((m) =>
             m.id === matchId ? { ...m, homeScore, awayScore } : m
@@ -182,7 +186,7 @@ export const useQuinielaStore = create<QuinielaState>()(
 
       setKnockoutWinner: (matchId, teamId) => {
         const round = get().knockout.find((m) => m.id === matchId)?.round
-        if (round && get().phaseLocks[round]) return
+        if (!get().canEdit || (round && get().phaseLocks[round])) return
         set((state) => {
           const updated = state.knockout.map((m) =>
             m.id === matchId ? { ...m, winner: teamId } : m
@@ -193,7 +197,7 @@ export const useQuinielaStore = create<QuinielaState>()(
 
       setKnockoutScore: (matchId, homeScore, awayScore) => {
         const round = get().knockout.find((m) => m.id === matchId)?.round
-        if (round && get().phaseLocks[round]) return
+        if (!get().canEdit || (round && get().phaseLocks[round])) return
         set((state) => {
           let winner: string | null = null
           if (homeScore !== null && awayScore !== null && homeScore !== awayScore) {
@@ -241,7 +245,7 @@ export const useQuinielaStore = create<QuinielaState>()(
       },
 
       setBonus: (key, value) => {
-        if (get().phaseLocks.bonuses) return
+        if (!get().canEdit || get().phaseLocks.bonuses) return
         set((state) => ({
           bonuses: { ...state.bonuses, [key]: value },
         }))
@@ -385,6 +389,7 @@ export const useQuinielaStore = create<QuinielaState>()(
       resetAll: () =>
         set({
           participantName: "",
+          canEdit: true,
           phaseLocks: { ...DEFAULT_PHASE_LOCKS },
           groups: defaultGroups(),
           matchPredictions: defaultMatchPredictions(),
@@ -451,6 +456,7 @@ export const useQuinielaStore = create<QuinielaState>()(
               participantName: participant.name,
               groups: participant.groups,
               bonuses: participant.bonuses,
+              canEdit: participant.canEdit ?? true,
             }
             if (participant.matchPredictions) {
               loaded.matchPredictions = participant.matchPredictions

@@ -7,8 +7,9 @@ import { getMatchesByRound, buildFifaMatrix } from "@/utils/fifaMatrix"
 import { getBestThirdPlaced } from "@/utils/bestThird"
 import { DEFAULT_SCORING, DEFAULT_PHASE_LOCKS, PhaseLocks } from "@/app/types"
 import ScoringConfigurator from "./ScoringConfigurator"
-import { Shield, Lock, Calculator, CheckCircle, Swords, AlertCircle } from "lucide-react"
-import { useState, useMemo } from "react"
+import { fetchParticipants, updateParticipantAdmin } from "@/lib/api"
+import { Shield, Lock, Calculator, CheckCircle, Swords, AlertCircle, Users, Gavel, Save } from "lucide-react"
+import { useState, useMemo, useEffect } from "react"
 
 const ROUNDS = [
   { key: "r32", label: "Dieciseisavos" },
@@ -38,6 +39,16 @@ export default function ResultsAdmin() {
   } = store
   const [unlocked, setUnlocked] = useState(false)
   const [renderError, setRenderError] = useState<string | null>(null)
+  const [participantList, setParticipantList] = useState<Array<{ name: string; penalties: number; canEdit: boolean }>>([])
+  const [savingParticipants, setSavingParticipants] = useState(false)
+
+  useEffect(() => {
+    fetchParticipants().then((list) =>
+      setParticipantList(
+        list.map((p: any) => ({ name: p.name, penalties: p.penalties ?? 0, canEdit: p.canEdit ?? true }))
+      )
+    ).catch(() => {})
+  }, [])
 
   const safeMatchScores = Array.isArray(resultMatchScores) ? resultMatchScores : []
   const totalScores = safeMatchScores.filter(
@@ -411,6 +422,88 @@ export default function ResultsAdmin() {
                 <p className="text-gray-500 text-sm">No hay puntos extra asignados. Ingresa los marcadores de grupos y haz clic en "Calcular puntos extra".</p>
               </div>
             )}
+          </div>
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <Users className="w-5 h-5 text-blue-400" />
+              <div>
+                <h3 className="text-lg font-semibold text-white">Participantes</h3>
+                <p className="text-sm text-gray-400">Penalizaciones y permisos de edición por usuario</p>
+              </div>
+            </div>
+            <button
+              onClick={async () => {
+                setSavingParticipants(true)
+                try {
+                  for (const p of participantList) {
+                    await updateParticipantAdmin({ name: p.name, penalties: p.penalties, canEdit: p.canEdit })
+                  }
+                } catch {}
+                setSavingParticipants(false)
+              }}
+              disabled={savingParticipants}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-lg transition-colors"
+            >
+              <Save className="w-3.5 h-3.5" />
+              {savingParticipants ? "Guardando..." : "Guardar cambios"}
+            </button>
+          </div>
+          <div className="bg-gray-800/80 backdrop-blur rounded-xl border border-gray-700/50 overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-700">
+                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Usuario</th>
+                  <th className="text-center px-4 py-3 text-xs font-medium text-red-400 uppercase tracking-wider">Penalización</th>
+                  <th className="text-center px-4 py-3 text-xs font-medium text-emerald-400 uppercase tracking-wider">Puede editar</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-700/50">
+                {participantList.map((p) => (
+                  <tr key={p.name} className="hover:bg-gray-700/30 transition-colors">
+                    <td className="px-4 py-3 text-sm text-white">{p.name}</td>
+                    <td className="px-4 py-3 text-center">
+                      <input
+                        type="number"
+                        min="0"
+                        value={p.penalties}
+                        onChange={(e) =>
+                          setParticipantList((prev) =>
+                            prev.map((x) => (x.name === p.name ? { ...x, penalties: parseInt(e.target.value) || 0 } : x))
+                          )
+                        }
+                        className="w-20 text-center bg-gray-700 border border-gray-600 rounded text-sm text-white py-1 focus:outline-none focus:ring-2 focus:ring-red-500/30"
+                      />
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <button
+                        onClick={() =>
+                          setParticipantList((prev) =>
+                            prev.map((x) => (x.name === p.name ? { ...x, canEdit: !x.canEdit } : x))
+                          )
+                        }
+                        className={`px-3 py-1 text-xs rounded-lg font-medium transition-colors ${
+                          p.canEdit
+                            ? "bg-emerald-600/20 text-emerald-300 border border-emerald-500/30"
+                            : "bg-red-600/20 text-red-300 border border-red-500/30"
+                        }`}
+                      >
+                        {p.canEdit ? "Sí" : "No"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {participantList.length === 0 && (
+                  <tr>
+                    <td colSpan={3} className="px-4 py-8 text-center text-sm text-gray-500">
+                      No hay participantes registrados
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
 

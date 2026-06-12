@@ -40,6 +40,8 @@ export interface IParticipant extends Document {
   matchPredictions: IMatchScorePrediction[]
   knockout: IKnockoutPrediction[]
   bonuses: IBonusPrediction
+  penalties: number
+  canEdit: boolean
   createdAt: Date
   updatedAt: Date
 }
@@ -97,6 +99,8 @@ const ParticipantSchema = new Schema<IParticipant>(
     matchPredictions: { type: [MatchScorePredictionSchema], default: [] },
     knockout: { type: [KnockoutPredictionSchema], default: [] },
     bonuses: { type: BonusPredictionSchema, default: () => ({ bestGoalkeeper: null, topScorer: null, bestPlayer: null }) },
+    penalties: { type: Number, default: 0 },
+    canEdit: { type: Boolean, default: true },
   },
   { timestamps: true }
 )

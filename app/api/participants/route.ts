@@ -193,3 +193,44 @@ export async function DELETE(req: Request) {
     )
   }
 }
+
+export async function PATCH(req: Request) {
+  try {
+    const token = getTokenFromRequest(req)
+    if (!token) return unauthorized()
+    const payload = verifyToken(token)
+    if (!payload || payload.role !== "admin") {
+      return NextResponse.json({ error: "Solo administradores" }, { status: 403 })
+    }
+
+    await connectDB()
+    const body = await req.json()
+    const { name, penalties, canEdit } = body
+
+    if (!name) {
+      return NextResponse.json({ error: "Nombre requerido" }, { status: 400 })
+    }
+
+    const update: Record<string, any> = {}
+    if (typeof penalties === "number") update.penalties = penalties
+    if (typeof canEdit === "boolean") update.canEdit = canEdit
+
+    const participant = await Participant.findOneAndUpdate(
+      { name },
+      { $set: update },
+      { new: true }
+    )
+
+    if (!participant) {
+      return NextResponse.json({ error: "Participante no encontrado" }, { status: 404 })
+    }
+
+    return NextResponse.json(participant)
+  } catch (error) {
+    console.error("Error updating participant:", error)
+    return NextResponse.json(
+      { error: "Error al actualizar participante" },
+      { status: 500 }
+    )
+  }
+}

@@ -51,6 +51,20 @@ export async function deleteParticipant(name: string) {
   return res.json()
 }
 
+export async function updateParticipantAdmin(data: {
+  name: string
+  penalties?: number
+  canEdit?: boolean
+}) {
+  const res = await fetch(`${BASE}/participants`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) throw new Error("Error al actualizar participante")
+  return res.json()
+}
+
 export async function fetchResults() {
   const res = await fetch(`${BASE}/results`)
   if (!res.ok) throw new Error("Error al obtener resultados")
