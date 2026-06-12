@@ -100,7 +100,7 @@ const ParticipantSchema = new Schema<IParticipant>(
     knockout: { type: [KnockoutPredictionSchema], default: [] },
     bonuses: { type: BonusPredictionSchema, default: () => ({ bestGoalkeeper: null, topScorer: null, bestPlayer: null }) },
     penalties: { type: Number, default: 0 },
-    canEdit: { type: Boolean, default: true },
+    canEdit: { type: Boolean, default: false },
   },
   { timestamps: true }
 )

@@ -388,7 +388,7 @@ export const useQuinielaStore = create<QuinielaState>()(
       resetAll: () =>
         set({
           participantName: "",
-          canEdit: true,
+  canEdit: false,
           phaseLocks: { ...DEFAULT_PHASE_LOCKS },
           groups: defaultGroups(),
           matchPredictions: defaultMatchPredictions(),
@@ -455,7 +455,7 @@ export const useQuinielaStore = create<QuinielaState>()(
               participantName: participant.name,
               groups: participant.groups,
               bonuses: participant.bonuses,
-              canEdit: participant.canEdit ?? true,
+              canEdit: participant.canEdit ?? false,
             }
             if (participant.matchPredictions) {
               loaded.matchPredictions = participant.matchPredictions

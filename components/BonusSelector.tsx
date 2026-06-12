@@ -5,7 +5,7 @@ import { teams, getTeamById } from "@/utils/teams"
 import { Star } from "lucide-react"
 
 export default function BonusSelector() {
-  const { bonuses, setBonus, phaseLocks } = useQuinielaStore()
+  const { bonuses, setBonus, canEdit } = useQuinielaStore()
   const allTeams = [...teams].sort((a, b) => a.name.localeCompare(b.name))
 
   return (
@@ -27,7 +27,7 @@ export default function BonusSelector() {
           icon="🧤"
           teams={allTeams}
           onChange={(v) => setBonus("bestGoalkeeper", v)}
-          disabled={phaseLocks.bonuses}
+          disabled={!canEdit}
         />
         <BonusCard
           label="Goleador"
@@ -35,7 +35,7 @@ export default function BonusSelector() {
           icon="⚽"
           teams={allTeams}
           onChange={(v) => setBonus("topScorer", v)}
-          disabled={phaseLocks.bonuses}
+          disabled={!canEdit}
         />
         <BonusCard
           label="Mejor Jugador"
@@ -43,7 +43,7 @@ export default function BonusSelector() {
           icon="👑"
           teams={allTeams}
           onChange={(v) => setBonus("bestPlayer", v)}
-          disabled={phaseLocks.bonuses}
+          disabled={!canEdit}
         />
       </div>
     </div>
