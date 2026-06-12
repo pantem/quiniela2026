@@ -76,9 +76,9 @@ export function calculateBonusPoints(
   cfg: ScoringConfig = DEFAULT_SCORING
 ): number {
   let points = 0
-  if (predictions.bestGoalkeeper === results.bestGoalkeeper) points += cfg.goalkeeperBonus
-  if (predictions.topScorer === results.topScorer) points += cfg.topScorerBonus
-  if (predictions.bestPlayer === results.bestPlayer) points += cfg.playerBonus
+  if (predictions.bestGoalkeeper != null && predictions.bestGoalkeeper === results.bestGoalkeeper) points += cfg.goalkeeperBonus
+  if (predictions.topScorer != null && predictions.topScorer === results.topScorer) points += cfg.topScorerBonus
+  if (predictions.bestPlayer != null && predictions.bestPlayer === results.bestPlayer) points += cfg.playerBonus
   return points
 }
 
