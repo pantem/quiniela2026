@@ -68,6 +68,7 @@ interface QuinielaState {
   setScoringConfig: (config: ScoringConfig) => void
   setPhaseLock: (phase: keyof PhaseLocks, value: boolean) => void
   calculateAutoBonuses: () => void
+  clearAutoBonuses: () => void
   getAutoBonusPoints: (participantName: string) => number
   saveResultsToMongo: () => Promise<void>
 }
@@ -529,6 +530,15 @@ export const useQuinielaStore = create<QuinielaState>()(
           console.error("AutoBonuses error:", err)
           set({ syncError: msg })
         }
+      },
+
+      clearAutoBonuses: () => {
+        set((state) => ({
+          results: {
+            ...state.results,
+            autoBonuses: {},
+          },
+        }))
       },
 
       getAutoBonusPoints: (participantName: string) => {

@@ -356,18 +356,31 @@ export default function ResultsAdmin() {
               <h3 className="text-lg font-semibold text-white">Asignación automática de puntos extra</h3>
               <p className="text-sm text-gray-400">Suma una única vez puntos por posición en el ranking general</p>
             </div>
-            <button
-              onClick={() => store.calculateAutoBonuses?.()}
-              disabled={totalScores < safeMatchScores.length}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-colors ${
-                totalScores < safeMatchScores.length
-                  ? "bg-gray-700 text-gray-500 cursor-not-allowed"
-                  : "bg-amber-600 hover:bg-amber-500 text-white"
-              }`}
-              title={totalScores < safeMatchScores.length ? `Completa todos los ${safeMatchScores.length} marcadores primero` : ""}
-            >
-              Calcular puntos extra
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => store.calculateAutoBonuses?.()}
+                disabled={totalScores < safeMatchScores.length}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-colors ${
+                  totalScores < safeMatchScores.length
+                    ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                    : "bg-amber-600 hover:bg-amber-500 text-white"
+                }`}
+                title={totalScores < safeMatchScores.length ? `Completa todos los ${safeMatchScores.length} marcadores primero` : ""}
+              >
+                Calcular puntos extra
+              </button>
+              {store.results.autoBonuses && Object.keys(store.results.autoBonuses).length > 0 && (
+                <button
+                  onClick={() => {
+                    store.clearAutoBonuses?.()
+                    store.saveResultsToMongo?.()
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-red-600/20 hover:bg-red-600/40 text-red-300 border border-red-500/30 rounded-lg transition-colors"
+                >
+                  Limpiar
+                </button>
+              )}
+            </div>
           </div>
           <div className="bg-gray-800/80 backdrop-blur rounded-xl border border-gray-700/50 overflow-hidden">
             {store.results.autoBonuses && Object.keys(store.results.autoBonuses).length > 0 ? (
