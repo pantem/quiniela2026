@@ -154,7 +154,7 @@ export const useQuinielaStore = create<QuinielaState>()(
       setCanEdit: (canEdit) => set({ canEdit }),
 
       setGroupPrediction: (groupId, position, teamId) => {
-        if (!get().canEdit || get().phaseLocks.groups) return
+        if (!get().canEdit) return
         set((state) => ({
           groups: state.groups.map((g) =>
             g.groupId === groupId ? { ...g, [position]: teamId } : g
@@ -164,7 +164,7 @@ export const useQuinielaStore = create<QuinielaState>()(
       },
 
       setMatchScore: (matchId, homeScore, awayScore) => {
-        if (!get().canEdit || get().phaseLocks.groups) return
+        if (!get().canEdit) return
         set((state) => {
           const updatedPredictions = state.matchPredictions.map((m) =>
             m.id === matchId ? { ...m, homeScore, awayScore } : m
@@ -186,7 +186,7 @@ export const useQuinielaStore = create<QuinielaState>()(
 
       setKnockoutWinner: (matchId, teamId) => {
         const round = get().knockout.find((m) => m.id === matchId)?.round
-        if (!get().canEdit || (round && get().phaseLocks[round])) return
+        if (!get().canEdit) return
         set((state) => {
           const updated = state.knockout.map((m) =>
             m.id === matchId ? { ...m, winner: teamId } : m
@@ -196,8 +196,7 @@ export const useQuinielaStore = create<QuinielaState>()(
       },
 
       setKnockoutScore: (matchId, homeScore, awayScore) => {
-        const round = get().knockout.find((m) => m.id === matchId)?.round
-        if (!get().canEdit || (round && get().phaseLocks[round])) return
+        if (!get().canEdit) return
         set((state) => {
           let winner: string | null = null
           if (homeScore !== null && awayScore !== null && homeScore !== awayScore) {
@@ -245,7 +244,7 @@ export const useQuinielaStore = create<QuinielaState>()(
       },
 
       setBonus: (key, value) => {
-        if (!get().canEdit || get().phaseLocks.bonuses) return
+        if (!get().canEdit) return
         set((state) => ({
           bonuses: { ...state.bonuses, [key]: value },
         }))
