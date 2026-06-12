@@ -72,7 +72,7 @@ function HomePage() {
   useEffect(() => {
     loadResultsFromMongo()
     loadAllParticipants()
-  }, [loadResultsFromMongo, loadAllParticipants])
+  }, [loadResultsFromMongo, loadAllParticipants, user])
 
   useEffect(() => {
     if (user && user.name !== participantName) {
