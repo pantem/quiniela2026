@@ -502,6 +502,13 @@ export const useQuinielaStore = create<QuinielaState>()(
       },
 
       calculateAutoBonuses: async () => {
+        const scores = get().resultMatchScores
+        const total = scores.length
+        const completed = scores.filter((m) => m.homeScore !== null && m.awayScore !== null).length
+        if (completed < total) {
+          set({ syncError: `Faltan ${total - completed} marcadores de grupo por ingresar antes de calcular puntos extra` })
+          return
+        }
         try {
           const token = typeof window !== "undefined" ? localStorage.getItem("quiniela-token") : null
           const res = await fetch("/api/auto-bonuses", {
@@ -515,6 +522,7 @@ export const useQuinielaStore = create<QuinielaState>()(
               ...state.results,
               autoBonuses: data.autoBonuses ?? {},
             },
+            syncError: null,
           }))
         } catch (err) {
           const msg = err instanceof Error ? err.message : "Error al calcular bonos automáticos"

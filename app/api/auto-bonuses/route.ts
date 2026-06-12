@@ -24,6 +24,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No hay resultados oficiales" }, { status: 400 })
     }
 
+    const scores = result.matchScores ?? []
+    const totalScores = scores.length
+    const completedScores = scores.filter((s: any) => s.homeScore !== null && s.awayScore !== null).length
+    if (completedScores < totalScores) {
+      return NextResponse.json(
+        { error: `Faltan ${totalScores - completedScores} marcadores de grupo por ingresar` },
+        { status: 400 }
+      )
+    }
+
     const scored = await Promise.all(
       participants.map(async (p: any) => {
         const matchPoints = await calculateMatchScorePoints(

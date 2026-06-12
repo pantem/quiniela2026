@@ -358,7 +358,13 @@ export default function ResultsAdmin() {
             </div>
             <button
               onClick={() => store.calculateAutoBonuses?.()}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-amber-600 hover:bg-amber-500 text-white rounded-lg transition-colors"
+              disabled={totalScores < safeMatchScores.length}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-colors ${
+                totalScores < safeMatchScores.length
+                  ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                  : "bg-amber-600 hover:bg-amber-500 text-white"
+              }`}
+              title={totalScores < safeMatchScores.length ? `Completa todos los ${safeMatchScores.length} marcadores primero` : ""}
             >
               Calcular puntos extra
             </button>
