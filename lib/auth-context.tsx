@@ -45,6 +45,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  useEffect(() => {
+    const handler = (e: StorageEvent) => {
+      if (e.key === "quiniela-token" && e.newValue !== e.oldValue && e.newValue !== token) {
+        window.location.reload()
+      }
+    }
+    window.addEventListener("storage", handler)
+    return () => window.removeEventListener("storage", handler)
+  }, [token])
+
   const login = useCallback(async (email: string, password: string) => {
     const res = await fetch("/api/auth/login", {
       method: "POST",
