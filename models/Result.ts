@@ -140,6 +140,7 @@ const PhaseLocksSchema = new Schema<PhaseLocks>(
     sf: { type: Boolean, default: false },
     third: { type: Boolean, default: false },
     final: { type: Boolean, default: false },
+    bonuses: { type: Boolean, default: false },
   },
   { _id: false }
 )
@@ -161,7 +162,7 @@ const ResultSchema = new Schema<IResult>(
     bonuses: { type: BonusResultSchema, default: () => ({ bestGoalkeeper: null, topScorer: null, bestPlayer: null }) },
     scoringConfig: { type: ScoringConfigSchema, default: null },
     locked: { type: Boolean, default: false },
-    phaseLocks: { type: PhaseLocksSchema, default: () => ({ groups: false, r32: false, r16: false, qf: false, sf: false, final: false }) },
+    phaseLocks: { type: PhaseLocksSchema, default: () => ({ groups: false, r32: false, r16: false, qf: false, sf: false, final: false, bonuses: false }) },
     autoBonuses: { type: Schema.Types.Mixed, default: {} },
   },
   { timestamps: true }

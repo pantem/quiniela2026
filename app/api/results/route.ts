@@ -55,7 +55,7 @@ export async function POST(req: Request) {
       knockout: knockout ?? [],
       bonuses: bonuses ?? { bestGoalkeeper: null, topScorer: null, bestPlayer: null },
       scoringConfig: scoringConfig ?? null,
-      phaseLocks: phaseLocks ?? { groups: false, r32: false, r16: false, qf: false, sf: false, final: false },
+      phaseLocks: phaseLocks ?? { groups: false, r32: false, r16: false, qf: false, sf: false, final: false, bonuses: false },
     })
 
     return NextResponse.json(result, { status: 201 })

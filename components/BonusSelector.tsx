@@ -27,7 +27,7 @@ export default function BonusSelector() {
           icon="🧤"
           teams={allTeams}
           onChange={(v) => setBonus("bestGoalkeeper", v)}
-          disabled={phaseLocks.groups}
+          disabled={phaseLocks.bonuses}
         />
         <BonusCard
           label="Goleador"
@@ -35,7 +35,7 @@ export default function BonusSelector() {
           icon="⚽"
           teams={allTeams}
           onChange={(v) => setBonus("topScorer", v)}
-          disabled={phaseLocks.groups}
+          disabled={phaseLocks.bonuses}
         />
         <BonusCard
           label="Mejor Jugador"
@@ -43,7 +43,7 @@ export default function BonusSelector() {
           icon="👑"
           teams={allTeams}
           onChange={(v) => setBonus("bestPlayer", v)}
-          disabled={phaseLocks.groups}
+          disabled={phaseLocks.bonuses}
         />
       </div>
     </div>

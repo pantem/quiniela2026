@@ -141,7 +141,7 @@ export default function ResultsAdmin() {
             </button>
             <div className="flex items-center gap-1">
               <span className="text-[10px] text-gray-500 mr-1">Bloqueos:</span>
-              {(["groups", "r32", "r16", "qf", "sf", "third", "final"] as const).map((phase) => (
+              {(["groups", "r32", "r16", "qf", "sf", "third", "final", "bonuses"] as const).map((phase) => (
                 <button
                   key={phase}
                   onClick={() => setPhaseLock?.(phase, !phaseLocks[phase])}
@@ -153,7 +153,7 @@ export default function ResultsAdmin() {
                   title={`${phaseLocks[phase] ? "Desbloquear" : "Bloquear"} fase ${phase}`}
                 >
                   {phaseLocks[phase] ? "🔒" : "🔓"}{" "}
-                  {phase === "groups" ? "Grupos" : phase === "r32" ? "R32" : phase === "r16" ? "R16" : phase === "qf" ? "QF" : phase === "sf" ? "SF" : phase === "third" ? "3RD" : "FIN"}
+                  {phase === "groups" ? "Grupos" : phase === "r32" ? "R32" : phase === "r16" ? "R16" : phase === "qf" ? "QF" : phase === "sf" ? "SF" : phase === "third" ? "3RD" : phase === "bonuses" ? "Bonos" : "FIN"}
                 </button>
               ))}
             </div>

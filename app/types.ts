@@ -116,6 +116,7 @@ export interface PhaseLocks {
   sf: boolean
   third: boolean
   final: boolean
+  bonuses: boolean
 }
 
 export const DEFAULT_PHASE_LOCKS: PhaseLocks = {
@@ -126,6 +127,7 @@ export const DEFAULT_PHASE_LOCKS: PhaseLocks = {
   sf: false,
   third: false,
   final: false,
+  bonuses: false,
 }
 
 export type AutoBonuses = Record<string, number>
