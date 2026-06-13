@@ -138,5 +138,6 @@ export type TabId =
   | 'eliminatoria'
   | 'campeon'
   | 'resultados'
+  | 'usuarios'
   | 'ranking'
   | 'dashboard'

@@ -9,6 +9,7 @@ import GroupMatches from "@/components/GroupMatches"
 import BracketView from "@/components/BracketView"
 import BonusSelector from "@/components/BonusSelector"
 import ResultsAdmin from "@/components/ResultsAdmin"
+import UserQuinielaList from "@/components/UserQuinielaList"
 import Ranking from "@/components/Ranking"
 import Dashboard from "@/components/Dashboard"
 import AuthModal from "@/components/AuthModal"
@@ -18,6 +19,7 @@ import {
   Swords,
   Trophy,
   ShieldCheck,
+  Users,
   BarChart3,
   UserCircle,
   LogIn,
@@ -43,6 +45,7 @@ const navItems: NavItem[] = [
   { id: "eliminatoria", label: "Fases Finales", icon: <Swords className="w-4 h-4" />, section: "predict" },
   { id: "campeon", label: "Bonos", icon: <Star className="w-4 h-4" />, section: "predict" },
   { id: "resultados", label: "Resultados", icon: <ShieldCheck className="w-4 h-4" />, section: "admin", adminOnly: true },
+  { id: "usuarios", label: "Usuarios", icon: <Users className="w-4 h-4" />, section: "admin", adminOnly: true },
   { id: "ranking", label: "Ranking", icon: <BarChart3 className="w-4 h-4" />, section: "stats" },
   { id: "dashboard", label: "Dashboard", icon: <BarChart3 className="w-4 h-4" />, section: "stats" },
 ]
@@ -101,7 +104,7 @@ function HomePage() {
     : navItems.filter((n) => !n.adminOnly)
 
   const renderContent = () => {
-    if (activeTab === "resultados" && user?.role !== "admin") {
+    if ((activeTab === "resultados" || activeTab === "usuarios") && user?.role !== "admin") {
       return (
         <div className="bg-gray-800/60 backdrop-blur rounded-xl border border-gray-700/50 p-12 text-center">
           <ShieldCheck className="w-12 h-12 text-gray-600 mx-auto mb-4" />
@@ -127,6 +130,8 @@ function HomePage() {
         return <BonusSelector />
       case "resultados":
         return <ResultsAdmin />
+      case "usuarios":
+        return <UserQuinielaList />
       case "ranking":
         return <Ranking />
       case "dashboard":
