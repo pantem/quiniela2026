@@ -64,6 +64,9 @@ export async function POST(req: Request) {
 
     const existing = await Participant.findOne({ name })
     if (existing) {
+      if (existing.canEdit === false) {
+        return NextResponse.json({ error: "Tu cuenta ha sido bloqueada para edición" }, { status: 403 })
+      }
       if (locks.groups) {
         groups = existing.groups
         matchPredictions = existing.matchPredictions ?? []
@@ -126,6 +129,9 @@ export async function PUT(req: Request) {
     const existing = await Participant.findOne({ name })
 
     if (existing) {
+      if (existing.canEdit === false) {
+        return NextResponse.json({ error: "Tu cuenta ha sido bloqueada para edición" }, { status: 403 })
+      }
       if (locks.groups) {
         groups = existing.groups
         matchPredictions = existing.matchPredictions ?? []

@@ -430,16 +430,27 @@ export const useQuinielaStore = create<QuinielaState>()(
         set({ syncing: true })
         try {
           const all = await fetchParticipants()
-          const exists = all.some((p: any) => p.name === participantName)
+          const me = all.find((p: any) => p.name === participantName)
 
-          if (exists) {
-            await updateParticipant({
+          if (me) {
+            if (me.canEdit === false) {
+              set({
+                canEdit: false,
+                syncError: "Tu cuenta ha sido bloqueada para edición. No se pudieron guardar los cambios.",
+                syncing: false,
+              })
+              return
+            }
+            const updated = await updateParticipant({
               name: participantName,
               groups,
               matchPredictions,
               knockout,
               bonuses,
             })
+            if (updated && typeof updated.canEdit === "boolean") {
+              set({ canEdit: updated.canEdit })
+            }
           } else {
             await saveParticipant({
               name: participantName,
