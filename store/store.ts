@@ -16,7 +16,7 @@ import { groups } from "@/utils/teams"
 import { getBestThirdPlaced } from "@/utils/bestThird"
 import { buildFifaMatrix, propagateWinners } from "@/utils/fifaMatrix"
 import { calculateGroupPoints, calculateKnockoutPoints, calculateMatchScorePoints, calculateMatchStats, calculateBonusPoints } from "@/utils/scoring"
-import { getAllGroupMatches, buildGroupResultsFromScores } from "@/utils/matches"
+import { getAllGroupMatches, getGroupMatches, buildGroupResultsFromScores } from "@/utils/matches"
 import { saveParticipant, updateParticipant, fetchParticipants, fetchResults, saveResults } from "@/lib/api"
 
 interface QuinielaState {
@@ -297,27 +297,42 @@ export const useQuinielaStore = create<QuinielaState>()(
 
       applyResultStandings: () => {
         const { resultMatchScores } = get()
-        const standings = buildGroupResultsFromScores(resultMatchScores)
+        const fullStandings = buildGroupResultsFromScores(resultMatchScores)
+        const withScores = resultMatchScores.filter((m: any) => m.homeScore != null && m.awayScore != null)
+        const perGroup = new Map<string, number>()
+        for (const m of withScores) {
+          perGroup.set(m.groupId, (perGroup.get(m.groupId) ?? 0) + 1)
+        }
+        const safeStandings = fullStandings.map((s: any) => {
+          const total = getGroupMatches(s.groupId).length
+          return perGroup.get(s.groupId) === total ? s : { groupId: s.groupId, first: null, second: null, third: null, fourth: null }
+        })
+        const allComplete = safeStandings.every((g: any) => g.first)
         set((state) => ({
           results: {
             ...state.results,
-            groups: standings,
+            groups: safeStandings,
+            knockout: allComplete ? state.results.knockout : [],
           },
         }))
+        if (!allComplete) {
+          set({ syncError: "No todos los grupos tienen sus 6 marcadores completos. Solo se actualizaron los grupos completos." })
+        }
       },
 
       generateResultsKnockout: () => {
         const { resultMatchScores, results } = get()
-        const groups = results.groups.some((g) => g.first)
-          ? results.groups
-          : buildGroupResultsFromScores(resultMatchScores)
-        const bestThird = getBestThirdPlaced(groups, resultMatchScores)
+        const allComplete = results.groups.every((g: any) => g.first && g.second && g.third && g.fourth)
+        if (!allComplete) {
+          set({ syncError: "Completa todos los marcadores de grupo y aplica posiciones primero" })
+          return
+        }
+        const bestThird = getBestThirdPlaced(results.groups, resultMatchScores)
         const thirdQualifiers = bestThird.map((t) => t.teamId).filter(Boolean) as string[]
-        const matrix = buildFifaMatrix(groups, thirdQualifiers)
+        const matrix = buildFifaMatrix(results.groups, thirdQualifiers)
         set((state) => ({
           results: {
             ...state.results,
-            groups,
             knockout: matrix,
           },
         }))
