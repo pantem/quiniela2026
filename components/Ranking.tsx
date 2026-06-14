@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react"
 import { useQuinielaStore } from "@/store/store"
-import { fetchRanking } from "@/lib/api"
-import { Trophy, Medal, AlertCircle, Loader2 } from "lucide-react"
+import { fetchRanking, fetchParticipants } from "@/lib/api"
+import { Trophy, Medal, AlertCircle, Loader2, Eye } from "lucide-react"
+import UserQuinielaModal from "./UserQuinielaModal"
 
 interface ParticipantScore {
   name: string
@@ -58,6 +59,16 @@ export default function Ranking() {
     ? apiScores
     : [localScore]
 
+  const [selectedParticipant, setSelectedParticipant] = useState<any>(null)
+
+  const handleViewQuiniela = async (name: string) => {
+    try {
+      const all = await fetchParticipants()
+      const p = all.find((x: any) => x.name === name)
+      if (p) setSelectedParticipant(p)
+    } catch {}
+  }
+
   if (loading) {
     return (
       <div className="bg-gray-800/60 backdrop-blur rounded-xl border border-gray-700/50 p-12 text-center space-y-4">
@@ -87,10 +98,20 @@ export default function Ranking() {
     )
   }
 
-  return <RankingTable scores={scores} />
+  return (
+    <>
+      <RankingTable scores={scores} onViewQuiniela={handleViewQuiniela} />
+      {selectedParticipant && (
+        <UserQuinielaModal
+          participant={selectedParticipant}
+          onClose={() => setSelectedParticipant(null)}
+        />
+      )}
+    </>
+  )
 }
 
-function RankingTable({ scores }: { scores: ParticipantScore[] }) {
+function RankingTable({ scores, onViewQuiniela }: { scores: ParticipantScore[]; onViewQuiniela?: (name: string) => void }) {
   const sorted = [...scores].sort((a, b) => b.total - a.total)
 
   const getMedal = (index: number) => {
@@ -126,6 +147,7 @@ function RankingTable({ scores }: { scores: ParticipantScore[] }) {
                 <th className="text-center px-3 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Auto</th>
                 <th className="text-center px-3 py-3 text-xs font-medium text-red-400 uppercase tracking-wider">Pen.</th>
                 <th className="text-right px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Total</th>
+                {onViewQuiniela && <th className="w-16 px-2 py-3" />}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-700/50">
@@ -148,6 +170,17 @@ function RankingTable({ scores }: { scores: ParticipantScore[] }) {
                   <td className="px-4 py-4 text-right">
                     <span className="text-lg font-bold text-white">{p.total}</span>
                   </td>
+                  {onViewQuiniela && (
+                    <td className="px-2 py-4 text-center">
+                      <button
+                        onClick={() => onViewQuiniela(p.name)}
+                        className="inline-flex items-center gap-1 px-2 py-1 text-[10px] bg-purple-600/20 text-purple-300 border border-purple-500/30 hover:bg-purple-600/30 rounded-lg transition-colors"
+                      >
+                        <Eye className="w-3 h-3" />
+                        Ver
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
