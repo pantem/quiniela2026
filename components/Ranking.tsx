@@ -114,10 +114,17 @@ export default function Ranking() {
 function RankingTable({ scores, onViewQuiniela }: { scores: ParticipantScore[]; onViewQuiniela?: (name: string) => void }) {
   const sorted = [...scores].sort((a, b) => b.total - a.total)
 
-  const getMedal = (index: number) => {
-    if (index === 0) return <Trophy className="w-5 h-5 text-amber-400" />
-    if (index === 1) return <Medal className="w-5 h-5 text-gray-300" />
-    if (index === 2) return <Medal className="w-5 h-5 text-amber-600" />
+  const ranks: Array<ParticipantScore & { rank: number }> = []
+  for (let i = 0; i < sorted.length; i++) {
+    const prev = i > 0 ? sorted[i - 1] : null
+    const rank = prev && sorted[i].total === prev.total ? ranks[i - 1].rank : i + 1
+    ranks.push({ ...sorted[i], rank })
+  }
+
+  const getMedal = (rank: number) => {
+    if (rank === 1) return <Trophy className="w-5 h-5 text-amber-400" />
+    if (rank === 2) return <Medal className="w-5 h-5 text-gray-300" />
+    if (rank === 3) return <Medal className="w-5 h-5 text-amber-600" />
     return null
   }
 
@@ -151,11 +158,11 @@ function RankingTable({ scores, onViewQuiniela }: { scores: ParticipantScore[]; 
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-700/50">
-              {sorted.map((p, i) => (
+              {ranks.map((p, i) => (
                 <tr key={`${p.name}-${i}`} className="hover:bg-gray-700/30 transition-colors">
                   <td className="px-4 py-4">
                     <div className="flex items-center justify-center w-8 h-8">
-                      {getMedal(i) || <span className="text-sm text-gray-500 font-mono">{i + 1}</span>}
+                      {getMedal(p.rank) || <span className="text-sm text-gray-500 font-mono">{p.rank}</span>}
                     </div>
                   </td>
                   <td className="px-4 py-4">
