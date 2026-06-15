@@ -117,7 +117,8 @@ function RankingTable({ scores, onViewQuiniela }: { scores: ParticipantScore[]; 
   const ranks: Array<ParticipantScore & { rank: number }> = []
   for (let i = 0; i < sorted.length; i++) {
     const prev = i > 0 ? sorted[i - 1] : null
-    const rank = prev && sorted[i].total === prev.total ? ranks[i - 1].rank : i + 1
+    const sameScore = prev && sorted[i].total === prev.total
+    const rank = sameScore ? ranks[i - 1].rank : (i > 0 ? ranks[i - 1].rank + 1 : 1)
     ranks.push({ ...sorted[i], rank })
   }
 
