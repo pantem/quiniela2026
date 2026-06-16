@@ -344,18 +344,13 @@ export default function ResultsAdmin() {
                 <label className="text-sm font-medium text-gray-300 block mb-2">
                   {key === "bestGoalkeeper" ? "Mejor Portero" : key === "topScorer" ? "Goleador" : "Mejor Jugador"}
                 </label>
-                <select
+                <input
+                  type="text"
                   value={(safeResults.bonuses?.[key] as string) ?? ""}
                   onChange={(e) => setResultBonus?.(key, e.target.value || null)}
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg text-sm"
-                >
-                  <option value="">Seleccionar</option>
-                  {[...allTeams].sort((a, b) => a.name.localeCompare(b.name)).map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.flag} {t.name}
-                    </option>
-                  ))}
-                </select>
+                  placeholder={key === "bestGoalkeeper" ? "Ej: Emiliano Martínez" : key === "topScorer" ? "Ej: Kylian Mbappé" : "Ej: Lionel Messi"}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white placeholder-gray-500 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
+                />
               </div>
             ))}
           </div>

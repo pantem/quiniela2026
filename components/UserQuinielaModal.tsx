@@ -375,18 +375,16 @@ export default function UserQuinielaModal({ participant, onClose }: Props) {
                   }
                   const official = resultBonuses[key]
                   const pred = userBonuses[key]
-                  const officialTeam = official ? getTeamById(official) : null
-                  const predTeam = pred ? getTeamById(pred) : null
                   const pts = getBonusItemPoints(key, pred, official, cfg)
                   return (
                     <div key={key} className="flex items-center gap-2 px-4 py-2.5 text-xs">
                       <span className="w-28 text-gray-400">{labels[key]}</span>
-                      <span className="w-20 text-gray-300">
-                        {officialTeam?.flag} {officialTeam?.name ?? "—"}
+                      <span className="w-28 text-gray-300 truncate">
+                        {official || "—"}
                       </span>
                       <span className="text-gray-600">→</span>
-                      <span className="w-20 text-white">
-                        {predTeam?.flag} {predTeam?.name ?? "—"}
+                      <span className="w-28 text-white truncate">
+                        {pred || "—"}
                       </span>
                       <span className={`ml-auto font-bold ${pts > 0 ? "text-emerald-400" : "text-gray-600"}`}>
                         {pts > 0 ? `+${pts}` : "0"}
