@@ -344,7 +344,7 @@ export const useQuinielaStore = create<QuinielaState>()(
 
       refreshKnockout: () => {
         const { groups, matchPredictions, resultMatchScores, knockout: existing } = get()
-        const allComplete = groups.every((g) => g.first && g.second && g.third && g.fourth)
+        const allComplete = Array.isArray(groups) && groups.length > 0 && groups.every((g) => g.first && g.second && g.third && g.fourth)
         if (!allComplete) {
           set({ knockout: [] })
           return
@@ -367,27 +367,27 @@ export const useQuinielaStore = create<QuinielaState>()(
       getTotalPoints: () => {
         const state = get()
         return (
-          calculateMatchScorePoints(state.matchPredictions, state.resultMatchScores) +
-          calculateGroupPointsForAll(state.groups, state.results.groups) +
-          calculateKnockoutPoints(state.knockout, state.results.knockout) +
-          calculateBonusPoints(state.bonuses, state.results.bonuses) +
+          calculateMatchScorePoints(state.matchPredictions ?? [], state.resultMatchScores ?? []) +
+          calculateGroupPointsForAll(state.groups ?? [], state.results.groups ?? []) +
+          calculateKnockoutPoints(state.knockout ?? [], state.results.knockout ?? []) +
+          calculateBonusPoints(state.bonuses ?? {}, state.results.bonuses ?? {}) +
           (state.results.autoBonuses?.[state.participantName] ?? 0)
         )
       },
 
       getGroupPoints: () => {
         const state = get()
-        return calculateGroupPointsForAll(state.groups, state.results.groups)
+        return calculateGroupPointsForAll(state.groups ?? [], state.results.groups ?? [])
       },
 
       getMatchPoints: () => {
         const state = get()
-        return calculateMatchScorePoints(state.matchPredictions, state.resultMatchScores)
+        return calculateMatchScorePoints(state.matchPredictions ?? [], state.resultMatchScores ?? [])
       },
 
       getKnockoutPoints: () => {
         const state = get()
-        return calculateKnockoutPoints(state.knockout, state.results.knockout)
+        return calculateKnockoutPoints(state.knockout ?? [], state.results.knockout ?? [])
       },
 
       getBonusPoints: () => {
@@ -479,7 +479,7 @@ export const useQuinielaStore = create<QuinielaState>()(
           if (participant) {
             const loaded: Partial<QuinielaState> = {
               participantName: participant.name,
-              groups: participant.groups,
+              groups: participant.groups ?? defaultGroups(),
               bonuses: participant.bonuses,
               canEdit: participant.canEdit ?? false,
             }
