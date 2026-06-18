@@ -68,12 +68,13 @@ export async function POST(req: Request) {
       if (existing.canEdit === false) {
         return NextResponse.json({ error: "Tu cuenta ha sido bloqueada para edición" }, { status: 403 })
       }
-      const finalGroups = locks.groups ? existing.groups : groups
-      const finalMatchPredictions = locks.groups ? (existing.matchPredictions ?? []) : (matchPredictions ?? [])
-      const finalBonuses = locks.groups ? existing.bonuses : bonuses
+      const bypass = existing.canEdit === true
+      const finalGroups = bypass ? groups : (locks.groups ? existing.groups : groups)
+      const finalMatchPredictions = bypass ? (matchPredictions ?? []) : (locks.groups ? (existing.matchPredictions ?? []) : (matchPredictions ?? []))
+      const finalBonuses = bypass ? bonuses : (locks.groups ? existing.bonuses : bonuses)
       const existingKnockout = existing.knockout ?? []
       const finalKnockout = (knockout ?? []).map((m: KnockoutMatch) => {
-        if (locks[m.round as keyof PhaseLocks]) {
+        if (!bypass && locks[m.round as keyof PhaseLocks]) {
           return existingKnockout.find((e: KnockoutMatch) => e.id === m.id) ?? m
         }
         return m
@@ -136,12 +137,13 @@ export async function PUT(req: Request) {
       if (existing.canEdit === false) {
         return NextResponse.json({ error: "Tu cuenta ha sido bloqueada para edición" }, { status: 403 })
       }
-      const finalGroups = locks.groups ? existing.groups : groups
-      const finalMatchPredictions = locks.groups ? (existing.matchPredictions ?? []) : (matchPredictions ?? [])
-      const finalBonuses = locks.groups ? existing.bonuses : bonuses
+      const bypass = existing.canEdit === true
+      const finalGroups = bypass ? groups : (locks.groups ? existing.groups : groups)
+      const finalMatchPredictions = bypass ? (matchPredictions ?? []) : (locks.groups ? (existing.matchPredictions ?? []) : (matchPredictions ?? []))
+      const finalBonuses = bypass ? bonuses : (locks.groups ? existing.bonuses : bonuses)
       const existingKnockout = existing.knockout ?? []
       const finalKnockout = (knockout ?? []).map((m: KnockoutMatch) => {
-        if (locks[m.round as keyof PhaseLocks]) {
+        if (!bypass && locks[m.round as keyof PhaseLocks]) {
           return existingKnockout.find((e: KnockoutMatch) => e.id === m.id) ?? m
         }
         return m
