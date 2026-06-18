@@ -1,6 +1,7 @@
 "use client"
 
 import { useQuinielaStore } from "@/store/store"
+import { useAuth } from "@/lib/auth-context"
 import { groups, getTeamById } from "@/utils/teams"
 import { X, ChevronDown, ChevronRight, Trophy, Timer, Swords, Star, UserCircle, History } from "lucide-react"
 import { useState, useMemo } from "react"
@@ -91,6 +92,8 @@ function getBonusItemPoints(key: string, pred: string | null, official: string |
 
 export default function UserQuinielaModal({ participant, onClose }: Props) {
   const store = useQuinielaStore()
+  const { user } = useAuth()
+  const isAdmin = user?.role === "admin"
   const cfg = store.results.scoringConfig ?? DEFAULT_SCORING
   const resultMatchScores = store.resultMatchScores ?? []
   const resultGroups = store.results.groups ?? []
@@ -424,7 +427,7 @@ export default function UserQuinielaModal({ participant, onClose }: Props) {
             </div>
           </div>
 
-          {/* Changelog Section */}
+          {isAdmin && (
           <div className="bg-gray-800/60 rounded-xl border border-gray-700/50 overflow-hidden">
             <button
               onClick={() => toggle("changelog")}
@@ -461,6 +464,7 @@ export default function UserQuinielaModal({ participant, onClose }: Props) {
               </div>
             )}
           </div>
+          )}
         </div>
       </div>
     </div>
