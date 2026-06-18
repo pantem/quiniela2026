@@ -2,7 +2,7 @@
 
 import { useQuinielaStore } from "@/store/store"
 import { groups, getTeamById } from "@/utils/teams"
-import { X, ChevronDown, ChevronRight, Trophy, Timer, Swords, Star, UserCircle } from "lucide-react"
+import { X, ChevronDown, ChevronRight, Trophy, Timer, Swords, Star, UserCircle, History } from "lucide-react"
 import { useState, useMemo } from "react"
 import { DEFAULT_SCORING, type ScoringConfig } from "@/app/types"
 
@@ -422,6 +422,44 @@ export default function UserQuinielaModal({ participant, onClose }: Props) {
                 <p className="text-xl font-bold text-white">{totals.total}</p>
               </div>
             </div>
+          </div>
+
+          {/* Changelog Section */}
+          <div className="bg-gray-800/60 rounded-xl border border-gray-700/50 overflow-hidden">
+            <button
+              onClick={() => toggle("changelog")}
+              className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-700/30 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <History className="w-4 h-4 text-purple-400" />
+                <span className="text-sm font-semibold text-white">Historial de cambios</span>
+                <span className="text-xs text-gray-500">({(participant.changelog ?? []).length})</span>
+              </div>
+              {expanded.changelog ? <ChevronDown className="w-4 h-4 text-gray-500" /> : <ChevronRight className="w-4 h-4 text-gray-500" />}
+            </button>
+            {expanded.changelog && (
+              <div className="divide-y divide-gray-700/20 max-h-80 overflow-y-auto">
+                {(participant.changelog ?? []).length === 0 ? (
+                  <div className="px-4 py-8 text-center text-sm text-gray-500">
+                    Sin cambios registrados
+                  </div>
+                ) : (
+                  [...(participant.changelog ?? [])].reverse().map((entry: any, i: number) => (
+                    <div key={i} className="px-4 py-3">
+                      <div className="text-[10px] text-gray-500 font-mono mb-1">
+                        {new Date(entry.timestamp).toLocaleString("es-MX", {
+                          year: "numeric", month: "2-digit", day: "2-digit",
+                          hour: "2-digit", minute: "2-digit", second: "2-digit",
+                        })}
+                      </div>
+                      <div className="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap">
+                        {entry.changes}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

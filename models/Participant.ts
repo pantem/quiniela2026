@@ -34,6 +34,11 @@ export interface IBonusPrediction {
   bestPlayer: string | null
 }
 
+export interface IChangelogEntry {
+  timestamp: Date
+  changes: string
+}
+
 export interface IParticipant extends Document {
   name: string
   groups: IGroupPrediction[]
@@ -42,6 +47,7 @@ export interface IParticipant extends Document {
   bonuses: IBonusPrediction
   penalties: number
   canEdit: boolean
+  changelog: IChangelogEntry[]
   createdAt: Date
   updatedAt: Date
 }
@@ -92,6 +98,14 @@ const BonusPredictionSchema = new Schema<IBonusPrediction>(
   { _id: false }
 )
 
+const ChangelogEntrySchema = new Schema<IChangelogEntry>(
+  {
+    timestamp: { type: Date, default: Date.now },
+    changes: { type: String, required: true },
+  },
+  { _id: false }
+)
+
 const ParticipantSchema = new Schema<IParticipant>(
   {
     name: { type: String, required: true, unique: true },
@@ -101,6 +115,7 @@ const ParticipantSchema = new Schema<IParticipant>(
     bonuses: { type: BonusPredictionSchema, default: () => ({ bestGoalkeeper: null, topScorer: null, bestPlayer: null }) },
     penalties: { type: Number, default: 0 },
     canEdit: { type: Boolean, default: false },
+    changelog: { type: [ChangelogEntrySchema], default: [] },
   },
   { timestamps: true }
 )

@@ -6,6 +6,7 @@ import { User } from "@/models/User"
 import { verifyToken, getTokenFromRequest, unauthorized } from "@/lib/auth"
 import type { PhaseLocks, KnockoutMatch } from "@/app/types"
 import { DEFAULT_PHASE_LOCKS } from "@/app/types"
+import { buildChangelogEntry } from "@/lib/changelog-diff"
 
 async function getAuthedName(req: Request): Promise<string | null> {
   const token = getTokenFromRequest(req)
@@ -67,22 +68,25 @@ export async function POST(req: Request) {
       if (existing.canEdit === false) {
         return NextResponse.json({ error: "Tu cuenta ha sido bloqueada para edición" }, { status: 403 })
       }
-      if (locks.groups) {
-        groups = existing.groups
-        matchPredictions = existing.matchPredictions ?? []
-        bonuses = existing.bonuses
-      }
+      const finalGroups = locks.groups ? existing.groups : groups
+      const finalMatchPredictions = locks.groups ? (existing.matchPredictions ?? []) : (matchPredictions ?? [])
+      const finalBonuses = locks.groups ? existing.bonuses : bonuses
       const existingKnockout = existing.knockout ?? []
-      knockout = (knockout ?? []).map((m: KnockoutMatch) => {
+      const finalKnockout = (knockout ?? []).map((m: KnockoutMatch) => {
         if (locks[m.round as keyof PhaseLocks]) {
           return existingKnockout.find((e: KnockoutMatch) => e.id === m.id) ?? m
         }
         return m
       })
-      existing.groups = groups
-      existing.matchPredictions = matchPredictions ?? []
-      existing.knockout = knockout ?? []
-      existing.bonuses = bonuses
+      const entry = buildChangelogEntry(
+        { groups: existing.groups, matchPredictions: existing.matchPredictions ?? [], knockout: existingKnockout, bonuses: existing.bonuses ?? {} },
+        { groups: finalGroups, matchPredictions: finalMatchPredictions, knockout: finalKnockout, bonuses: finalBonuses }
+      )
+      if (entry) existing.changelog.push(entry)
+      existing.groups = finalGroups
+      existing.matchPredictions = finalMatchPredictions
+      existing.knockout = finalKnockout
+      existing.bonuses = finalBonuses
       await existing.save()
       return NextResponse.json(existing)
     }
@@ -132,41 +136,50 @@ export async function PUT(req: Request) {
       if (existing.canEdit === false) {
         return NextResponse.json({ error: "Tu cuenta ha sido bloqueada para edición" }, { status: 403 })
       }
-      if (locks.groups) {
-        groups = existing.groups
-        matchPredictions = existing.matchPredictions ?? []
-        bonuses = existing.bonuses
-      }
+      const finalGroups = locks.groups ? existing.groups : groups
+      const finalMatchPredictions = locks.groups ? (existing.matchPredictions ?? []) : (matchPredictions ?? [])
+      const finalBonuses = locks.groups ? existing.bonuses : bonuses
       const existingKnockout = existing.knockout ?? []
-      knockout = (knockout ?? []).map((m: KnockoutMatch) => {
+      const finalKnockout = (knockout ?? []).map((m: KnockoutMatch) => {
         if (locks[m.round as keyof PhaseLocks]) {
           return existingKnockout.find((e: KnockoutMatch) => e.id === m.id) ?? m
         }
         return m
       })
-    }
-
-    const participant = await Participant.findOneAndUpdate(
-      { name },
-      {
-        $set: {
-          groups,
-          matchPredictions: matchPredictions ?? [],
-          knockout: knockout ?? [],
-          bonuses,
-        },
-      },
-      { new: true }
-    )
-
-    if (!participant) {
-      return NextResponse.json(
-        { error: "Participante no encontrado" },
-        { status: 404 }
+      const entry = buildChangelogEntry(
+        { groups: existing.groups, matchPredictions: existing.matchPredictions ?? [], knockout: existingKnockout, bonuses: existing.bonuses ?? {} },
+        { groups: finalGroups, matchPredictions: finalMatchPredictions, knockout: finalKnockout, bonuses: finalBonuses }
       )
+      const update: Record<string, any> = {
+        $set: {
+          groups: finalGroups,
+          matchPredictions: finalMatchPredictions,
+          knockout: finalKnockout,
+          bonuses: finalBonuses,
+        },
+      }
+      if (entry) {
+        update.$push = { changelog: entry }
+      }
+      const participant = await Participant.findOneAndUpdate({ name }, update, { new: true })
+      if (!participant) {
+        return NextResponse.json(
+          { error: "Participante no encontrado" },
+          { status: 404 }
+        )
+      }
+      return NextResponse.json(participant)
     }
 
-    return NextResponse.json(participant)
+    // New participant (no existing) - just create without changelog
+    const participant = await Participant.create({
+      name,
+      groups,
+      matchPredictions: matchPredictions ?? [],
+      knockout: knockout ?? [],
+      bonuses,
+    })
+    return NextResponse.json(participant, { status: 201 })
   } catch (error) {
     console.error("Error updating participant:", error)
     return NextResponse.json(
