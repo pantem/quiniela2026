@@ -4,7 +4,7 @@ import { useQuinielaStore } from "@/store/store"
 import { Star } from "lucide-react"
 
 export default function BonusSelector() {
-  const { bonuses, setBonus, canEdit } = useQuinielaStore()
+  const { bonuses, setBonus, canEditPhase } = useQuinielaStore()
 
   return (
     <div className="space-y-6">
@@ -25,7 +25,7 @@ export default function BonusSelector() {
           icon="🧤"
           placeholder="Ej: Emiliano Martínez"
           onChange={(v) => setBonus("bestGoalkeeper", v)}
-          disabled={!canEdit}
+          disabled={!canEditPhase('bonuses')}
         />
         <BonusInput
           label="Goleador"
@@ -33,7 +33,7 @@ export default function BonusSelector() {
           icon="⚽"
           placeholder="Ej: Kylian Mbappé"
           onChange={(v) => setBonus("topScorer", v)}
-          disabled={!canEdit}
+          disabled={!canEditPhase('bonuses')}
         />
         <BonusInput
           label="Mejor Jugador"
@@ -41,7 +41,7 @@ export default function BonusSelector() {
           icon="👑"
           placeholder="Ej: Lionel Messi"
           onChange={(v) => setBonus("bestPlayer", v)}
-          disabled={!canEdit}
+          disabled={!canEditPhase('bonuses')}
         />
       </div>
     </div>

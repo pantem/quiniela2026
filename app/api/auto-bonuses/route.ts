@@ -57,13 +57,8 @@ export async function POST(req: Request) {
     )
 
     scored.sort((a, b) => b.total - a.total)
-    const n = scored.length
 
     const autoBonuses: Record<string, number> = {}
-    if (n >= 1) autoBonuses[scored[0].name] = (autoBonuses[scored[0].name] ?? 0) + 10
-    if (n >= 3) autoBonuses[scored[n - 3].name] = (autoBonuses[scored[n - 3].name] ?? 0) + 10
-    if (n >= 2) autoBonuses[scored[n - 2].name] = (autoBonuses[scored[n - 2].name] ?? 0) + 20
-    if (n >= 1) autoBonuses[scored[n - 1].name] = (autoBonuses[scored[n - 1].name] ?? 0) + 30
 
     await ResultModel.findOneAndUpdate(
       {},

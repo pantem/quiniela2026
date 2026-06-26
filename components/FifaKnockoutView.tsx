@@ -29,9 +29,11 @@ function getRoundPoints(cfg: typeof DEFAULT_SCORING, round: string): { winner: n
 }
 
 export default function FifaKnockoutView() {
-  const { fifaKnockout, setFifaKnockoutScore, canEdit, results, phaseLocks } = useQuinielaStore()
+  const { fifaKnockout, setFifaKnockoutScore, canEditPhase, results, phaseLocks } = useQuinielaStore()
   const scoringConfig = results.scoringConfig ?? DEFAULT_SCORING
   const fifaLocked = phaseLocks.fifaLocked
+
+  const editable = canEditPhase('fifaLocked') && !fifaLocked
 
   const adminMatches = results.fifaKnockout
   const hasAdminBracket = adminMatches.some((m) => m.homeTeam && m.awayTeam)
@@ -82,8 +84,6 @@ export default function FifaKnockoutView() {
     }
     return { ...r, matches }
   })
-
-  const editable = canEdit && !fifaLocked
 
   return (
     <div className="space-y-4">

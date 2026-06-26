@@ -4,7 +4,7 @@ import { useQuinielaStore } from "@/store/store"
 import { getTeamById } from "@/utils/teams"
 import { getMatchesByRound, propagateWinners } from "@/utils/fifaMatrix"
 import { Swords } from "lucide-react"
-import { DEFAULT_SCORING } from "@/app/types"
+import { DEFAULT_SCORING, PhaseLocks } from "@/app/types"
 import { useEffect } from "react"
 
 const ROUNDS = [
@@ -29,7 +29,7 @@ function getRoundPoints(cfg: typeof DEFAULT_SCORING, round: string): { winner: n
 }
 
 export default function BracketView() {
-  const { knockout, setKnockoutScore, canEdit, results } = useQuinielaStore()
+  const { knockout, setKnockoutScore, canEditPhase, results } = useQuinielaStore()
   const scoringConfig = results.scoringConfig ?? DEFAULT_SCORING
 
   useEffect(() => {
@@ -140,17 +140,17 @@ export default function BracketView() {
                           <span className="text-gray-400">{match.label}</span>
                           <span className="text-gray-600">G:{pts.winner} E:{pts.exact}</span>
                         </div>
-                        <div className={`flex items-center gap-1 px-2 py-1.5 ${!canEdit ? "opacity-60" : ""}`}>
+                        <div className={`flex items-center gap-1 px-2 py-1.5 ${!canEditPhase(match.round as keyof PhaseLocks) ? "opacity-60" : ""}`}>
                           <span className="text-gray-200 text-xs shrink-0 w-24 truncate text-right">{home?.flag} {home?.name ?? "—"}</span>
                           <ScoreSelect
                             value={match.homeScore}
-                            disabled={!canEdit}
+                            disabled={!canEditPhase(match.round as keyof PhaseLocks)}
                             onChange={(v) => setKnockoutScore(match.id, v, match.awayScore)}
                           />
                           <span className="text-gray-500 text-[10px]">-</span>
                           <ScoreSelect
                             value={match.awayScore}
-                            disabled={!canEdit}
+                            disabled={!canEditPhase(match.round as keyof PhaseLocks)}
                             onChange={(v) => setKnockoutScore(match.id, match.homeScore, v)}
                           />
                           <span className="text-gray-200 text-xs shrink-0 w-24 truncate text-left">{away?.flag} {away?.name ?? "—"}</span>
@@ -218,17 +218,17 @@ export default function BracketView() {
                             <span className="text-gray-400">{match.label}</span>
                             <span className="text-gray-600">G:{pts.winner} E:{pts.exact}</span>
                           </div>
-                          <div className={`flex items-center gap-1 px-2 py-1.5 ${!canEdit ? "opacity-60" : ""}`}>
+                          <div className={`flex items-center gap-1 px-2 py-1.5 ${!canEditPhase(match.round as keyof PhaseLocks) ? "opacity-60" : ""}`}>
                             <span className="text-gray-200 text-xs shrink-0 w-24 truncate text-right">{home?.flag} {home?.name ?? "—"}</span>
                             <ScoreSelect
                               value={match.homeScore}
-                              disabled={!canEdit}
+                              disabled={!canEditPhase(match.round as keyof PhaseLocks)}
                               onChange={(v) => setKnockoutScore(match.id, v, match.awayScore)}
                             />
                             <span className="text-gray-500 text-[10px]">-</span>
                             <ScoreSelect
                               value={match.awayScore}
-                              disabled={!canEdit}
+                              disabled={!canEditPhase(match.round as keyof PhaseLocks)}
                               onChange={(v) => setKnockoutScore(match.id, match.homeScore, v)}
                             />
                             <span className="text-gray-200 text-xs shrink-0 w-24 truncate text-left">{away?.flag} {away?.name ?? "—"}</span>

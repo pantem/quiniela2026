@@ -593,8 +593,13 @@ export const useQuinielaStore = create<QuinielaState>()(
               fifaKnockout,
               bonuses,
             })
-            if (updated && typeof updated.canEdit === "boolean") {
-              set({ canEdit: updated.canEdit })
+            if (updated) {
+              if (typeof updated.canEdit === "boolean") {
+                set({ canEdit: updated.canEdit })
+              }
+              if (updated.phasePermissions) {
+                set({ phasePermissions: updated.phasePermissions })
+              }
             }
           } else {
             await saveParticipant({
@@ -776,6 +781,7 @@ export const useQuinielaStore = create<QuinielaState>()(
         const bonuses = persisted.bonuses ?? persisted.results?.bonuses ?? { ...defaultBonuses }
         return {
           ...persisted,
+          phasePermissions: persisted.phasePermissions ?? { groups: true, r32: true, r16: true, qf: true, sf: true, third: true, final: true, bonuses: true, fifaLocked: true },
           fifaKnockout: persisted.fifaKnockout ?? [],
           phaseLocks,
           bonuses,
