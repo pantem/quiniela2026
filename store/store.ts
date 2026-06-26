@@ -15,21 +15,24 @@ import {
 import { groups } from "@/utils/teams"
 import { getBestThirdPlaced } from "@/utils/bestThird"
 import { buildFifaMatrix, propagateWinners } from "@/utils/fifaMatrix"
-import { calculateGroupPoints, calculateKnockoutPoints, calculateMatchScorePoints, calculateMatchStats, calculateBonusPoints } from "@/utils/scoring"
+import { calculateGroupPoints, calculateKnockoutPoints, calculateFifaKnockoutPoints, calculateMatchScorePoints, calculateMatchStats, calculateBonusPoints } from "@/utils/scoring"
 import { getAllGroupMatches, getGroupMatches, buildGroupResultsFromScores } from "@/utils/matches"
 import { saveParticipant, updateParticipant, fetchParticipants, fetchResults, saveResults } from "@/lib/api"
 
 interface QuinielaState {
   participantName: string
   canEdit: boolean
+  phasePermissions: PhaseLocks
   groups: GroupPrediction[]
   matchPredictions: MatchScore[]
   knockout: KnockoutMatch[]
+  fifaKnockout: KnockoutMatch[]
   bonuses: BonusPrediction
   phaseLocks: PhaseLocks
   results: {
     groups: GroupPrediction[]
     knockout: KnockoutMatch[]
+    fifaKnockout: KnockoutMatch[]
     bonuses: BonusPrediction
     scoringConfig: ScoringConfig | null
     autoBonuses: AutoBonuses
@@ -42,10 +45,17 @@ interface QuinielaState {
 
   setParticipantName: (name: string) => void
   setCanEdit: (canEdit: boolean) => void
+  canEditPhase: (phase: keyof PhaseLocks) => boolean
+  setPhasePermission: (phase: keyof PhaseLocks, value: boolean) => void
   setGroupPrediction: (groupId: string, position: "first" | "second" | "third" | "fourth", teamId: string | null) => void
   setMatchScore: (matchId: string, homeScore: number | null, awayScore: number | null) => void
   setKnockoutWinner: (matchId: string, teamId: string | null) => void
   setKnockoutScore: (matchId: string, homeScore: number | null, awayScore: number | null) => void
+  setFifaKnockoutScore: (matchId: string, homeScore: number | null, awayScore: number | null) => void
+  setAdminFifaKnockoutTeam: (matchId: string, side: 'homeTeam' | 'awayTeam', teamId: string | null) => void
+  setAdminFifaKnockoutScore: (matchId: string, homeScore: number | null, awayScore: number | null) => void
+  generateFifaKnockout: () => void
+  getFifaKnockoutPoints: () => number
   setBonus: (key: keyof BonusPrediction, value: string | null) => void
   setResultMatchScore: (matchId: string, homeScore: number | null, awayScore: number | null) => void
   setResultGroup: (groupId: string, position: "first" | "second" | "third" | "fourth", teamId: string | null) => void
@@ -64,6 +74,7 @@ interface QuinielaState {
   getMatchStats: () => ReturnType<typeof calculateMatchStats>
   resetAll: () => void
   syncToMongo: () => Promise<void>
+  initFifaKnockout: () => void
   loadFromMongo: (name: string) => Promise<void>
   loadResultsFromMongo: () => Promise<void>
   loadAllParticipants: () => Promise<void>
@@ -127,19 +138,68 @@ const defaultResultsGroups = () =>
     })
   )
 
+function createEmptyFifaKnockout(): KnockoutMatch[] {
+  const matches: KnockoutMatch[] = []
+  const roundDefs: Array<{ prefix: string; round: 'r32' | 'r16' | 'qf' | 'sf'; count: number }> = [
+    { prefix: 'F_R32', round: 'r32', count: 16 },
+    { prefix: 'F_R16', round: 'r16', count: 8 },
+    { prefix: 'F_QF', round: 'qf', count: 4 },
+    { prefix: 'F_SF', round: 'sf', count: 2 },
+  ]
+  for (const rd of roundDefs) {
+    for (let i = 1; i <= rd.count; i++) {
+      const padded = String(i).padStart(2, '0')
+      matches.push({
+        id: `${rd.prefix}_${padded}`,
+        round: rd.round,
+        homeTeam: null,
+        awayTeam: null,
+        homeScore: null,
+        awayScore: null,
+        winner: null,
+        label: `${rd.round.toUpperCase()}-${i}`,
+      })
+    }
+  }
+  matches.push({
+    id: 'F_3RD_01',
+    round: 'third',
+    homeTeam: null,
+    awayTeam: null,
+    homeScore: null,
+    awayScore: null,
+    winner: null,
+    label: '3rd Place',
+  })
+  matches.push({
+    id: 'F_F_01',
+    round: 'final',
+    homeTeam: null,
+    awayTeam: null,
+    homeScore: null,
+    awayScore: null,
+    winner: null,
+    label: 'Final',
+  })
+  return matches
+}
+
 export const useQuinielaStore = create<QuinielaState>()(
   persist(
     (set, get) => ({
       participantName: "",
       canEdit: true,
+      phasePermissions: { groups: true, r32: true, r16: true, qf: true, sf: true, third: true, final: true, bonuses: true, fifaLocked: true },
       groups: defaultGroups(),
       matchPredictions: defaultMatchPredictions(),
       knockout: [],
+      fifaKnockout: [],
       bonuses: { ...defaultBonuses },
       phaseLocks: { ...DEFAULT_PHASE_LOCKS },
       results: {
         groups: defaultResultsGroups(),
         knockout: [],
+        fifaKnockout: [],
         bonuses: { ...defaultBonuses },
         scoringConfig: null,
         autoBonuses: {},
@@ -153,8 +213,20 @@ export const useQuinielaStore = create<QuinielaState>()(
       setParticipantName: (name) => set({ participantName: name }),
       setCanEdit: (canEdit) => set({ canEdit }),
 
+      canEditPhase: (phase) => {
+        const state = get()
+        const setting = state.phasePermissions[phase]
+        return setting !== false
+      },
+
+      setPhasePermission: (phase, value) => {
+        set((state) => ({
+          phasePermissions: { ...state.phasePermissions, [phase]: value },
+        }))
+      },
+
       setGroupPrediction: (groupId, position, teamId) => {
-        if (!get().canEdit) return
+        if (!get().canEditPhase('groups')) return
         set((state) => ({
           groups: state.groups.map((g) =>
             g.groupId === groupId ? { ...g, [position]: teamId } : g
@@ -164,7 +236,7 @@ export const useQuinielaStore = create<QuinielaState>()(
       },
 
       setMatchScore: (matchId, homeScore, awayScore) => {
-        if (!get().canEdit) return
+        if (!get().canEditPhase('groups')) return
         set((state) => {
           const updatedPredictions = state.matchPredictions.map((m) =>
             m.id === matchId ? { ...m, homeScore, awayScore } : m
@@ -185,8 +257,8 @@ export const useQuinielaStore = create<QuinielaState>()(
       },
 
       setKnockoutWinner: (matchId, teamId) => {
-        const round = get().knockout.find((m) => m.id === matchId)?.round
-        if (!get().canEdit) return
+        const round = get().knockout.find((m) => m.id === matchId)?.round ?? ''
+        if (!get().canEditPhase(round as keyof PhaseLocks)) return
         set((state) => {
           const updated = state.knockout.map((m) =>
             m.id === matchId ? { ...m, winner: teamId } : m
@@ -196,7 +268,8 @@ export const useQuinielaStore = create<QuinielaState>()(
       },
 
       setKnockoutScore: (matchId, homeScore, awayScore) => {
-        if (!get().canEdit) return
+        const round = get().knockout.find((m) => m.id === matchId)?.round ?? ''
+        if (!get().canEditPhase(round as keyof PhaseLocks)) return
         set((state) => {
           let winner: string | null = null
           if (homeScore !== null && awayScore !== null && homeScore !== awayScore) {
@@ -224,6 +297,77 @@ export const useQuinielaStore = create<QuinielaState>()(
         })
       },
 
+      setFifaKnockoutScore: (matchId, homeScore, awayScore) => {
+        if (!get().canEditPhase('fifaLocked')) return
+        set((state) => {
+          let winner: string | null = null
+          const existing = state.fifaKnockout.find((m) => m.id === matchId)
+          if (existing) {
+            if (homeScore !== null && awayScore !== null && homeScore !== awayScore) {
+              winner = homeScore > awayScore ? existing.homeTeam : existing.awayTeam
+            }
+            const updated = state.fifaKnockout.map((m) =>
+              m.id === matchId ? { ...m, homeScore, awayScore, winner } : m
+            )
+            return { fifaKnockout: propagateWinners(updated) }
+          }
+          const adminMatch = state.results.fifaKnockout.find((m) => m.id === matchId)
+          if (adminMatch && homeScore !== null && awayScore !== null && homeScore !== awayScore) {
+            winner = homeScore > awayScore ? adminMatch.homeTeam : adminMatch.awayTeam
+          }
+          const newEntry: KnockoutMatch = {
+            id: matchId,
+            round: adminMatch?.round ?? 'r16',
+            homeTeam: adminMatch?.homeTeam ?? null,
+            awayTeam: adminMatch?.awayTeam ?? null,
+            homeScore,
+            awayScore,
+            winner,
+            label: adminMatch?.label ?? '',
+          }
+          return { fifaKnockout: propagateWinners([...state.fifaKnockout, newEntry]) }
+        })
+      },
+
+      setAdminFifaKnockoutTeam: (matchId, side, teamId) => {
+        set((state) => ({
+          results: {
+            ...state.results,
+            fifaKnockout: state.results.fifaKnockout.map((m) =>
+              m.id === matchId ? { ...m, [side]: teamId } : m
+            ),
+          },
+        }))
+      },
+
+      setAdminFifaKnockoutScore: (matchId, homeScore, awayScore) => {
+        set((state) => {
+          const match = state.results.fifaKnockout.find((m) => m.id === matchId)
+          let winner: string | null = null
+          if (match && homeScore !== null && awayScore !== null && homeScore !== awayScore) {
+            winner = homeScore > awayScore ? match.homeTeam : match.awayTeam
+          }
+          const updated = state.results.fifaKnockout.map((m) =>
+            m.id === matchId ? { ...m, homeScore, awayScore, winner } : m
+          )
+          return {
+            results: {
+              ...state.results,
+              fifaKnockout: propagateWinners(updated),
+            },
+          }
+        })
+      },
+
+      generateFifaKnockout: () => {
+        set((state) => ({
+          results: {
+            ...state.results,
+            fifaKnockout: createEmptyFifaKnockout(),
+          },
+        }))
+      },
+
       setResultMatchScore: (matchId, homeScore, awayScore) => {
         set((state) => ({
           resultMatchScores: state.resultMatchScores.map((m) =>
@@ -244,7 +388,7 @@ export const useQuinielaStore = create<QuinielaState>()(
       },
 
       setBonus: (key, value) => {
-        if (!get().canEdit) return
+        if (!get().canEditPhase('bonuses')) return
         set((state) => ({
           bonuses: { ...state.bonuses, [key]: value },
         }))
@@ -370,6 +514,7 @@ export const useQuinielaStore = create<QuinielaState>()(
           calculateMatchScorePoints(state.matchPredictions ?? [], state.resultMatchScores ?? []) +
           calculateGroupPointsForAll(state.groups ?? [], state.results.groups ?? []) +
           calculateKnockoutPoints(state.knockout ?? [], state.results.knockout ?? []) +
+          calculateFifaKnockoutPoints(state.fifaKnockout ?? [], state.results.fifaKnockout ?? []) +
           calculateBonusPoints(state.bonuses ?? {}, state.results.bonuses ?? {}) +
           (state.results.autoBonuses?.[state.participantName] ?? 0)
         )
@@ -390,6 +535,11 @@ export const useQuinielaStore = create<QuinielaState>()(
         return calculateKnockoutPoints(state.knockout ?? [], state.results.knockout ?? [])
       },
 
+      getFifaKnockoutPoints: () => {
+        const state = get()
+        return calculateFifaKnockoutPoints(state.fifaKnockout ?? [], state.results.fifaKnockout ?? [])
+      },
+
       getBonusPoints: () => {
         const state = get()
         return calculateBonusPoints(state.bonuses, state.results.bonuses)
@@ -408,10 +558,12 @@ export const useQuinielaStore = create<QuinielaState>()(
           groups: defaultGroups(),
           matchPredictions: defaultMatchPredictions(),
           knockout: [],
+          fifaKnockout: [],
           bonuses: { ...defaultBonuses },
           results: {
             groups: defaultResultsGroups(),
             knockout: [],
+            fifaKnockout: [],
             bonuses: { ...defaultBonuses },
             scoringConfig: null,
             autoBonuses: {},
@@ -424,7 +576,7 @@ export const useQuinielaStore = create<QuinielaState>()(
         }),
 
       syncToMongo: async () => {
-        const { participantName, groups, matchPredictions, knockout, bonuses } = get()
+        const { participantName, groups, matchPredictions, knockout, fifaKnockout, bonuses } = get()
         if (!participantName) return
 
         set({ syncing: true })
@@ -433,19 +585,12 @@ export const useQuinielaStore = create<QuinielaState>()(
           const me = all.find((p: any) => p.name === participantName)
 
           if (me) {
-            if (me.canEdit === false) {
-              set({
-                canEdit: false,
-                syncError: "Tu cuenta ha sido bloqueada para edición. No se pudieron guardar los cambios.",
-                syncing: false,
-              })
-              return
-            }
             const updated = await updateParticipant({
               name: participantName,
               groups,
               matchPredictions,
               knockout,
+              fifaKnockout,
               bonuses,
             })
             if (updated && typeof updated.canEdit === "boolean") {
@@ -457,6 +602,7 @@ export const useQuinielaStore = create<QuinielaState>()(
               groups,
               matchPredictions,
               knockout,
+              fifaKnockout,
               bonuses,
             })
           }
@@ -471,6 +617,20 @@ export const useQuinielaStore = create<QuinielaState>()(
         }
       },
 
+      initFifaKnockout: () => {
+        const state = get()
+        const adminMatches = state.results.fifaKnockout
+        if (adminMatches.length === 0) return
+        const merged = adminMatches.map((m) => {
+          const userMatch = state.fifaKnockout.find((e) => e.id === m.id)
+          if (userMatch) {
+            return { ...m, homeScore: userMatch.homeScore, awayScore: userMatch.awayScore, winner: userMatch.winner }
+          }
+          return { ...m, homeScore: null, awayScore: null, winner: null }
+        })
+        set({ fifaKnockout: merged })
+      },
+
       loadFromMongo: async (name) => {
         set({ syncing: true })
         try {
@@ -482,9 +642,14 @@ export const useQuinielaStore = create<QuinielaState>()(
               groups: participant.groups ?? defaultGroups(),
               bonuses: participant.bonuses,
               canEdit: participant.canEdit ?? false,
+              phasePermissions: participant.phasePermissions ?? { groups: true, r32: true, r16: true, qf: true, sf: true, third: true, final: true, bonuses: true, fifaLocked: true },
             }
             if (participant.matchPredictions) {
               loaded.matchPredictions = participant.matchPredictions
+            }
+            const savedFifaKnockout: KnockoutMatch[] = participant.fifaKnockout ?? []
+            if (savedFifaKnockout.length > 0) {
+              loaded.fifaKnockout = savedFifaKnockout
             }
             const savedKnockout: KnockoutMatch[] = participant.knockout ?? []
             if (savedKnockout.length > 0) {
@@ -493,6 +658,7 @@ export const useQuinielaStore = create<QuinielaState>()(
               set(loaded)
               get().refreshKnockout()
             }
+            get().initFifaKnockout()
           }
         } catch (err) {
           console.error("Load error:", err)
@@ -509,6 +675,7 @@ export const useQuinielaStore = create<QuinielaState>()(
           results: {
             groups: data.groups,
             knockout: data.knockout ?? [],
+            fifaKnockout: data.fifaKnockout ?? [],
             bonuses: data.bonuses ?? { ...defaultBonuses },
             scoringConfig: data.scoringConfig ?? null,
             autoBonuses: data.autoBonuses ?? {},
@@ -518,6 +685,7 @@ export const useQuinielaStore = create<QuinielaState>()(
         if (data.matchScores) {
           set({ resultMatchScores: data.matchScores })
         }
+        get().initFifaKnockout()
           }
         } catch (err) {
           console.error("Load results error:", err)
@@ -582,6 +750,7 @@ export const useQuinielaStore = create<QuinielaState>()(
           await saveResults({
             groups: results.groups,
             knockout: results.knockout,
+            fifaKnockout: results.fifaKnockout,
             bonuses: results.bonuses,
             matchScores: resultMatchScores,
             scoringConfig: results.scoringConfig ?? undefined,
@@ -598,14 +767,16 @@ export const useQuinielaStore = create<QuinielaState>()(
     }),
     {
       name: "quiniela-2026",
-      version: 4,
+      version: 5,
       migrate: (persisted: any, version: number) => {
-        const phaseLocks = persisted.phaseLocks ?? (persisted.locked != null
+        const phaseLocksRaw = persisted.phaseLocks ?? (persisted.locked != null
           ? { groups: persisted.locked, r32: persisted.locked, r16: persisted.locked, qf: persisted.locked, sf: persisted.locked, third: persisted.locked, final: persisted.locked }
           : { ...DEFAULT_PHASE_LOCKS })
+        const phaseLocks = { ...DEFAULT_PHASE_LOCKS, ...phaseLocksRaw }
         const bonuses = persisted.bonuses ?? persisted.results?.bonuses ?? { ...defaultBonuses }
         return {
           ...persisted,
+          fifaKnockout: persisted.fifaKnockout ?? [],
           phaseLocks,
           bonuses,
           matchPredictions: persisted.matchPredictions ?? defaultMatchPredictions(),
@@ -614,6 +785,11 @@ export const useQuinielaStore = create<QuinielaState>()(
             ...(persisted.results ?? {}),
             groups: persisted.results?.groups ?? defaultResultsGroups(),
             knockout: (persisted.results?.knockout ?? []).map((m: any) => ({
+              ...m,
+              homeScore: m.homeScore ?? null,
+              awayScore: m.awayScore ?? null,
+            })),
+            fifaKnockout: (persisted.results?.fifaKnockout ?? []).map((m: any) => ({
               ...m,
               homeScore: m.homeScore ?? null,
               awayScore: m.awayScore ?? null,

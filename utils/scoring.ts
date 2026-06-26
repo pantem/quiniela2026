@@ -82,6 +82,30 @@ export function calculateBonusPoints(
   return points
 }
 
+export function calculateFifaKnockoutPoints(
+  predictions: KnockoutMatch[],
+  results: KnockoutMatch[],
+  cfg: ScoringConfig = DEFAULT_SCORING
+): number {
+  let total = 0
+  for (const pred of predictions) {
+    const actual = results.find((r) => r.id === pred.id)
+    if (!actual) continue
+    const pts = getRoundPoints(cfg, pred.round)
+    if (pred.winner === actual.winner) {
+      total += pts.winner
+    }
+    if (
+      pred.homeScore != null && pred.awayScore != null &&
+      actual.homeScore != null && actual.awayScore != null &&
+      pred.homeScore === actual.homeScore && pred.awayScore === actual.awayScore
+    ) {
+      total += pts.exact
+    }
+  }
+  return total
+}
+
 export function calculateKnockoutPoints(
   predictions: KnockoutMatch[],
   results: KnockoutMatch[],

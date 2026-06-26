@@ -16,6 +16,7 @@ export async function saveParticipant(data: {
   groups: any[]
   matchPredictions?: any[]
   knockout: any[]
+  fifaKnockout?: any[]
   bonuses?: any
 }) {
   const res = await fetch(`${BASE}/participants`, {
@@ -32,6 +33,7 @@ export async function updateParticipant(data: {
   groups: any[]
   matchPredictions?: any[]
   knockout: any[]
+  fifaKnockout?: any[]
   bonuses?: any
 }) {
   const res = await fetch(`${BASE}/participants`, {
@@ -55,6 +57,7 @@ export async function updateParticipantAdmin(data: {
   name: string
   penalties?: number
   canEdit?: boolean
+  phasePermissions?: Record<string, boolean>
 }) {
   const res = await fetch(`${BASE}/participants`, {
     method: "PATCH",
@@ -75,6 +78,7 @@ export async function saveResults(data: {
   groups: any[]
   matchScores?: any[]
   knockout: any[]
+  fifaKnockout?: any[]
   bonuses?: any
   scoringConfig?: any
   phaseLocks?: any

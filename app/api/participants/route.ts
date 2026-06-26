@@ -48,7 +48,7 @@ export async function POST(req: Request) {
 
     await connectDB()
     const body = await req.json()
-    let { name, groups, matchPredictions, knockout, bonuses } = body
+    let { name, groups, matchPredictions, knockout, fifaKnockout, bonuses } = body
 
     if (name !== authedName) {
       return NextResponse.json({ error: "No puedes guardar datos de otro usuario" }, { status: 403 })
@@ -65,28 +65,35 @@ export async function POST(req: Request) {
 
     const existing = await Participant.findOne({ name })
     if (existing) {
-      if (existing.canEdit === false) {
-        return NextResponse.json({ error: "Tu cuenta ha sido bloqueada para edición" }, { status: 403 })
+      const userPerms = (existing as any).phasePermissions
+      const canEditPhase = (phase: string) => {
+        if (!userPerms) return existing.canEdit !== false
+        const setting = userPerms[phase]
+        if (setting === true) return true
+        if (setting === false) return false
+        return true
       }
-      const bypass = existing.canEdit === true
-      const finalGroups = bypass ? groups : (locks.groups ? existing.groups : groups)
-      const finalMatchPredictions = bypass ? (matchPredictions ?? []) : (locks.groups ? (existing.matchPredictions ?? []) : (matchPredictions ?? []))
-      const finalBonuses = bypass ? bonuses : (locks.groups ? existing.bonuses : bonuses)
+      const finalGroups = canEditPhase('groups') ? groups : existing.groups
+      const finalMatchPredictions = canEditPhase('groups') ? (matchPredictions ?? []) : (existing.matchPredictions ?? [])
+      const finalBonuses = canEditPhase('bonuses') ? bonuses : existing.bonuses
       const existingKnockout = existing.knockout ?? []
       const finalKnockout = (knockout ?? []).map((m: KnockoutMatch) => {
-        if (!bypass && locks[m.round as keyof PhaseLocks]) {
+        if (!canEditPhase(m.round)) {
           return existingKnockout.find((e: KnockoutMatch) => e.id === m.id) ?? m
         }
         return m
       })
+      const existingFifaKnockout = existing.fifaKnockout ?? []
+      const finalFifaKnockout = canEditPhase('fifaLocked') ? (fifaKnockout ?? []) : existingFifaKnockout
       const entry = buildChangelogEntry(
-        { groups: existing.groups, matchPredictions: existing.matchPredictions ?? [], knockout: existingKnockout, bonuses: existing.bonuses ?? {} },
-        { groups: finalGroups, matchPredictions: finalMatchPredictions, knockout: finalKnockout, bonuses: finalBonuses }
+        { groups: existing.groups, matchPredictions: existing.matchPredictions ?? [], knockout: existingKnockout, fifaKnockout: existingFifaKnockout, bonuses: existing.bonuses ?? {} },
+        { groups: finalGroups, matchPredictions: finalMatchPredictions, knockout: finalKnockout, fifaKnockout: finalFifaKnockout, bonuses: finalBonuses }
       )
       if (entry) existing.changelog.push(entry)
       existing.groups = finalGroups
       existing.matchPredictions = finalMatchPredictions
       existing.knockout = finalKnockout
+      existing.fifaKnockout = finalFifaKnockout
       existing.bonuses = finalBonuses
       await existing.save()
       return NextResponse.json(existing)
@@ -97,6 +104,7 @@ export async function POST(req: Request) {
       groups,
       matchPredictions: matchPredictions ?? [],
       knockout: knockout ?? [],
+      fifaKnockout: fifaKnockout ?? [],
       bonuses,
     })
 
@@ -117,7 +125,7 @@ export async function PUT(req: Request) {
 
     await connectDB()
     const body = await req.json()
-    let { name, groups, matchPredictions, knockout, bonuses } = body
+    let { name, groups, matchPredictions, knockout, fifaKnockout, bonuses } = body
 
     if (name !== authedName) {
       return NextResponse.json({ error: "No puedes modificar datos de otro usuario" }, { status: 403 })
@@ -134,29 +142,36 @@ export async function PUT(req: Request) {
     const existing = await Participant.findOne({ name })
 
     if (existing) {
-      if (existing.canEdit === false) {
-        return NextResponse.json({ error: "Tu cuenta ha sido bloqueada para edición" }, { status: 403 })
+      const userPerms = (existing as any).phasePermissions
+      const canEditPhase = (phase: string) => {
+        if (!userPerms) return existing.canEdit !== false
+        const setting = userPerms[phase]
+        if (setting === true) return true
+        if (setting === false) return false
+        return true
       }
-      const bypass = existing.canEdit === true
-      const finalGroups = bypass ? groups : (locks.groups ? existing.groups : groups)
-      const finalMatchPredictions = bypass ? (matchPredictions ?? []) : (locks.groups ? (existing.matchPredictions ?? []) : (matchPredictions ?? []))
-      const finalBonuses = bypass ? bonuses : (locks.groups ? existing.bonuses : bonuses)
+      const finalGroups = canEditPhase('groups') ? groups : existing.groups
+      const finalMatchPredictions = canEditPhase('groups') ? (matchPredictions ?? []) : (existing.matchPredictions ?? [])
+      const finalBonuses = canEditPhase('bonuses') ? bonuses : existing.bonuses
       const existingKnockout = existing.knockout ?? []
       const finalKnockout = (knockout ?? []).map((m: KnockoutMatch) => {
-        if (!bypass && locks[m.round as keyof PhaseLocks]) {
+        if (!canEditPhase(m.round)) {
           return existingKnockout.find((e: KnockoutMatch) => e.id === m.id) ?? m
         }
         return m
       })
+      const existingFifaKnockout = existing.fifaKnockout ?? []
+      const finalFifaKnockout = canEditPhase('fifaLocked') ? (fifaKnockout ?? []) : existingFifaKnockout
       const entry = buildChangelogEntry(
-        { groups: existing.groups, matchPredictions: existing.matchPredictions ?? [], knockout: existingKnockout, bonuses: existing.bonuses ?? {} },
-        { groups: finalGroups, matchPredictions: finalMatchPredictions, knockout: finalKnockout, bonuses: finalBonuses }
+        { groups: existing.groups, matchPredictions: existing.matchPredictions ?? [], knockout: existingKnockout, fifaKnockout: existingFifaKnockout, bonuses: existing.bonuses ?? {} },
+        { groups: finalGroups, matchPredictions: finalMatchPredictions, knockout: finalKnockout, fifaKnockout: finalFifaKnockout, bonuses: finalBonuses }
       )
       const update: Record<string, any> = {
         $set: {
           groups: finalGroups,
           matchPredictions: finalMatchPredictions,
           knockout: finalKnockout,
+          fifaKnockout: finalFifaKnockout,
           bonuses: finalBonuses,
         },
       }
@@ -179,6 +194,7 @@ export async function PUT(req: Request) {
       groups,
       matchPredictions: matchPredictions ?? [],
       knockout: knockout ?? [],
+      fifaKnockout: fifaKnockout ?? [],
       bonuses,
     })
     return NextResponse.json(participant, { status: 201 })
@@ -226,7 +242,7 @@ export async function PATCH(req: Request) {
 
     await connectDB()
     const body = await req.json()
-    const { name, penalties, canEdit } = body
+    const { name, penalties, canEdit, phasePermissions } = body
 
     if (!name) {
       return NextResponse.json({ error: "Nombre requerido" }, { status: 400 })
@@ -235,6 +251,7 @@ export async function PATCH(req: Request) {
     const update: Record<string, any> = {}
     if (typeof penalties === "number") update.penalties = penalties
     if (typeof canEdit === "boolean") update.canEdit = canEdit
+    if (phasePermissions) update.phasePermissions = phasePermissions
 
     const participant = await Participant.findOneAndUpdate(
       { name },

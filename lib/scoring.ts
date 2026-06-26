@@ -87,6 +87,30 @@ export async function calculateBonusPoints(
   return points
 }
 
+export async function calculateFifaKnockoutPoints(
+  predictions: Array<{ id: string; round: string; winner: string | null; homeScore?: number | null; awayScore?: number | null }>,
+  results: Array<{ id: string; winner: string | null; homeScore?: number | null; awayScore?: number | null }>
+): Promise<number> {
+  const cfg = await getScoringConfig()
+  let total = 0
+  for (const pred of predictions) {
+    const actual = results.find((r) => r.id === pred.id)
+    if (!actual) continue
+    const pts = points(cfg, pred.round)
+    if (pred.winner === actual.winner) {
+      total += pts.winner
+    }
+    if (
+      pred.homeScore != null && pred.awayScore != null &&
+      actual.homeScore != null && actual.awayScore != null &&
+      pred.homeScore === actual.homeScore && pred.awayScore === actual.awayScore
+    ) {
+      total += pts.exact
+    }
+  }
+  return total
+}
+
 export async function calculateKnockoutPoints(
   predictions: Array<{ id: string; round: string; winner: string | null; homeScore?: number | null; awayScore?: number | null }>,
   results: Array<{ id: string; winner: string | null; homeScore?: number | null; awayScore?: number | null }>

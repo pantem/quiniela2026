@@ -168,7 +168,7 @@ export function propagateWinners(matches: KnockoutMatch[]): KnockoutMatch[] {
   const byId = new Map(matches.map((m) => [m.id, { ...m }]))
   const sortKey = (id: string) => {
     const parts = id.split("_")
-    return parseInt(parts[1]) || 0
+    return parseInt(parts[parts.length - 1]) || 0
   }
 
   for (const [fromRound, , toRound] of PROPAGATION) {

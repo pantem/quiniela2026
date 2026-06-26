@@ -5,6 +5,7 @@ import { ResultModel } from "@/models/Result"
 import {
   calculateGroupPoints,
   calculateKnockoutPoints,
+  calculateFifaKnockoutPoints,
   calculateMatchScorePoints,
   calculateMatchStats,
   calculateBonusPoints,
@@ -44,6 +45,10 @@ export async function GET() {
           p.knockout,
           result.knockout
         )
+        const fifaKnockoutPoints = await calculateFifaKnockoutPoints(
+          p.fifaKnockout ?? [],
+          result.fifaKnockout ?? []
+        )
         const bonusPoints = await calculateBonusPoints(
           p.bonuses ?? { bestGoalkeeper: null, topScorer: null, bestPlayer: null },
           result.bonuses ?? { bestGoalkeeper: null, topScorer: null, bestPlayer: null }
@@ -61,10 +66,11 @@ export async function GET() {
           matchStats,
           groupPoints,
           knockoutPoints,
+          fifaKnockoutPoints,
           bonusPoints,
           autoBonusPoints,
           penalties,
-          total: matchPoints + groupPoints + knockoutPoints + bonusPoints + autoBonusPoints - penalties,
+          total: matchPoints + groupPoints + knockoutPoints + fifaKnockoutPoints + bonusPoints + autoBonusPoints - penalties,
         }
       })
     )

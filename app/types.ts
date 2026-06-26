@@ -117,6 +117,7 @@ export interface PhaseLocks {
   third: boolean
   final: boolean
   bonuses: boolean
+  fifaLocked: boolean
 }
 
 export const DEFAULT_PHASE_LOCKS: PhaseLocks = {
@@ -128,6 +129,7 @@ export const DEFAULT_PHASE_LOCKS: PhaseLocks = {
   third: false,
   final: false,
   bonuses: false,
+  fifaLocked: false,
 }
 
 export type AutoBonuses = Record<string, number>
@@ -136,6 +138,7 @@ export type TabId =
   | 'grupos'
   | 'marcadores'
   | 'eliminatoria'
+  | 'fifaeliminatoria'
   | 'campeon'
   | 'resultados'
   | 'usuarios'

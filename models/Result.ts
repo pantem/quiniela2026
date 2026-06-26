@@ -61,6 +61,7 @@ export interface IResult extends Document {
   groups: IGroupResult[]
   matchScores: IMatchScoreResult[]
   knockout: IKnockoutResult[]
+  fifaKnockout: IKnockoutResult[]
   bonuses: IBonusResult
   scoringConfig: IScoringConfig | null
   locked: boolean
@@ -141,6 +142,7 @@ const PhaseLocksSchema = new Schema<PhaseLocks>(
     third: { type: Boolean, default: false },
     final: { type: Boolean, default: false },
     bonuses: { type: Boolean, default: false },
+    fifaLocked: { type: Boolean, default: false },
   },
   { _id: false }
 )
@@ -159,10 +161,11 @@ const ResultSchema = new Schema<IResult>(
     groups: { type: [GroupResultSchema], required: true },
     matchScores: { type: [MatchScoreResultSchema], default: [] },
     knockout: { type: [KnockoutResultSchema], default: [] },
+    fifaKnockout: { type: [KnockoutResultSchema], default: [] },
     bonuses: { type: BonusResultSchema, default: () => ({ bestGoalkeeper: null, topScorer: null, bestPlayer: null }) },
     scoringConfig: { type: ScoringConfigSchema, default: null },
     locked: { type: Boolean, default: false },
-    phaseLocks: { type: PhaseLocksSchema, default: () => ({ groups: false, r32: false, r16: false, qf: false, sf: false, final: false, bonuses: false }) },
+    phaseLocks: { type: PhaseLocksSchema, default: () => ({ groups: false, r32: false, r16: false, qf: false, sf: false, final: false, bonuses: false, fifaLocked: false }) },
     autoBonuses: { type: Schema.Types.Mixed, default: {} },
   },
   { timestamps: true }

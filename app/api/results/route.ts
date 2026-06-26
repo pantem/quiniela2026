@@ -27,7 +27,7 @@ export async function POST(req: Request) {
 
     await connectDB()
     const body = await req.json()
-    const { groups, matchScores, knockout, bonuses, scoringConfig, phaseLocks, autoBonuses } = body
+    const { groups, matchScores, knockout, fifaKnockout, bonuses, scoringConfig, phaseLocks, autoBonuses } = body
 
     if (!groups) {
       return NextResponse.json(
@@ -41,6 +41,7 @@ export async function POST(req: Request) {
       result.groups = groups
       result.matchScores = matchScores ?? []
       result.knockout = knockout ?? []
+      result.fifaKnockout = fifaKnockout ?? []
       result.bonuses = bonuses ?? { bestGoalkeeper: null, topScorer: null, bestPlayer: null }
       result.scoringConfig = scoringConfig ?? null
       if (phaseLocks) result.phaseLocks = phaseLocks
@@ -53,6 +54,7 @@ export async function POST(req: Request) {
       groups,
       matchScores: matchScores ?? [],
       knockout: knockout ?? [],
+      fifaKnockout: fifaKnockout ?? [],
       bonuses: bonuses ?? { bestGoalkeeper: null, topScorer: null, bestPlayer: null },
       scoringConfig: scoringConfig ?? null,
       phaseLocks: phaseLocks ?? { groups: false, r32: false, r16: false, qf: false, sf: false, final: false, bonuses: false },

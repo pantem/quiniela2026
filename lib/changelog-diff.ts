@@ -72,13 +72,14 @@ function compareBonuses(oldB: any, newB: any): string[] {
 }
 
 export function buildChangelogEntry(
-  existing: { groups: any[]; matchPredictions?: any[]; knockout?: any[]; bonuses?: any },
-  incoming: { groups: any[]; matchPredictions?: any[]; knockout?: any[]; bonuses?: any }
+  existing: { groups: any[]; matchPredictions?: any[]; knockout?: any[]; fifaKnockout?: any[]; bonuses?: any },
+  incoming: { groups: any[]; matchPredictions?: any[]; knockout?: any[]; fifaKnockout?: any[]; bonuses?: any }
 ): IChangelogEntry | null {
   const parts = [
     ...compareMatchScores(existing.matchPredictions ?? [], incoming.matchPredictions ?? []),
     ...compareGroups(existing.groups, incoming.groups),
     ...compareKnockout(existing.knockout ?? [], incoming.knockout ?? []),
+    ...compareKnockout(existing.fifaKnockout ?? [], incoming.fifaKnockout ?? []),
     ...compareBonuses(existing.bonuses ?? {}, incoming.bonuses ?? {}),
   ]
   if (parts.length === 0) return null

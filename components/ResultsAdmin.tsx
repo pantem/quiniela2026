@@ -20,6 +20,15 @@ const ROUNDS = [
   { key: "final", label: "Final" },
 ] as const
 
+const FIFA_ROUNDS = [
+  { key: "r32", label: "Dieciseisavos" },
+  { key: "r16", label: "Octavos" },
+  { key: "qf", label: "Cuartos" },
+  { key: "sf", label: "Semifinal" },
+  { key: "third", label: "3er Lugar" },
+  { key: "final", label: "Final" },
+] as const
+
 export default function ResultsAdmin() {
   const store = useQuinielaStore()
   const {
@@ -36,16 +45,36 @@ export default function ResultsAdmin() {
     setPhaseLock,
     saveResultsToMongo,
     loadResultsFromMongo,
+    setAdminFifaKnockoutTeam,
+    setAdminFifaKnockoutScore,
+    generateFifaKnockout,
   } = store
   const [unlocked, setUnlocked] = useState(false)
   const [renderError, setRenderError] = useState<string | null>(null)
-  const [participantList, setParticipantList] = useState<Array<{ name: string; penalties: number; canEdit: boolean }>>([])
+  const [participantList, setParticipantList] = useState<Array<{ name: string; penalties: number; canEdit: boolean; phasePermissions: Record<string, boolean> }>>([])
+
+  const PHASE_KEYS = [
+    { key: "groups", label: "Grupos" },
+    { key: "r32", label: "16avos" },
+    { key: "r16", label: "Octavos" },
+    { key: "qf", label: "Cuartos" },
+    { key: "sf", label: "Semifinal" },
+    { key: "third", label: "3er" },
+    { key: "final", label: "Final" },
+    { key: "bonuses", label: "Bonos" },
+    { key: "fifaLocked", label: "FIFA" },
+  ] as const
   const [savingParticipants, setSavingParticipants] = useState(false)
 
   useEffect(() => {
     fetchParticipants().then((list) =>
       setParticipantList(
-        list.map((p: any) => ({ name: p.name, penalties: p.penalties ?? 0, canEdit: p.canEdit ?? true }))
+        list.map((p: any) => ({
+          name: p.name,
+          penalties: p.penalties ?? 0,
+          canEdit: p.canEdit ?? true,
+          phasePermissions: p.phasePermissions ?? { groups: true, r32: true, r16: true, qf: true, sf: true, third: true, final: true, bonuses: true, fifaLocked: true },
+        }))
       )
     ).catch(() => {})
   }, [])
@@ -152,7 +181,7 @@ export default function ResultsAdmin() {
             </button>
             <div className="flex items-center gap-1">
               <span className="text-[10px] text-gray-500 mr-1">Bloqueos:</span>
-              {(["groups", "r32", "r16", "qf", "sf", "third", "final", "bonuses"] as const).map((phase) => (
+              {(["groups", "r32", "r16", "qf", "sf", "third", "final", "bonuses", "fifaLocked"] as const).map((phase) => (
                 <button
                   key={phase}
                   onClick={() => setPhaseLock?.(phase, !phaseLocks[phase])}
@@ -164,7 +193,7 @@ export default function ResultsAdmin() {
                   title={`${phaseLocks[phase] ? "Desbloquear" : "Bloquear"} fase ${phase}`}
                 >
                   {phaseLocks[phase] ? "🔒" : "🔓"}{" "}
-                  {phase === "groups" ? "Grupos" : phase === "r32" ? "R32" : phase === "r16" ? "R16" : phase === "qf" ? "QF" : phase === "sf" ? "SF" : phase === "third" ? "3RD" : phase === "bonuses" ? "Bonos" : "FIN"}
+                  {phase === "groups" ? "Grupos" : phase === "r32" ? "R32" : phase === "r16" ? "R16" : phase === "qf" ? "QF" : phase === "sf" ? "SF" : phase === "third" ? "3RD" : phase === "bonuses" ? "Bonos" : phase === "fifaLocked" ? "FIFA" : "FIN"}
                 </button>
               ))}
             </div>
@@ -337,6 +366,95 @@ export default function ResultsAdmin() {
         </div>
 
         <div>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <Swords className="w-5 h-5 text-amber-400" />
+              <div>
+                <h3 className="text-lg font-semibold text-white">Bracket Oficial FIFA</h3>
+                <p className="text-sm text-gray-400">
+                  Selecciona los equipos para cada partido y captura los marcadores oficiales
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => generateFifaKnockout?.()}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-amber-600 hover:bg-amber-500 text-white rounded-lg transition-colors"
+              >
+                <Swords className="w-3.5 h-3.5" />
+                Generar bracket FIFA
+              </button>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {FIFA_ROUNDS.map(({ key, label }) => {
+              const roundMatches = (results?.fifaKnockout ?? []).filter((m: any) => m.round === key)
+              return (
+                <div
+                  key={key}
+                  className="bg-gray-800/80 backdrop-blur rounded-xl border border-gray-700/50 overflow-hidden"
+                >
+                  <div className="px-4 py-3 bg-gradient-to-r from-gray-700 to-gray-800 border-b border-gray-600/50">
+                    <div className="flex items-center gap-2">
+                      <Swords className="w-4 h-4 text-amber-400" />
+                      <h3 className="font-bold text-white">{label}</h3>
+                    </div>
+                  </div>
+                  <div className="p-3 space-y-1.5">
+                    {roundMatches.length === 0 ? (
+                      <p className="text-gray-500 text-xs text-center py-4">
+                        Presiona "Generar bracket FIFA" para comenzar
+                      </p>
+                    ) : (
+                      roundMatches.map((match: any) => {
+                        const home = getTeamById(match?.homeTeam)
+                        const away = getTeamById(match?.awayTeam)
+                        return (
+                          <div
+                            key={match?.id}
+                            className="flex items-center gap-1 bg-gray-700/30 rounded-lg p-1.5"
+                          >
+                            <select
+                              value={match?.homeTeam ?? ""}
+                              onChange={(e) => setAdminFifaKnockoutTeam?.(match.id, 'homeTeam', e.target.value || null)}
+                              className="w-24 text-xs bg-gray-700 border border-gray-600 rounded text-white py-1 px-1 truncate focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+                            >
+                              <option value="">—</option>
+                              {allTeams.map((t) => (
+                                <option key={t.id} value={t.id}>{t.flag} {t.name}</option>
+                              ))}
+                            </select>
+                            <AdminScoreSelect
+                              value={match?.homeScore ?? null}
+                              onChange={(v) => setAdminFifaKnockoutScore?.(match.id, v, match?.awayScore ?? null)}
+                            />
+                            <span className="text-gray-500 text-xs">-</span>
+                            <AdminScoreSelect
+                              value={match?.awayScore ?? null}
+                              onChange={(v) => setAdminFifaKnockoutScore?.(match.id, match?.homeScore ?? null, v)}
+                            />
+                            <select
+                              value={match?.awayTeam ?? ""}
+                              onChange={(e) => setAdminFifaKnockoutTeam?.(match.id, 'awayTeam', e.target.value || null)}
+                              className="w-24 text-xs bg-gray-700 border border-gray-600 rounded text-white py-1 px-1 truncate focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+                            >
+                              <option value="">—</option>
+                              {allTeams.map((t) => (
+                                <option key={t.id} value={t.id}>{t.flag} {t.name}</option>
+                              ))}
+                            </select>
+                          </div>
+                        )
+                      })
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        <div>
           <h3 className="text-lg font-semibold text-white mb-4">Bonos</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {(["bestGoalkeeper", "topScorer", "bestPlayer"] as const).map((key) => (
@@ -429,22 +547,24 @@ export default function ResultsAdmin() {
                 <p className="text-sm text-gray-400">Penalizaciones y permisos de edición por usuario</p>
               </div>
             </div>
-            <button
-              onClick={async () => {
-                setSavingParticipants(true)
-                try {
-                  for (const p of participantList) {
-                    await updateParticipantAdmin({ name: p.name, penalties: p.penalties, canEdit: p.canEdit })
-                  }
-                } catch {}
-                setSavingParticipants(false)
-              }}
-              disabled={savingParticipants}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-lg transition-colors"
-            >
-              <Save className="w-3.5 h-3.5" />
-              {savingParticipants ? "Guardando..." : "Guardar cambios"}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={async () => {
+                  setSavingParticipants(true)
+                  try {
+                    for (const p of participantList) {
+                      await updateParticipantAdmin({ name: p.name, penalties: p.penalties, canEdit: p.canEdit, phasePermissions: p.phasePermissions })
+                    }
+                  } catch {}
+                  setSavingParticipants(false)
+                }}
+                disabled={savingParticipants}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-lg transition-colors"
+              >
+                <Save className="w-3.5 h-3.5" />
+                {savingParticipants ? "Guardando..." : "Guardar cambios"}
+              </button>
+            </div>
           </div>
           <div className="bg-gray-800/80 backdrop-blur rounded-xl border border-gray-700/50 overflow-hidden">
             <table className="w-full">
@@ -452,7 +572,31 @@ export default function ResultsAdmin() {
                 <tr className="border-b border-gray-700">
                   <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Usuario</th>
                   <th className="text-center px-4 py-3 text-xs font-medium text-red-400 uppercase tracking-wider">Penalización</th>
-                  <th className="text-center px-4 py-3 text-xs font-medium text-emerald-400 uppercase tracking-wider">Puede editar</th>
+                  <th className="text-center px-4 py-3 text-xs font-medium text-emerald-400 uppercase tracking-wider">Fases</th>
+                </tr>
+                <tr className="border-b border-gray-700/50">
+                  <th></th>
+                  <th></th>
+                  <th className="px-4 py-2">
+                    <div className="flex flex-wrap gap-1 justify-center">
+                      {PHASE_KEYS.map((ph) => (
+                        <button
+                          key={ph.key}
+                          onClick={() =>
+                            setParticipantList((prev) =>
+                              prev.map((p) => ({
+                                ...p,
+                                phasePermissions: { ...p.phasePermissions, [ph.key]: !p.phasePermissions[ph.key] },
+                              }))
+                            )
+                          }
+                          className="px-2 py-0.5 text-[10px] rounded font-medium transition-colors border border-gray-600/50 bg-gray-700/50 text-gray-300 hover:bg-gray-600/50"
+                        >
+                          Todos {ph.label}
+                        </button>
+                      ))}
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-700/50">
@@ -472,27 +616,36 @@ export default function ResultsAdmin() {
                         className="w-20 text-center bg-gray-700 border border-gray-600 rounded text-sm text-white py-1 focus:outline-none focus:ring-2 focus:ring-red-500/30"
                       />
                     </td>
-                    <td className="px-4 py-3 text-center">
-                      <button
-                        onClick={() =>
-                          setParticipantList((prev) =>
-                            prev.map((x) => (x.name === p.name ? { ...x, canEdit: !x.canEdit } : x))
-                          )
-                        }
-                        className={`px-3 py-1 text-xs rounded-lg font-medium transition-colors ${
-                          p.canEdit
-                            ? "bg-emerald-600/20 text-emerald-300 border border-emerald-500/30"
-                            : "bg-red-600/20 text-red-300 border border-red-500/30"
-                        }`}
-                      >
-                        {p.canEdit ? "Sí" : "No"}
-                      </button>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap gap-1 justify-center">
+                        {PHASE_KEYS.map((ph) => (
+                          <button
+                            key={ph.key}
+                            onClick={() =>
+                              setParticipantList((prev) =>
+                                prev.map((x) =>
+                                  x.name === p.name
+                                    ? { ...x, phasePermissions: { ...x.phasePermissions, [ph.key]: !x.phasePermissions[ph.key] } }
+                                    : x
+                                )
+                              )
+                            }
+                            className={`px-2 py-0.5 text-[10px] rounded font-medium transition-colors border ${
+                              p.phasePermissions[ph.key]
+                                ? "bg-emerald-600/20 text-emerald-300 border-emerald-500/30"
+                                : "bg-red-600/20 text-red-300 border-red-500/30"
+                            }`}
+                          >
+                            {ph.label}
+                          </button>
+                        ))}
+                      </div>
                     </td>
                   </tr>
                 ))}
                 {participantList.length === 0 && (
                   <tr>
-                    <td colSpan={3} className="px-4 py-8 text-center text-sm text-gray-500">
+                    <td colSpan={2} className="px-4 py-8 text-center text-sm text-gray-500">
                       No hay participantes registrados
                     </td>
                   </tr>
