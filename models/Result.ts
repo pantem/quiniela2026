@@ -67,6 +67,8 @@ export interface IResult extends Document {
   locked: boolean
   phaseLocks: PhaseLocks
   autoBonuses: Record<string, number>
+  r32TeamBonus: Record<string, number>
+  r32TeamBonusDetail: Record<string, string[]>
   updatedAt: Date
 }
 
@@ -167,6 +169,8 @@ const ResultSchema = new Schema<IResult>(
     locked: { type: Boolean, default: false },
     phaseLocks: { type: PhaseLocksSchema, default: () => ({ groups: false, r32: false, r16: false, qf: false, sf: false, final: false, bonuses: false, fifaLocked: false }) },
     autoBonuses: { type: Schema.Types.Mixed, default: {} },
+    r32TeamBonus: { type: Schema.Types.Mixed, default: {} },
+    r32TeamBonusDetail: { type: Schema.Types.Mixed, default: {} },
   },
   { timestamps: true }
 )

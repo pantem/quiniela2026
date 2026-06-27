@@ -36,6 +36,8 @@ interface QuinielaState {
     bonuses: BonusPrediction
     scoringConfig: ScoringConfig | null
     autoBonuses: AutoBonuses
+    r32TeamBonus: AutoBonuses
+    r32TeamBonusDetail: Record<string, string[]>
   }
   resultMatchScores: MatchScore[]
   allParticipants: Array<{ name: string }>
@@ -83,6 +85,10 @@ interface QuinielaState {
   calculateAutoBonuses: () => void
   clearAutoBonuses: () => void
   getAutoBonusPoints: (participantName: string) => number
+  getR32TeamBonusPoints: (participantName: string) => number
+  getR32TeamBonusDetail: (participantName: string) => string[]
+  calculateR32TeamBonus: () => Promise<void>
+  clearR32TeamBonus: () => void
   saveResultsToMongo: () => Promise<void>
 }
 
@@ -203,6 +209,8 @@ export const useQuinielaStore = create<QuinielaState>()(
         bonuses: { ...defaultBonuses },
         scoringConfig: null,
         autoBonuses: {},
+        r32TeamBonus: {},
+        r32TeamBonusDetail: {},
       },
       resultMatchScores: defaultResultMatchScores(),
       allParticipants: [],
@@ -516,7 +524,8 @@ export const useQuinielaStore = create<QuinielaState>()(
           calculateKnockoutPoints(state.knockout ?? [], state.results.knockout ?? []) +
           calculateFifaKnockoutPoints(state.fifaKnockout ?? [], state.results.fifaKnockout ?? []) +
           calculateBonusPoints(state.bonuses ?? {}, state.results.bonuses ?? {}) +
-          (state.results.autoBonuses?.[state.participantName] ?? 0)
+          (state.results.autoBonuses?.[state.participantName] ?? 0) +
+          (state.results.r32TeamBonus?.[state.participantName] ?? 0)
         )
       },
 
@@ -567,6 +576,8 @@ export const useQuinielaStore = create<QuinielaState>()(
             bonuses: { ...defaultBonuses },
             scoringConfig: null,
             autoBonuses: {},
+            r32TeamBonus: {},
+            r32TeamBonusDetail: {},
           },
           resultMatchScores: defaultResultMatchScores(),
           allParticipants: [],
@@ -684,6 +695,8 @@ export const useQuinielaStore = create<QuinielaState>()(
             bonuses: data.bonuses ?? { ...defaultBonuses },
             scoringConfig: data.scoringConfig ?? null,
             autoBonuses: data.autoBonuses ?? {},
+            r32TeamBonus: data.r32TeamBonus ?? {},
+            r32TeamBonusDetail: data.r32TeamBonusDetail ?? {},
           },
           phaseLocks: data.phaseLocks ?? { ...DEFAULT_PHASE_LOCKS },
         })
@@ -741,12 +754,56 @@ export const useQuinielaStore = create<QuinielaState>()(
           results: {
             ...state.results,
             autoBonuses: {},
+            r32TeamBonus: {},
+            r32TeamBonusDetail: {},
           },
         }))
       },
 
       getAutoBonusPoints: (participantName: string) => {
         return get().results.autoBonuses[participantName] ?? 0
+      },
+
+      getR32TeamBonusPoints: (participantName: string) => {
+        return get().results.r32TeamBonus?.[participantName] ?? 0
+      },
+
+      getR32TeamBonusDetail: (participantName: string) => {
+        return get().results.r32TeamBonusDetail?.[participantName] ?? []
+      },
+
+      calculateR32TeamBonus: async () => {
+        try {
+          const token = typeof window !== "undefined" ? localStorage.getItem("quiniela-token") : null
+          const res = await fetch("/api/r32-team-bonus", {
+            method: "POST",
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          })
+          if (!res.ok) throw new Error("Error al calcular bonus de equipos en dieciseisavos")
+          const data = await res.json()
+          set((state) => ({
+            results: {
+              ...state.results,
+              r32TeamBonus: data.r32TeamBonus ?? {},
+              r32TeamBonusDetail: data.r32TeamBonusDetail ?? {},
+            },
+            syncError: null,
+          }))
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : "Error al calcular bonus de equipos en dieciseisavos"
+          console.error("R32TeamBonus error:", err)
+          set({ syncError: msg })
+        }
+      },
+
+      clearR32TeamBonus: () => {
+        set((state) => ({
+          results: {
+            ...state.results,
+            r32TeamBonus: {},
+            r32TeamBonusDetail: {},
+          },
+        }))
       },
 
       saveResultsToMongo: async () => {
@@ -761,6 +818,8 @@ export const useQuinielaStore = create<QuinielaState>()(
             scoringConfig: results.scoringConfig ?? undefined,
             phaseLocks,
             autoBonuses: results.autoBonuses,
+            r32TeamBonus: results.r32TeamBonus,
+            r32TeamBonusDetail: results.r32TeamBonusDetail,
           })
           set({ syncError: null })
         } catch (err) {
@@ -803,6 +862,8 @@ export const useQuinielaStore = create<QuinielaState>()(
             bonuses: persisted.results?.bonuses ?? { ...defaultBonuses },
             scoringConfig: persisted.results?.scoringConfig ?? null,
             autoBonuses: persisted.results?.autoBonuses ?? {},
+            r32TeamBonus: persisted.results?.r32TeamBonus ?? {},
+            r32TeamBonusDetail: persisted.results?.r32TeamBonusDetail ?? {},
           },
         }
       },

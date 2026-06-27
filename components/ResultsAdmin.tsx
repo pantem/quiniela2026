@@ -540,6 +540,61 @@ export default function ResultsAdmin() {
 
         <div>
           <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-semibold text-white">Bonus por equipos en dieciseisavos (FIFA)</h3>
+              <p className="text-sm text-gray-400">3 puntos por cada equipo de tu predicción de grupos que coincida con la fase FIFA de dieciseisavos</p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => store.calculateR32TeamBonus?.()}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors"
+              >
+                Calcular bonus 16avos
+              </button>
+              {store.results.r32TeamBonus && Object.keys(store.results.r32TeamBonus).length > 0 && (
+                <button
+                  onClick={() => store.clearR32TeamBonus?.()}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-red-600/30 hover:bg-red-600/50 text-red-300 border border-red-500/30 rounded-lg transition-colors"
+                >
+                  Limpiar
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="bg-gray-800/80 backdrop-blur rounded-xl border border-gray-700/50 p-4">
+            {store.results.r32TeamBonus && Object.keys(store.results.r32TeamBonus).length > 0 ? (
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-700">
+                    <th className="text-left px-4 py-2 text-xs font-medium text-gray-400 uppercase tracking-wider">Participante</th>
+                    <th className="text-center px-4 py-2 text-xs font-medium text-gray-400 uppercase tracking-wider">Equipos acertados</th>
+                    <th className="text-right px-4 py-2 text-xs font-medium text-emerald-400 uppercase tracking-wider">Puntos</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-700/50">
+                  {Object.entries(store.results.r32TeamBonus)
+                    .sort(([, a], [, b]) => b - a)
+                    .map(([name, pts]) => (
+                      <tr key={name} className="hover:bg-gray-700/30 transition-colors">
+                        <td className="px-4 py-2 text-sm text-white">{name}</td>
+                        <td className="px-4 py-2 text-sm text-center text-gray-400">
+                          {(store.results.r32TeamBonusDetail?.[name] as string[])?.join(", ") || "—"}
+                        </td>
+                        <td className="px-4 py-2 text-sm text-right text-emerald-400 font-bold">+{pts}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="p-6 text-center">
+                <p className="text-gray-500 text-sm">Asigna los equipos en la fase FIFA de dieciseisavos y haz clic en "Calcular bonus 16avos".</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <Users className="w-5 h-5 text-blue-400" />
               <div>

@@ -13,6 +13,8 @@ interface ParticipantScore {
   knockoutPoints: number
   bonusPoints?: number
   autoBonusPoints?: number
+  r32TeamBonusPoints?: number
+  r32TeamBonusDetail?: string[]
   penalties?: number
   total: number
 }
@@ -30,6 +32,8 @@ export default function Ranking() {
     knockoutPoints: store.getKnockoutPoints(),
     bonusPoints: store.getBonusPoints(),
     autoBonusPoints: store.getAutoBonusPoints(store.participantName),
+    r32TeamBonusPoints: store.getR32TeamBonusPoints(store.participantName),
+    r32TeamBonusDetail: store.getR32TeamBonusDetail(store.participantName),
     total: store.getTotalPoints(),
   }
 
@@ -153,6 +157,7 @@ function RankingTable({ scores, onViewQuiniela }: { scores: ParticipantScore[]; 
                 <th className="text-center px-3 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Fases Finales</th>
                 <th className="text-center px-3 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Bonos</th>
                 <th className="text-center px-3 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Auto</th>
+                <th className="text-center px-3 py-3 text-xs font-medium text-emerald-400 uppercase tracking-wider">16avos</th>
                 <th className="text-center px-3 py-3 text-xs font-medium text-red-400 uppercase tracking-wider">Pen.</th>
                 <th className="text-right px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Total</th>
                 {onViewQuiniela && <th className="w-16 px-2 py-3" />}
@@ -174,6 +179,16 @@ function RankingTable({ scores, onViewQuiniela }: { scores: ParticipantScore[]; 
                   <td className="px-3 py-4 text-center text-sm text-gray-300">{p.knockoutPoints}</td>
                   <td className="px-3 py-4 text-center text-sm text-gray-300">{p.bonusPoints ?? 0}</td>
                   <td className="px-3 py-4 text-center text-sm text-purple-400">{p.autoBonusPoints ?? 0}</td>
+                  <td className="px-3 py-4 text-center text-sm text-emerald-400 relative group">
+                    {p.r32TeamBonusPoints ?? 0}
+                    {(p.r32TeamBonusDetail ?? []).length > 0 && (
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block z-10">
+                        <div className="bg-gray-900 text-white text-[10px] rounded-lg px-2 py-1 whitespace-nowrap shadow-lg border border-gray-700">
+                          {(p.r32TeamBonusDetail ?? []).join(", ")}
+                        </div>
+                      </div>
+                    )}
+                  </td>
                   <td className="px-3 py-4 text-center text-sm text-red-400">{(p.penalties ?? 0) > 0 ? `-${p.penalties}` : 0}</td>
                   <td className="px-4 py-4 text-right">
                     <span className="text-lg font-bold text-white">{p.total}</span>
