@@ -96,6 +96,7 @@ export async function calculateFifaKnockoutPoints(
   for (const pred of predictions) {
     const actual = results.find((r) => r.id === pred.id)
     if (!actual) continue
+    if (actual.winner == null) continue
     const pts = points(cfg, pred.round)
     if (pred.winner === actual.winner) {
       total += pts.winner
@@ -120,6 +121,7 @@ export async function calculateKnockoutPoints(
   for (const pred of predictions) {
     const actual = results.find((r) => r.id === pred.id)
     if (!actual) continue
+    if (actual.winner == null) continue
     const pts = points(cfg, pred.round)
     if (pred.winner === actual.winner) {
       total += pts.winner

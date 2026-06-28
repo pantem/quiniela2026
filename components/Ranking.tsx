@@ -11,6 +11,7 @@ interface ParticipantScore {
   matchPoints: number
   groupPoints: number
   knockoutPoints: number
+  fifaKnockoutPoints?: number
   bonusPoints?: number
   autoBonusPoints?: number
   r32TeamBonusPoints?: number
@@ -30,6 +31,7 @@ export default function Ranking() {
     matchPoints: store.getMatchPoints(),
     groupPoints: store.getGroupPoints(),
     knockoutPoints: store.getKnockoutPoints(),
+    fifaKnockoutPoints: store.getFifaKnockoutPoints(),
     bonusPoints: store.getBonusPoints(),
     autoBonusPoints: store.getAutoBonusPoints(store.participantName),
     r32TeamBonusPoints: store.getR32TeamBonusPoints(store.participantName),
@@ -155,6 +157,7 @@ function RankingTable({ scores, onViewQuiniela }: { scores: ParticipantScore[]; 
                 <th className="text-center px-3 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Marcadores</th>
                 <th className="text-center px-3 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Grupos</th>
                 <th className="text-center px-3 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Fases Finales</th>
+                <th className="text-center px-3 py-3 text-xs font-medium text-emerald-400 uppercase tracking-wider">FIFA</th>
                 <th className="text-center px-3 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Bonos</th>
                 <th className="text-center px-3 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Auto</th>
                 <th className="text-center px-3 py-3 text-xs font-medium text-emerald-400 uppercase tracking-wider">16avos</th>
@@ -177,6 +180,7 @@ function RankingTable({ scores, onViewQuiniela }: { scores: ParticipantScore[]; 
                   <td className="px-3 py-4 text-center text-sm text-gray-300">{p.matchPoints}</td>
                   <td className="px-3 py-4 text-center text-sm text-gray-300">{p.groupPoints}</td>
                   <td className="px-3 py-4 text-center text-sm text-gray-300">{p.knockoutPoints}</td>
+                  <td className="px-3 py-4 text-center text-sm text-emerald-400">{p.fifaKnockoutPoints ?? 0}</td>
                   <td className="px-3 py-4 text-center text-sm text-gray-300">{p.bonusPoints ?? 0}</td>
                   <td className="px-3 py-4 text-center text-sm text-purple-400">{p.autoBonusPoints ?? 0}</td>
                   <td className="px-3 py-4 text-center text-sm text-emerald-400 relative group">
