@@ -53,7 +53,7 @@ export async function GET() {
           p.bonuses ?? { bestGoalkeeper: null, topScorer: null, bestPlayer: null },
           result.bonuses ?? { bestGoalkeeper: null, topScorer: null, bestPlayer: null }
         )
-        const autoBonusPoints = (result.autoBonuses as Record<string, number>)?.[p.name] ?? 0
+        const autoBonusPoints = 0
         const r32TeamBonusPoints = ((result as any).r32TeamBonus as Record<string, number>)?.[p.name] ?? 0
         const r32TeamBonusDetail = ((result as any).r32TeamBonusDetail as Record<string, string[]>)?.[p.name] ?? []
         const penalties = p.penalties ?? 0
@@ -74,7 +74,7 @@ export async function GET() {
           r32TeamBonusPoints,
           r32TeamBonusDetail,
           penalties,
-          total: matchPoints + groupPoints + knockoutPoints + fifaKnockoutPoints + bonusPoints + autoBonusPoints + r32TeamBonusPoints - penalties,
+          total: matchPoints + groupPoints + knockoutPoints + fifaKnockoutPoints + bonusPoints + autoBonusPoints - penalties,
         }
       })
     )

@@ -524,8 +524,7 @@ export const useQuinielaStore = create<QuinielaState>()(
           calculateKnockoutPoints(state.knockout ?? [], state.results.knockout ?? []) +
           calculateFifaKnockoutPoints(state.fifaKnockout ?? [], state.results.fifaKnockout ?? []) +
           calculateBonusPoints(state.bonuses ?? {}, state.results.bonuses ?? {}) +
-          (state.results.autoBonuses?.[state.participantName] ?? 0) +
-          (state.results.r32TeamBonus?.[state.participantName] ?? 0)
+          (state.results.autoBonuses?.[state.participantName] ?? 0)
         )
       },
 
@@ -694,7 +693,7 @@ export const useQuinielaStore = create<QuinielaState>()(
             fifaKnockout: data.fifaKnockout ?? [],
             bonuses: data.bonuses ?? { ...defaultBonuses },
             scoringConfig: data.scoringConfig ?? null,
-            autoBonuses: data.autoBonuses ?? {},
+            autoBonuses: {},
             r32TeamBonus: data.r32TeamBonus ?? {},
             r32TeamBonusDetail: data.r32TeamBonusDetail ?? {},
           },
