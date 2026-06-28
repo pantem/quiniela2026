@@ -57,6 +57,7 @@ interface QuinielaState {
   setAdminFifaKnockoutTeam: (matchId: string, side: 'homeTeam' | 'awayTeam', teamId: string | null) => void
   setAdminFifaKnockoutScore: (matchId: string, homeScore: number | null, awayScore: number | null) => void
   generateFifaKnockout: () => void
+  propagateFifaKnockout: () => void
   getFifaKnockoutPoints: () => number
   setBonus: (key: keyof BonusPrediction, value: string | null) => void
   setResultMatchScore: (matchId: string, homeScore: number | null, awayScore: number | null) => void
@@ -338,14 +339,25 @@ export const useQuinielaStore = create<QuinielaState>()(
       },
 
       setAdminFifaKnockoutTeam: (matchId, side, teamId) => {
-        set((state) => ({
-          results: {
-            ...state.results,
-            fifaKnockout: state.results.fifaKnockout.map((m) =>
-              m.id === matchId ? { ...m, [side]: teamId } : m
-            ),
-          },
-        }))
+        set((state) => {
+          const match = state.results.fifaKnockout.find((m) => m.id === matchId)
+          if (!match) return state
+          const updatedMatch = { ...match, [side]: teamId }
+          let winner = updatedMatch.winner
+          if (updatedMatch.homeScore !== null && updatedMatch.awayScore !== null) {
+            winner = updatedMatch.homeScore > updatedMatch.awayScore ? updatedMatch.homeTeam : updatedMatch.awayTeam
+            if (updatedMatch.homeScore === updatedMatch.awayScore) winner = null
+          }
+          const updated = state.results.fifaKnockout.map((m) =>
+            m.id === matchId ? { ...updatedMatch, winner } : m
+          )
+          return {
+            results: {
+              ...state.results,
+              fifaKnockout: propagateWinners(updated),
+            },
+          }
+        })
       },
 
       setAdminFifaKnockoutScore: (matchId, homeScore, awayScore) => {
@@ -372,6 +384,15 @@ export const useQuinielaStore = create<QuinielaState>()(
           results: {
             ...state.results,
             fifaKnockout: createEmptyFifaKnockout(),
+          },
+        }))
+      },
+
+      propagateFifaKnockout: () => {
+        set((state) => ({
+          results: {
+            ...state.results,
+            fifaKnockout: propagateWinners(state.results.fifaKnockout),
           },
         }))
       },
@@ -694,8 +715,8 @@ export const useQuinielaStore = create<QuinielaState>()(
             bonuses: data.bonuses ?? { ...defaultBonuses },
             scoringConfig: data.scoringConfig ?? null,
             autoBonuses: {},
-            r32TeamBonus: {},
-            r32TeamBonusDetail: {},
+            r32TeamBonus: data.r32TeamBonus ?? {},
+            r32TeamBonusDetail: data.r32TeamBonusDetail ?? {},
           },
           phaseLocks: data.phaseLocks ?? { ...DEFAULT_PHASE_LOCKS },
         })

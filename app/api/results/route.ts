@@ -7,7 +7,7 @@ export async function GET() {
   try {
     await connectDB()
     const result = await ResultModel.findOne().sort({ updatedAt: -1 }).lean()
-    return NextResponse.json(result ?? { groups: [], matchScores: [], knockout: [], bonuses: { bestGoalkeeper: null, topScorer: null, bestPlayer: null }, locked: false, autoBonuses: {}, r32TeamBonus: {}, r32TeamBonusDetail: {} })
+    return NextResponse.json(result ?? { groups: [], matchScores: [], knockout: [], fifaKnockout: [], bonuses: { bestGoalkeeper: null, topScorer: null, bestPlayer: null }, locked: false, autoBonuses: {}, r32TeamBonus: {}, r32TeamBonusDetail: {} })
   } catch (error) {
     console.error("Error fetching results:", error)
     return NextResponse.json(

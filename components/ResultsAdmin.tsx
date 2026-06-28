@@ -48,6 +48,7 @@ export default function ResultsAdmin() {
     setAdminFifaKnockoutTeam,
     setAdminFifaKnockoutScore,
     generateFifaKnockout,
+    propagateFifaKnockout,
   } = store
   const [unlocked, setUnlocked] = useState(false)
   const [renderError, setRenderError] = useState<string | null>(null)
@@ -377,6 +378,13 @@ export default function ResultsAdmin() {
               </div>
             </div>
             <div className="flex gap-2">
+              <button
+                onClick={() => propagateFifaKnockout?.()}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors"
+              >
+                <Swords className="w-3.5 h-3.5" />
+                Propagar equipos
+              </button>
               <button
                 onClick={() => generateFifaKnockout?.()}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-amber-600 hover:bg-amber-500 text-white rounded-lg transition-colors"
