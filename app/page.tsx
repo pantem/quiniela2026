@@ -43,7 +43,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { id: "grupos", label: "Grupos", icon: <Table2 className="w-4 h-4" />, section: "predict" },
   { id: "marcadores", label: "Marcadores", icon: <Timer className="w-4 h-4" />, section: "predict" },
-  { id: "eliminatoria", label: "Fases Finales", icon: <Swords className="w-4 h-4" />, section: "predict" },
+  //{ id: "eliminatoria", label: "Fases Finales", icon: <Swords className="w-4 h-4" />, section: "predict" },
   { id: "fifaeliminatoria", label: "Fase Final FIFA", icon: <Swords className="w-4 h-4" />, section: "predict" },
   { id: "campeon", label: "Bonos", icon: <Star className="w-4 h-4" />, section: "predict" },
   { id: "resultados", label: "Resultados", icon: <ShieldCheck className="w-4 h-4" />, section: "admin", adminOnly: true },
@@ -257,11 +257,10 @@ function HomePage() {
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${
-                    activeTab === item.id
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${activeTab === item.id
                       ? "bg-purple-600/20 text-purple-300 border border-purple-500/30"
                       : "text-gray-400 hover:text-white hover:bg-gray-800"
-                  }`}
+                    }`}
                 >
                   {item.icon}
                   {item.label}
@@ -278,11 +277,10 @@ function HomePage() {
                     <button
                       key={item.id}
                       onClick={() => setActiveTab(item.id)}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${
-                        activeTab === item.id
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${activeTab === item.id
                           ? "bg-emerald-600/20 text-emerald-300 border border-emerald-500/30"
                           : "text-gray-400 hover:text-white hover:bg-gray-800"
-                      }`}
+                        }`}
                     >
                       {item.icon}
                       {item.label}
@@ -299,11 +297,10 @@ function HomePage() {
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${
-                    activeTab === item.id
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${activeTab === item.id
                       ? "bg-amber-600/20 text-amber-300 border border-amber-500/30"
                       : "text-gray-400 hover:text-white hover:bg-gray-800"
-                  }`}
+                    }`}
                 >
                   {item.icon}
                   {item.label}
@@ -318,11 +315,10 @@ function HomePage() {
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-all ${
-                      activeTab === item.id
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-all ${activeTab === item.id
                         ? "bg-purple-600/20 text-purple-300 border border-purple-500/30"
                         : "text-gray-400 hover:text-white hover:bg-gray-800 border border-transparent"
-                    }`}
+                      }`}
                   >
                     {item.icon}
                     {item.label}
