@@ -694,8 +694,8 @@ export const useQuinielaStore = create<QuinielaState>()(
             bonuses: data.bonuses ?? { ...defaultBonuses },
             scoringConfig: data.scoringConfig ?? null,
             autoBonuses: {},
-            r32TeamBonus: data.r32TeamBonus ?? {},
-            r32TeamBonusDetail: data.r32TeamBonusDetail ?? {},
+            r32TeamBonus: {},
+            r32TeamBonusDetail: {},
           },
           phaseLocks: data.phaseLocks ?? { ...DEFAULT_PHASE_LOCKS },
         })

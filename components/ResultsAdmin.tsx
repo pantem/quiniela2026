@@ -551,14 +551,15 @@ export default function ResultsAdmin() {
               >
                 Calcular bonus 16avos
               </button>
-              {store.results.r32TeamBonus && Object.keys(store.results.r32TeamBonus).length > 0 && (
-                <button
-                  onClick={() => store.clearR32TeamBonus?.()}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-red-600/30 hover:bg-red-600/50 text-red-300 border border-red-500/30 rounded-lg transition-colors"
-                >
-                  Limpiar
-                </button>
-              )}
+              <button
+                onClick={async () => {
+                  store.clearR32TeamBonus?.()
+                  await store.saveResultsToMongo?.()
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-red-600/30 hover:bg-red-600/50 text-red-300 border border-red-500/30 rounded-lg transition-colors"
+              >
+                Limpiar
+              </button>
             </div>
           </div>
           <div className="bg-gray-800/80 backdrop-blur rounded-xl border border-gray-700/50 p-4">
