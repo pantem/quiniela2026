@@ -83,6 +83,8 @@ export async function saveResults(data: {
   scoringConfig?: any
   phaseLocks?: any
   autoBonuses?: any
+  r32TeamBonus?: any
+  r32TeamBonusDetail?: any
 }) {
   const res = await fetch(`${BASE}/results`, {
     method: "POST",
