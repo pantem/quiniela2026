@@ -73,10 +73,11 @@ export function calculateGroupPoints(
 }
 
 export function calculateBonusPoints(
-  predictions: BonusPrediction,
-  results: BonusPrediction,
+  predictions: BonusPrediction | null | undefined,
+  results: BonusPrediction | null | undefined,
   cfg: ScoringConfig = DEFAULT_SCORING
 ): number {
+  if (!predictions || !results) return 0
   let points = 0
   if (predictions.bestGoalkeeper != null && predictions.bestGoalkeeper === results.bestGoalkeeper) points += cfg.goalkeeperBonus
   if (predictions.topScorer != null && predictions.topScorer === results.topScorer) points += cfg.topScorerBonus

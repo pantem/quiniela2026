@@ -577,7 +577,10 @@ export const useQuinielaStore = create<QuinielaState>()(
 
       getBonusPoints: () => {
         const state = get()
-        return calculateBonusPoints(state.bonuses, state.results.bonuses)
+        return calculateBonusPoints(
+          state.bonuses ?? { bestGoalkeeper: null, topScorer: null, bestPlayer: null },
+          state.results.bonuses ?? { bestGoalkeeper: null, topScorer: null, bestPlayer: null }
+        )
       },
 
       getMatchStats: () => {
@@ -682,7 +685,7 @@ export const useQuinielaStore = create<QuinielaState>()(
             const loaded: Partial<QuinielaState> = {
               participantName: participant.name,
               groups: participant.groups ?? defaultGroups(),
-              bonuses: participant.bonuses,
+              bonuses: participant.bonuses ?? { ...defaultBonuses },
               canEdit: participant.canEdit ?? false,
               phasePermissions: participant.phasePermissions ?? { groups: true, r32: true, r16: true, qf: true, sf: true, third: true, final: true, bonuses: true, fifaLocked: true },
             }

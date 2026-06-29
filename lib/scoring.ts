@@ -76,9 +76,10 @@ export async function calculateGroupPoints(
 }
 
 export async function calculateBonusPoints(
-  predictions: { bestGoalkeeper: string | null; topScorer: string | null; bestPlayer: string | null },
-  results: { bestGoalkeeper: string | null; topScorer: string | null; bestPlayer: string | null }
+  predictions: { bestGoalkeeper: string | null; topScorer: string | null; bestPlayer: string | null } | null | undefined,
+  results: { bestGoalkeeper: string | null; topScorer: string | null; bestPlayer: string | null } | null | undefined
 ): Promise<number> {
+  if (!predictions || !results) return 0
   const cfg = await getScoringConfig()
   let points = 0
   if (predictions.bestGoalkeeper != null && predictions.bestGoalkeeper === results.bestGoalkeeper) points += cfg.goalkeeperBonus
