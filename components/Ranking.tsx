@@ -26,17 +26,23 @@ export default function Ranking() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const localScore: ParticipantScore = {
-    name: store.participantName || "Tú",
-    matchPoints: store.getMatchPoints(),
-    groupPoints: store.getGroupPoints(),
-    knockoutPoints: store.getKnockoutPoints(),
-    fifaKnockoutPoints: store.getFifaKnockoutPoints(),
-    bonusPoints: store.getBonusPoints(),
-    autoBonusPoints: store.getAutoBonusPoints(store.participantName),
-    r32TeamBonusPoints: store.getR32TeamBonusPoints(store.participantName),
-    r32TeamBonusDetail: store.getR32TeamBonusDetail(store.participantName),
-    total: store.getTotalPoints(),
+  let localScore: ParticipantScore
+  try {
+    localScore = {
+      name: store.participantName || "Tú",
+      matchPoints: store.getMatchPoints(),
+      groupPoints: store.getGroupPoints(),
+      knockoutPoints: store.getKnockoutPoints(),
+      fifaKnockoutPoints: store.getFifaKnockoutPoints(),
+      bonusPoints: store.getBonusPoints(),
+      autoBonusPoints: store.getAutoBonusPoints(store.participantName),
+      r32TeamBonusPoints: store.getR32TeamBonusPoints(store.participantName),
+      r32TeamBonusDetail: store.getR32TeamBonusDetail(store.participantName),
+      total: store.getTotalPoints(),
+    }
+  } catch (e) {
+    console.error("Error computing localScore:", e)
+    localScore = { name: store.participantName || "Tú", matchPoints: 0, groupPoints: 0, knockoutPoints: 0, fifaKnockoutPoints: 0, bonusPoints: 0, autoBonusPoints: 0, r32TeamBonusPoints: 0, r32TeamBonusDetail: [], penalties: 0, total: 0 }
   }
 
   useEffect(() => {

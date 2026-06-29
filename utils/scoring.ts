@@ -22,8 +22,9 @@ export function calculateMatchScorePoints(
 ): number {
   let points = 0
   for (const pred of predictions) {
+    if (!pred || !pred.id) continue
     if (pred.homeScore === null || pred.awayScore === null) continue
-    const actual = results.find((r) => r.id === pred.id)
+    const actual = results.find((r) => r && r.id === pred.id)
     if (!actual || actual.homeScore === null || actual.awayScore === null) continue
 
     if (pred.homeScore === actual.homeScore && pred.awayScore === actual.awayScore) {
@@ -47,6 +48,7 @@ export function calculateGroupPoints(
   cfg: ScoringConfig = DEFAULT_SCORING
 ): number {
   let points = 0
+  if (!prediction || !results) return 0
   const positions: Array<"first" | "second" | "third" | "fourth"> = [
     "first", "second", "third", "fourth",
   ]
@@ -89,7 +91,8 @@ export function calculateFifaKnockoutPoints(
 ): number {
   let total = 0
   for (const pred of predictions) {
-    const actual = results.find((r) => r.id === pred.id)
+    if (!pred || !pred.id) continue
+    const actual = results.find((r) => r && r.id === pred.id)
     if (!actual) continue
     if (actual.winner == null) continue
     const pts = getRoundPoints(cfg, pred.round)
@@ -115,7 +118,8 @@ export function calculateKnockoutPoints(
   let total = 0
 
   for (const pred of predictions) {
-    const actual = results.find((r) => r.id === pred.id)
+    if (!pred || !pred.id) continue
+    const actual = results.find((r) => r && r.id === pred.id)
     if (!actual) continue
     if (actual.winner == null) continue
 
@@ -159,10 +163,11 @@ export function calculateMatchStats(
   let points = 0
 
   for (const pred of predictions) {
+    if (!pred || !pred.id) continue
     if (pred.homeScore === null || pred.awayScore === null) continue
     played++
 
-    const actual = results.find((r) => r.id === pred.id)
+    const actual = results.find((r) => r && r.id === pred.id)
     if (!actual || actual.homeScore === null || actual.awayScore === null) continue
 
     const predGD = pred.homeScore - pred.awayScore

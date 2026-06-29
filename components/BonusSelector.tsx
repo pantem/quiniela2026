@@ -2,9 +2,32 @@
 
 import { useQuinielaStore } from "@/store/store"
 import { Star } from "lucide-react"
+import type { BonusPrediction, PhaseLocks } from "@/app/types"
 
 export default function BonusSelector() {
-  const { bonuses, setBonus, canEditPhase } = useQuinielaStore()
+  const store = useQuinielaStore()
+  let bonuses: BonusPrediction
+  let setBonus: (key: keyof BonusPrediction, value: string | null) => void
+  let canEditPhase: (phase: keyof PhaseLocks) => boolean
+  try {
+    bonuses = store.bonuses
+    setBonus = store.setBonus
+    canEditPhase = store.canEditPhase
+  } catch (e) {
+    console.error("BonusSelector store error:", e)
+    return (
+      <div className="bg-gray-800/60 backdrop-blur rounded-xl border border-gray-700/50 p-12 text-center">
+        <p className="text-red-400 text-sm">Error al cargar la sección de bonos. Revisa la consola.</p>
+      </div>
+    )
+  }
+  if (!bonuses) {
+    return (
+      <div className="bg-gray-800/60 backdrop-blur rounded-xl border border-gray-700/50 p-12 text-center">
+        <p className="text-gray-400 text-sm">No hay datos de bonos disponibles.</p>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -21,27 +44,27 @@ export default function BonusSelector() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <BonusInput
           label="Mejor Portero"
-          value={bonuses.bestGoalkeeper}
+          value={bonuses?.bestGoalkeeper ?? null}
           icon="🧤"
           placeholder="Ej: Emiliano Martínez"
-          onChange={(v) => setBonus("bestGoalkeeper", v)}
-          disabled={!canEditPhase('bonuses')}
+          onChange={(v) => setBonus?.("bestGoalkeeper", v)}
+          disabled={!canEditPhase?.('bonuses')}
         />
         <BonusInput
           label="Goleador"
-          value={bonuses.topScorer}
+          value={bonuses?.topScorer ?? null}
           icon="⚽"
           placeholder="Ej: Kylian Mbappé"
-          onChange={(v) => setBonus("topScorer", v)}
-          disabled={!canEditPhase('bonuses')}
+          onChange={(v) => setBonus?.("topScorer", v)}
+          disabled={!canEditPhase?.('bonuses')}
         />
         <BonusInput
           label="Mejor Jugador"
-          value={bonuses.bestPlayer}
+          value={bonuses?.bestPlayer ?? null}
           icon="👑"
           placeholder="Ej: Lionel Messi"
-          onChange={(v) => setBonus("bestPlayer", v)}
-          disabled={!canEditPhase('bonuses')}
+          onChange={(v) => setBonus?.("bestPlayer", v)}
+          disabled={!canEditPhase?.('bonuses')}
         />
       </div>
     </div>

@@ -223,9 +223,15 @@ export const useQuinielaStore = create<QuinielaState>()(
       setCanEdit: (canEdit) => set({ canEdit }),
 
       canEditPhase: (phase) => {
-        const state = get()
-        const setting = state.phasePermissions[phase]
-        return setting !== false
+        try {
+          const state = get()
+          const perms = state.phasePermissions
+          if (!perms) return true
+          const setting = perms[phase]
+          return setting !== false
+        } catch {
+          return true
+        }
       },
 
       setPhasePermission: (phase, value) => {
@@ -781,7 +787,7 @@ export const useQuinielaStore = create<QuinielaState>()(
       },
 
       getAutoBonusPoints: (participantName: string) => {
-        return get().results.autoBonuses[participantName] ?? 0
+        return get().results.autoBonuses?.[participantName] ?? 0
       },
 
       getR32TeamBonusPoints: (participantName: string) => {
@@ -897,7 +903,8 @@ function calculateGroupPointsForAll(
 ): number {
   let total = 0
   for (const pred of predictions) {
-    const actual = results.find((r) => r.groupId === pred.groupId)
+    if (!pred || !pred.groupId) continue
+    const actual = results.find((r) => r && r.groupId === pred.groupId)
     if (actual) {
       total += calculateGroupPoints(pred, actual)
     }
