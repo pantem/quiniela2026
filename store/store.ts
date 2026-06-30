@@ -860,7 +860,7 @@ export const useQuinielaStore = create<QuinielaState>()(
     }),
     {
       name: "quiniela-2026",
-      version: 5,
+      version: 6,
       migrate: (persisted: any, version: number) => {
         const phaseLocksRaw = persisted.phaseLocks ?? (persisted.locked != null
           ? { groups: persisted.locked, r32: persisted.locked, r16: persisted.locked, qf: persisted.locked, sf: persisted.locked, third: persisted.locked, final: persisted.locked }

@@ -41,43 +41,34 @@ function getGroupPosPoints(
   return actualTeams.includes(pred) ? cfg.groupOutcome : 0
 }
 
-function getKnockoutWinnerPoints(
-  predWinner: string | null,
-  officialWinner: string | null,
+function getKnockoutPoints(
+  pred: { winner: string | null; homeScore: number | null; awayScore: number | null },
+  result: { winner: string | null; homeScore: number | null; awayScore: number | null },
   round: string,
   cfg: ScoringConfig
-): number {
-  if (!predWinner || !officialWinner || predWinner !== officialWinner) return 0
-  const pts: Record<string, { winner: number }> = {
-    r32: { winner: cfg.r32Winner },
-    r16: { winner: cfg.r16Winner },
-    qf: { winner: cfg.qfWinner },
-    sf: { winner: cfg.sfWinner },
-    third: { winner: cfg.thirdWinner },
-    final: { winner: cfg.finalWinner },
+): { winnerPts: number; exactPts: number } {
+  if (!result.winner) return { winnerPts: 0, exactPts: 0 }
+  const pts: Record<string, { winner: number; exact: number }> = {
+    r32: { winner: cfg.r32Winner, exact: cfg.r32Exact },
+    r16: { winner: cfg.r16Winner, exact: cfg.r16Exact },
+    qf: { winner: cfg.qfWinner, exact: cfg.qfExact },
+    sf: { winner: cfg.sfWinner, exact: cfg.sfExact },
+    third: { winner: cfg.thirdWinner, exact: cfg.thirdExact },
+    final: { winner: cfg.finalWinner, exact: cfg.finalExact },
   }
-  return pts[round]?.winner ?? 0
-}
-
-function getKnockoutExactPoints(
-  predHome: number | null,
-  predAway: number | null,
-  officialHome: number | null,
-  officialAway: number | null,
-  round: string,
-  cfg: ScoringConfig
-): number {
-  if (predHome === null || predAway === null || officialHome === null || officialAway === null) return 0
-  if (predHome !== officialHome || predAway !== officialAway) return 0
-  const pts: Record<string, { exact: number }> = {
-    r32: { exact: cfg.r32Exact },
-    r16: { exact: cfg.r16Exact },
-    qf: { exact: cfg.qfExact },
-    sf: { exact: cfg.sfExact },
-    third: { exact: cfg.thirdExact },
-    final: { exact: cfg.finalExact },
+  const roundPts = pts[round]
+  if (!roundPts) return { winnerPts: 0, exactPts: 0 }
+  if (
+    pred.homeScore != null && pred.awayScore != null &&
+    result.homeScore != null && result.awayScore != null &&
+    pred.homeScore === result.homeScore && pred.awayScore === result.awayScore
+  ) {
+    return { winnerPts: 0, exactPts: roundPts.exact }
   }
-  return pts[round]?.exact ?? 0
+  if (pred.winner && pred.winner === result.winner) {
+    return { winnerPts: roundPts.winner, exactPts: 0 }
+  }
+  return { winnerPts: 0, exactPts: 0 }
 }
 
 function getBonusItemPoints(key: string, pred: string | null, official: string | null, cfg: ScoringConfig): number {
@@ -98,12 +89,14 @@ export default function UserQuinielaModal({ participant, onClose }: Props) {
   const resultMatchScores = store.resultMatchScores ?? []
   const resultGroups = store.results.groups ?? []
   const resultKnockout = store.results.knockout ?? []
+  const resultFifaKnockout = store.results.fifaKnockout ?? []
   const resultBonuses = store.results.bonuses ?? { bestGoalkeeper: null, topScorer: null, bestPlayer: null }
 
   const [expanded, setExpanded] = useState<Record<string, boolean>>({
     matches: true,
     groups: false,
     knockout: false,
+    fifaKnockout: false,
     bonuses: false,
   })
 
@@ -112,6 +105,7 @@ export default function UserQuinielaModal({ participant, onClose }: Props) {
   const userMatchPredictions = participant.matchPredictions ?? []
   const userGroups = participant.groups ?? []
   const userKnockout = participant.knockout ?? []
+  const userFifaKnockout = participant.fifaKnockout ?? []
   const userBonuses = participant.bonuses ?? { bestGoalkeeper: null, topScorer: null, bestPlayer: null }
   const penalties = participant.penalties ?? 0
 
@@ -119,6 +113,7 @@ export default function UserQuinielaModal({ participant, onClose }: Props) {
     let matchPts = 0
     let groupPts = 0
     let knockoutPts = 0
+    let fifaKnockoutPts = 0
     let bonusPts = 0
 
     for (const pred of userMatchPredictions) {
@@ -138,8 +133,16 @@ export default function UserQuinielaModal({ participant, onClose }: Props) {
     for (const pred of userKnockout) {
       const result = resultKnockout.find((r: any) => r.id === pred.id)
       if (result) {
-        knockoutPts += getKnockoutWinnerPoints(pred.winner, result.winner, pred.round, cfg)
-        knockoutPts += getKnockoutExactPoints(pred.homeScore, pred.awayScore, result.homeScore, result.awayScore, pred.round, cfg)
+        const { winnerPts, exactPts } = getKnockoutPoints(pred, result, pred.round, cfg)
+        knockoutPts += winnerPts + exactPts
+      }
+    }
+
+    for (const pred of userFifaKnockout) {
+      const result = resultFifaKnockout.find((r: any) => r.id === pred.id)
+      if (result) {
+        const { winnerPts, exactPts } = getKnockoutPoints(pred, result, pred.round, cfg)
+        fifaKnockoutPts += winnerPts + exactPts
       }
     }
 
@@ -147,8 +150,8 @@ export default function UserQuinielaModal({ participant, onClose }: Props) {
       bonusPts += getBonusItemPoints(key, userBonuses[key], resultBonuses[key], cfg)
     }
 
-    return { matchPts, groupPts, knockoutPts, bonusPts, total: matchPts + groupPts + knockoutPts + bonusPts - penalties }
-  }, [userMatchPredictions, userGroups, userKnockout, userBonuses, resultMatchScores, resultGroups, resultKnockout, resultBonuses, cfg, penalties])
+    return { matchPts, groupPts, knockoutPts, fifaKnockoutPts, bonusPts, total: matchPts + groupPts + knockoutPts + fifaKnockoutPts + bonusPts - penalties }
+  }, [userMatchPredictions, userGroups, userKnockout, userFifaKnockout, userBonuses, resultMatchScores, resultGroups, resultKnockout, resultFifaKnockout, resultBonuses, cfg, penalties])
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-12 pb-12">
@@ -312,8 +315,71 @@ export default function UserQuinielaModal({ participant, onClose }: Props) {
                   const away = getTeamById(pred.awayTeam)
                   const officialHome = getTeamById(result.homeTeam)
                   const officialAway = getTeamById(result.awayTeam)
-                  const winnerPts = getKnockoutWinnerPoints(pred.winner, result.winner, pred.round, cfg)
-                  const exactPts = getKnockoutExactPoints(pred.homeScore, pred.awayScore, result.homeScore, result.awayScore, pred.round, cfg)
+                  const { winnerPts, exactPts } = getKnockoutPoints(pred, result, pred.round, cfg)
+                  const roundLabel: Record<string, string> = {
+                    r32: "Dieciseisavos", r16: "Octavos", qf: "Cuartos",
+                    sf: "Semifinal", third: "3er Lugar", final: "Final",
+                  }
+                  return (
+                    <div key={pred.id} className="px-4 py-2.5">
+                      <div className="text-[10px] text-gray-500 font-semibold uppercase mb-1">{roundLabel[pred.round] ?? pred.round}</div>
+                      <div className="flex items-center gap-2 text-xs flex-wrap">
+                        <span className="text-gray-400 w-24 truncate text-right">
+                          {officialHome?.flag ?? home?.flag} {officialHome?.name ?? home?.name ?? "—"}
+                        </span>
+                        <span className="text-gray-400 w-8 text-center">
+                          {result.homeScore != null && result.awayScore != null
+                            ? `${result.homeScore}-${result.awayScore}`
+                            : "?-?"}
+                        </span>
+                        <span className="text-gray-600">→</span>
+                        <span className="text-white w-8 text-center font-mono">
+                          {pred.homeScore != null && pred.awayScore != null
+                            ? `${pred.homeScore}-${pred.awayScore}`
+                            : "?-?"}
+                        </span>
+                        <span className="text-gray-300 w-24 truncate text-left">
+                          {officialAway?.flag ?? away?.flag} {officialAway?.name ?? away?.name ?? "—"}
+                        </span>
+                        <span className="ml-auto flex gap-3">
+                          <span className={winnerPts > 0 ? "text-emerald-400 font-bold" : "text-gray-600"}>
+                            Gan: {winnerPts > 0 ? `+${winnerPts}` : "0"}
+                          </span>
+                          <span className={exactPts > 0 ? "text-emerald-400 font-bold" : "text-gray-600"}>
+                            Exc: {exactPts > 0 ? `+${exactPts}` : "0"}
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* FIFA Knockout Section */}
+          <div className="bg-gray-800/60 rounded-xl border border-gray-700/50 overflow-hidden">
+            <button
+              onClick={() => toggle("fifaKnockout")}
+              className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-700/30 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <Swords className="w-4 h-4 text-cyan-400" />
+                <span className="text-sm font-semibold text-white">Fase Final FIFA</span>
+                <span className="text-xs text-amber-400 font-bold">+{totals.fifaKnockoutPts} pts</span>
+              </div>
+              {expanded.fifaKnockout ? <ChevronDown className="w-4 h-4 text-gray-500" /> : <ChevronRight className="w-4 h-4 text-gray-500" />}
+            </button>
+            {expanded.fifaKnockout && (
+              <div className="divide-y divide-gray-700/30">
+                {userFifaKnockout.map((pred: any) => {
+                  const result = resultFifaKnockout.find((r: any) => r.id === pred.id)
+                  if (!result) return null
+                  const home = getTeamById(pred.homeTeam)
+                  const away = getTeamById(pred.awayTeam)
+                  const officialHome = getTeamById(result.homeTeam)
+                  const officialAway = getTeamById(result.awayTeam)
+                  const { winnerPts, exactPts } = getKnockoutPoints(pred, result, pred.round, cfg)
                   const roundLabel: Record<string, string> = {
                     r32: "Dieciseisavos", r16: "Octavos", qf: "Cuartos",
                     sf: "Semifinal", third: "3er Lugar", final: "Final",
@@ -401,7 +467,7 @@ export default function UserQuinielaModal({ participant, onClose }: Props) {
 
           {/* Totals Summary */}
           <div className="bg-gray-800/80 rounded-xl border border-gray-600/50 p-4">
-            <div className="grid grid-cols-5 gap-4 text-center">
+            <div className="grid grid-cols-6 gap-4 text-center">
               <div>
                 <p className="text-[10px] text-gray-500 uppercase tracking-wider">Marcadores</p>
                 <p className="text-lg font-bold text-blue-400">+{totals.matchPts}</p>
@@ -413,6 +479,10 @@ export default function UserQuinielaModal({ participant, onClose }: Props) {
               <div>
                 <p className="text-[10px] text-gray-500 uppercase tracking-wider">F. Finales</p>
                 <p className="text-lg font-bold text-emerald-400">+{totals.knockoutPts}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider">FIFA</p>
+                <p className="text-lg font-bold text-cyan-400">+{totals.fifaKnockoutPts}</p>
               </div>
               <div>
                 <p className="text-[10px] text-gray-500 uppercase tracking-wider">Bonos</p>

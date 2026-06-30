@@ -99,15 +99,14 @@ export async function calculateFifaKnockoutPoints(
     if (!actual) continue
     if (actual.winner == null) continue
     const pts = points(cfg, pred.round)
-    if (pred.winner === actual.winner) {
-      total += pts.winner
-    }
     if (
       pred.homeScore != null && pred.awayScore != null &&
       actual.homeScore != null && actual.awayScore != null &&
       pred.homeScore === actual.homeScore && pred.awayScore === actual.awayScore
     ) {
       total += pts.exact
+    } else if (pred.winner === actual.winner) {
+      total += pts.winner
     }
   }
   return total
@@ -124,15 +123,14 @@ export async function calculateKnockoutPoints(
     if (!actual) continue
     if (actual.winner == null) continue
     const pts = points(cfg, pred.round)
-    if (pred.winner === actual.winner) {
-      total += pts.winner
-    }
     if (
       pred.homeScore != null && pred.awayScore != null &&
       actual.homeScore != null && actual.awayScore != null &&
       pred.homeScore === actual.homeScore && pred.awayScore === actual.awayScore
     ) {
       total += pts.exact
+    } else if (pred.winner === actual.winner) {
+      total += pts.winner
     }
   }
   return total
