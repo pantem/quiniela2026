@@ -685,7 +685,14 @@ export const useQuinielaStore = create<QuinielaState>()(
         const merged = adminMatches.map((m) => {
           const userMatch = state.fifaKnockout.find((e) => e.id === m.id)
           if (userMatch) {
-            return { ...m, homeScore: userMatch.homeScore, awayScore: userMatch.awayScore, winner: userMatch.winner }
+            return {
+              ...m,
+              homeTeam: userMatch.homeTeam ?? m.homeTeam,
+              awayTeam: userMatch.awayTeam ?? m.awayTeam,
+              homeScore: userMatch.homeScore,
+              awayScore: userMatch.awayScore,
+              winner: userMatch.winner,
+            }
           }
           return { ...m, homeScore: null, awayScore: null, winner: null }
         })

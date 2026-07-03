@@ -2,7 +2,7 @@
 
 import { useQuinielaStore } from "@/store/store"
 import { getTeamById } from "@/utils/teams"
-import { getMatchesByRound, propagateWinners } from "@/utils/fifaMatrix"
+import { getMatchesByRound } from "@/utils/fifaMatrix"
 import { Swords, Lock } from "lucide-react"
 import { DEFAULT_SCORING } from "@/app/types"
 import { useEffect } from "react"
@@ -37,6 +37,7 @@ export default function FifaKnockoutView() {
 
   const adminMatches = results.fifaKnockout
   const hasAdminBracket = adminMatches.some((m) => m.homeTeam && m.awayTeam)
+  const hasUserPredictions = fifaKnockout.some((m) => m.homeScore !== null || m.awayScore !== null)
 
   useEffect(() => {
     if (hasAdminBracket && fifaKnockout.length === 0) {
@@ -44,12 +45,24 @@ export default function FifaKnockoutView() {
     }
   }, [hasAdminBracket, adminMatches.length])
 
-  const mergedKnockout = adminMatches.map((m) => {
-    const userMatch = fifaKnockout.find((u) => u.id === m.id)
-    return userMatch ?? m
-  })
+  const mergedKnockout = adminMatches.length > 0
+    ? adminMatches.map((m) => {
+        const userMatch = fifaKnockout.find((u) => u.id === m.id)
+        if (userMatch) {
+          return {
+            ...m,
+            homeTeam: userMatch.homeTeam ?? m.homeTeam,
+            awayTeam: userMatch.awayTeam ?? m.awayTeam,
+            homeScore: userMatch.homeScore,
+            awayScore: userMatch.awayScore,
+            winner: userMatch.winner ?? m.winner,
+          }
+        }
+        return m
+      })
+    : fifaKnockout
 
-  if (!hasAdminBracket) {
+  if (!hasAdminBracket && fifaKnockout.length === 0) {
     return (
       <div className="bg-gray-800/60 backdrop-blur rounded-xl border border-gray-700/50 p-8 text-center">
         <Swords className="w-12 h-12 text-gray-600 mx-auto mb-4" />
@@ -135,8 +148,19 @@ export default function FifaKnockoutView() {
                       <div className="w-full bg-gray-800/60 border border-gray-700/30 rounded-lg py-3 text-center text-xs text-gray-600">
                         <div className="text-emerald-400 font-semibold">{round.label}</div>
                         <div className="mt-1">{match.label}</div>
-                        <div className="text-[10px] text-gray-500 mt-1">Por definir</div>
-                        <div className="text-[9px] text-gray-600 mt-1">Gan: {pts.winner}pts | Exacto: {pts.exact}pts</div>
+                        {match.homeScore !== null || match.awayScore !== null ? (
+                          <>
+                            <div className="mt-1 text-gray-300 font-mono">
+                              {match.homeScore ?? "?"} - {match.awayScore ?? "?"}
+                            </div>
+                            <div className="text-[9px] text-gray-600 mt-0.5">Gan: {pts.winner}pts | Exacto: {pts.exact}pts</div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="text-[10px] text-gray-500 mt-1">Por definir</div>
+                            <div className="text-[9px] text-gray-600 mt-1">Gan: {pts.winner}pts | Exacto: {pts.exact}pts</div>
+                          </>
+                        )}
                       </div>
                     ) : (
                       <div className="w-full bg-gray-800/80 border border-gray-700/50 rounded-lg overflow-hidden text-xs">
@@ -213,7 +237,13 @@ export default function FifaKnockoutView() {
                         <div className="bg-gray-800/60 border border-gray-700/30 rounded-lg py-2 text-center text-[10px] text-gray-600">
                           <div className="text-emerald-400 font-semibold">{round.label}</div>
                           <div className="mt-1 text-[9px]">{match.label}</div>
-                          <div className="text-[9px] text-gray-500 mt-1">Esperando semifinales</div>
+                          {match.homeScore !== null || match.awayScore !== null ? (
+                            <div className="mt-1 text-gray-300 font-mono text-xs">
+                              {match.homeScore ?? "?"} - {match.awayScore ?? "?"}
+                            </div>
+                          ) : (
+                            <div className="text-[9px] text-gray-500 mt-1">Esperando semifinales</div>
+                          )}
                           <div className="text-[9px] text-gray-600 mt-0.5">G: {pts.winner} | E: {pts.exact}</div>
                         </div>
                       ) : (
