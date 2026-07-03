@@ -386,12 +386,28 @@ export const useQuinielaStore = create<QuinielaState>()(
       },
 
       generateFifaKnockout: () => {
-        set((state) => ({
-          results: {
-            ...state.results,
-            fifaKnockout: createEmptyFifaKnockout(),
-          },
-        }))
+        set((state) => {
+          const groups = state.results.groups
+          const matchScores = state.resultMatchScores
+          const allComplete = Array.isArray(groups) && groups.length > 0 && groups.every((g) => g.first && g.second && g.third && g.fourth)
+          const hasRealScores = matchScores.some((s) => s.homeScore !== null)
+          if (allComplete) {
+            const bestThird = getBestThirdPlaced(groups, hasRealScores ? matchScores : undefined)
+            const thirdQualifiers = bestThird.map((t) => t.teamId).filter(Boolean) as string[]
+            return {
+              results: {
+                ...state.results,
+                fifaKnockout: buildFifaMatrix(groups, thirdQualifiers),
+              },
+            }
+          }
+          return {
+            results: {
+              ...state.results,
+              fifaKnockout: createEmptyFifaKnockout(),
+            },
+          }
+        })
       },
 
       propagateFifaKnockout: () => {
