@@ -117,7 +117,12 @@ export interface PhaseLocks {
   third: boolean
   final: boolean
   bonuses: boolean
-  fifaLocked: boolean
+  fifaR32: boolean
+  fifaR16: boolean
+  fifaQf: boolean
+  fifaSf: boolean
+  fifaFinal: boolean
+  fifaThird: boolean
 }
 
 export const DEFAULT_PHASE_LOCKS: PhaseLocks = {
@@ -129,7 +134,12 @@ export const DEFAULT_PHASE_LOCKS: PhaseLocks = {
   third: false,
   final: false,
   bonuses: false,
-  fifaLocked: false,
+  fifaR32: false,
+  fifaR16: false,
+  fifaQf: false,
+  fifaSf: false,
+  fifaFinal: false,
+  fifaThird: false,
 }
 
 export type AutoBonuses = Record<string, number>

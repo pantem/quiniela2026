@@ -144,7 +144,12 @@ const PhaseLocksSchema = new Schema<PhaseLocks>(
     third: { type: Boolean, default: false },
     final: { type: Boolean, default: false },
     bonuses: { type: Boolean, default: false },
-    fifaLocked: { type: Boolean, default: false },
+    fifaR32: { type: Boolean, default: false },
+    fifaR16: { type: Boolean, default: false },
+    fifaQf: { type: Boolean, default: false },
+    fifaSf: { type: Boolean, default: false },
+    fifaFinal: { type: Boolean, default: false },
+    fifaThird: { type: Boolean, default: false },
   },
   { _id: false }
 )
@@ -167,7 +172,7 @@ const ResultSchema = new Schema<IResult>(
     bonuses: { type: BonusResultSchema, default: () => ({ bestGoalkeeper: null, topScorer: null, bestPlayer: null }) },
     scoringConfig: { type: ScoringConfigSchema, default: null },
     locked: { type: Boolean, default: false },
-    phaseLocks: { type: PhaseLocksSchema, default: () => ({ groups: false, r32: false, r16: false, qf: false, sf: false, final: false, bonuses: false, fifaLocked: false }) },
+    phaseLocks: { type: PhaseLocksSchema, default: () => ({ groups: false, r32: false, r16: false, qf: false, sf: false, final: false, bonuses: false, fifaR32: false, fifaR16: false, fifaQf: false, fifaSf: false, fifaFinal: false, fifaThird: false }) },
     autoBonuses: { type: Schema.Types.Mixed, default: {} },
     r32TeamBonus: { type: Schema.Types.Mixed, default: {} },
     r32TeamBonusDetail: { type: Schema.Types.Mixed, default: {} },

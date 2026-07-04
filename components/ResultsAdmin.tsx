@@ -63,7 +63,12 @@ export default function ResultsAdmin() {
     { key: "third", label: "3er" },
     { key: "final", label: "Final" },
     { key: "bonuses", label: "Bonos" },
-    { key: "fifaLocked", label: "FIFA" },
+    { key: "fifaR32", label: "F-R32" },
+    { key: "fifaR16", label: "F-R16" },
+    { key: "fifaQf", label: "F-QF" },
+    { key: "fifaSf", label: "F-SF" },
+    { key: "fifaFinal", label: "F-FIN" },
+    { key: "fifaThird", label: "F-3RD" },
   ] as const
   const [savingParticipants, setSavingParticipants] = useState(false)
 
@@ -74,7 +79,7 @@ export default function ResultsAdmin() {
           name: p.name,
           penalties: p.penalties ?? 0,
           canEdit: p.canEdit ?? true,
-          phasePermissions: p.phasePermissions ?? { groups: true, r32: true, r16: true, qf: true, sf: true, third: true, final: true, bonuses: true, fifaLocked: true },
+          phasePermissions: p.phasePermissions ?? { groups: true, r32: true, r16: true, qf: true, sf: true, third: true, final: true, bonuses: true, fifaR32: true, fifaR16: true, fifaQf: true, fifaSf: true, fifaFinal: true, fifaThird: true },
         }))
       )
     ).catch(() => {})
@@ -182,21 +187,28 @@ export default function ResultsAdmin() {
             </button>
             <div className="flex items-center gap-1">
               <span className="text-[10px] text-gray-500 mr-1">Bloqueos:</span>
-              {(["groups", "r32", "r16", "qf", "sf", "third", "final", "bonuses", "fifaLocked"] as const).map((phase) => (
-                <button
-                  key={phase}
-                  onClick={() => setPhaseLock?.(phase, !phaseLocks[phase])}
-                  className={`px-1.5 py-1 text-[10px] rounded transition-colors font-medium ${
-                    phaseLocks[phase]
-                      ? "bg-red-600/20 text-red-300 border border-red-500/30"
-                      : "bg-gray-700 text-gray-400 border border-transparent"
-                  }`}
-                  title={`${phaseLocks[phase] ? "Desbloquear" : "Bloquear"} fase ${phase}`}
-                >
-                  {phaseLocks[phase] ? "🔒" : "🔓"}{" "}
-                  {phase === "groups" ? "Grupos" : phase === "r32" ? "R32" : phase === "r16" ? "R16" : phase === "qf" ? "QF" : phase === "sf" ? "SF" : phase === "third" ? "3RD" : phase === "bonuses" ? "Bonos" : phase === "fifaLocked" ? "FIFA" : "FIN"}
-                </button>
-              ))}
+              {(["groups", "r32", "r16", "qf", "sf", "third", "final", "bonuses", "fifaR32", "fifaR16", "fifaQf", "fifaSf", "fifaFinal", "fifaThird"] as const).map((phase) => {
+                const label: Record<string, string> = {
+                  groups: "Grupos", r32: "R32", r16: "R16", qf: "QF", sf: "SF",
+                  third: "3RD", final: "FIN", bonuses: "Bonos",
+                  fifaR32: "F32", fifaR16: "F16", fifaQf: "FQF", fifaSf: "FSF",
+                  fifaFinal: "FFIN", fifaThird: "F3RD",
+                }
+                return (
+                  <button
+                    key={phase}
+                    onClick={() => setPhaseLock?.(phase, !phaseLocks[phase])}
+                    className={`px-1.5 py-1 text-[10px] rounded transition-colors font-medium ${
+                      phaseLocks[phase]
+                        ? "bg-red-600/20 text-red-300 border border-red-500/30"
+                        : "bg-gray-700 text-gray-400 border border-transparent"
+                    }`}
+                    title={`${phaseLocks[phase] ? "Desbloquear" : "Bloquear"} fase ${label[phase] ?? phase}`}
+                  >
+                    {phaseLocks[phase] ? "🔒" : "🔓"} {label[phase] ?? phase}
+                  </button>
+                )
+              })}
             </div>
             <button
               onClick={() => loadResultsFromMongo?.()}

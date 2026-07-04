@@ -49,7 +49,12 @@ export interface IPhasePermissions {
   third: boolean
   final: boolean
   bonuses: boolean
-  fifaLocked: boolean
+  fifaR32: boolean
+  fifaR16: boolean
+  fifaQf: boolean
+  fifaSf: boolean
+  fifaFinal: boolean
+  fifaThird: boolean
 }
 
 const DEFAULT_PHASE_PERMISSIONS: IPhasePermissions = {
@@ -61,7 +66,12 @@ const DEFAULT_PHASE_PERMISSIONS: IPhasePermissions = {
   third: true,
   final: true,
   bonuses: true,
-  fifaLocked: true,
+  fifaR32: true,
+  fifaR16: true,
+  fifaQf: true,
+  fifaSf: true,
+  fifaFinal: true,
+  fifaThird: true,
 }
 
 export interface IParticipant extends Document {
@@ -143,7 +153,12 @@ const PhasePermissionsSchema = new Schema<IPhasePermissions>(
     third: { type: Boolean, default: true },
     final: { type: Boolean, default: true },
     bonuses: { type: Boolean, default: true },
-    fifaLocked: { type: Boolean, default: true },
+    fifaR32: { type: Boolean, default: true },
+    fifaR16: { type: Boolean, default: true },
+    fifaQf: { type: Boolean, default: true },
+    fifaSf: { type: Boolean, default: true },
+    fifaFinal: { type: Boolean, default: true },
+    fifaThird: { type: Boolean, default: true },
   },
   { _id: false }
 )

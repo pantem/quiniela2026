@@ -196,7 +196,7 @@ export const useQuinielaStore = create<QuinielaState>()(
     (set, get) => ({
       participantName: "",
       canEdit: true,
-      phasePermissions: { groups: true, r32: true, r16: true, qf: true, sf: true, third: true, final: true, bonuses: true, fifaLocked: true },
+      phasePermissions: { groups: true, r32: true, r16: true, qf: true, sf: true, third: true, final: true, bonuses: true, fifaR32: true, fifaR16: true, fifaQf: true, fifaSf: true, fifaFinal: true, fifaThird: true },
       groups: defaultGroups(),
       matchPredictions: defaultMatchPredictions(),
       knockout: [],
@@ -313,7 +313,15 @@ export const useQuinielaStore = create<QuinielaState>()(
       },
 
       setFifaKnockoutScore: (matchId, homeScore, awayScore) => {
-        if (!get().canEditPhase('fifaLocked')) return
+        const idPrefix = matchId.split('_')[0]
+        let round: keyof PhaseLocks | null = null
+        if (idPrefix === 'R32') round = 'fifaR32'
+        else if (idPrefix === 'R16') round = 'fifaR16'
+        else if (idPrefix === 'QF') round = 'fifaQf'
+        else if (idPrefix === 'SF') round = 'fifaSf'
+        else if (idPrefix === 'F') round = matchId.includes('3RD') ? 'fifaThird' : 'fifaFinal'
+        else if (idPrefix === '3RD') round = 'fifaThird'
+        if (round && !get().canEditPhase(round)) return
         set((state) => {
           let winner: string | null = null
           const existing = state.fifaKnockout.find((m) => m.id === matchId)
@@ -321,10 +329,11 @@ export const useQuinielaStore = create<QuinielaState>()(
             if (homeScore !== null && awayScore !== null && homeScore !== awayScore) {
               winner = homeScore > awayScore ? existing.homeTeam : existing.awayTeam
             }
-            const updated = state.fifaKnockout.map((m) =>
-              m.id === matchId ? { ...m, homeScore, awayScore, winner } : m
-            )
-            return { fifaKnockout: propagateWinners(updated) }
+            return {
+              fifaKnockout: state.fifaKnockout.map((m) =>
+                m.id === matchId ? { ...m, homeScore, awayScore, winner } : m
+              ),
+            }
           }
           const adminMatch = state.results.fifaKnockout.find((m) => m.id === matchId)
           if (adminMatch && homeScore !== null && awayScore !== null && homeScore !== awayScore) {
@@ -340,7 +349,7 @@ export const useQuinielaStore = create<QuinielaState>()(
             winner,
             label: adminMatch?.label ?? '',
           }
-          return { fifaKnockout: propagateWinners([...state.fifaKnockout, newEntry]) }
+          return { fifaKnockout: [...state.fifaKnockout, newEntry] }
         })
       },
 
@@ -685,13 +694,15 @@ export const useQuinielaStore = create<QuinielaState>()(
         const merged = adminMatches.map((m) => {
           const userMatch = state.fifaKnockout.find((e) => e.id === m.id)
           if (userMatch) {
+            let winner: string | null = null
+            if (userMatch.homeScore !== null && userMatch.awayScore !== null && userMatch.homeScore !== userMatch.awayScore) {
+              winner = userMatch.homeScore > userMatch.awayScore ? m.homeTeam : m.awayTeam
+            }
             return {
               ...m,
-              homeTeam: userMatch.homeTeam ?? m.homeTeam,
-              awayTeam: userMatch.awayTeam ?? m.awayTeam,
               homeScore: userMatch.homeScore,
               awayScore: userMatch.awayScore,
-              winner: userMatch.winner,
+              winner,
             }
           }
           return { ...m, homeScore: null, awayScore: null, winner: null }
@@ -710,7 +721,7 @@ export const useQuinielaStore = create<QuinielaState>()(
               groups: participant.groups ?? defaultGroups(),
               bonuses: participant.bonuses ?? { ...defaultBonuses },
               canEdit: participant.canEdit ?? false,
-              phasePermissions: participant.phasePermissions ?? { groups: true, r32: true, r16: true, qf: true, sf: true, third: true, final: true, bonuses: true, fifaLocked: true },
+              phasePermissions: participant.phasePermissions ?? { groups: true, r32: true, r16: true, qf: true, sf: true, third: true, final: true, bonuses: true, fifaR32: true, fifaR16: true, fifaQf: true, fifaSf: true, fifaFinal: true, fifaThird: true },
             }
             if (participant.matchPredictions) {
               loaded.matchPredictions = participant.matchPredictions
@@ -739,19 +750,25 @@ export const useQuinielaStore = create<QuinielaState>()(
         try {
           const data = await fetchResults()
           if (data && data.groups) {
+            const rawLocks = data.phaseLocks ?? {}
+            const phaseLocks: PhaseLocks = {
+              ...DEFAULT_PHASE_LOCKS,
+              ...rawLocks,
+              ...(rawLocks.fifaLocked ? { fifaR32: true, fifaR16: true, fifaQf: true, fifaSf: true, fifaFinal: true, fifaThird: true } : {}),
+            }
             set({
-          results: {
-            groups: data.groups,
-            knockout: data.knockout ?? [],
-            fifaKnockout: data.fifaKnockout ?? [],
-            bonuses: data.bonuses ?? { ...defaultBonuses },
-            scoringConfig: data.scoringConfig ?? null,
-            autoBonuses: {},
-            r32TeamBonus: data.r32TeamBonus ?? {},
-            r32TeamBonusDetail: data.r32TeamBonusDetail ?? {},
-          },
-          phaseLocks: data.phaseLocks ?? { ...DEFAULT_PHASE_LOCKS },
-        })
+              results: {
+                groups: data.groups,
+                knockout: data.knockout ?? [],
+                fifaKnockout: data.fifaKnockout ?? [],
+                bonuses: data.bonuses ?? { ...defaultBonuses },
+                scoringConfig: data.scoringConfig ?? null,
+                autoBonuses: {},
+                r32TeamBonus: data.r32TeamBonus ?? {},
+                r32TeamBonusDetail: data.r32TeamBonusDetail ?? {},
+              },
+              phaseLocks,
+            })
         if (data.matchScores) {
           set({ resultMatchScores: data.matchScores })
         }
@@ -883,16 +900,20 @@ export const useQuinielaStore = create<QuinielaState>()(
     }),
     {
       name: "quiniela-2026",
-      version: 6,
+      version: 7,
       migrate: (persisted: any, version: number) => {
         const phaseLocksRaw = persisted.phaseLocks ?? (persisted.locked != null
           ? { groups: persisted.locked, r32: persisted.locked, r16: persisted.locked, qf: persisted.locked, sf: persisted.locked, third: persisted.locked, final: persisted.locked }
           : { ...DEFAULT_PHASE_LOCKS })
-        const phaseLocks = { ...DEFAULT_PHASE_LOCKS, ...phaseLocksRaw }
+        const phaseLocks = {
+          ...DEFAULT_PHASE_LOCKS,
+          ...phaseLocksRaw,
+          ...(phaseLocksRaw.fifaLocked ? { fifaR32: true, fifaR16: true, fifaQf: true, fifaSf: true, fifaFinal: true, fifaThird: true } : {}),
+        }
         const bonuses = persisted.bonuses ?? persisted.results?.bonuses ?? { ...defaultBonuses }
         return {
           ...persisted,
-          phasePermissions: persisted.phasePermissions ?? { groups: true, r32: true, r16: true, qf: true, sf: true, third: true, final: true, bonuses: true, fifaLocked: true },
+          phasePermissions: persisted.phasePermissions ?? { groups: true, r32: true, r16: true, qf: true, sf: true, third: true, final: true, bonuses: true, fifaR32: true, fifaR16: true, fifaQf: true, fifaSf: true, fifaFinal: true, fifaThird: true },
           fifaKnockout: persisted.fifaKnockout ?? [],
           phaseLocks,
           bonuses,

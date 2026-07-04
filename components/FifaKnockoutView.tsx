@@ -31,9 +31,16 @@ function getRoundPoints(cfg: typeof DEFAULT_SCORING, round: string): { winner: n
 export default function FifaKnockoutView() {
   const { fifaKnockout, setFifaKnockoutScore, canEditPhase, results, phaseLocks } = useQuinielaStore()
   const scoringConfig = results.scoringConfig ?? DEFAULT_SCORING
-  const fifaLocked = phaseLocks.fifaLocked
 
-  const editable = canEditPhase('fifaLocked') && !fifaLocked
+  const fifaLockKey = (round: string): keyof typeof phaseLocks =>
+    `fifa${round.charAt(0).toUpperCase()}${round.slice(1)}` as keyof typeof phaseLocks
+
+  const anyFifaLocked = (['r32', 'r16', 'qf', 'sf', 'third', 'final'] as const).some(
+    (r) => phaseLocks[fifaLockKey(r)]
+  )
+
+  const isEditable = (round: string) =>
+    canEditPhase(fifaLockKey(round)) && !phaseLocks[fifaLockKey(round)]
 
   const adminMatches = results.fifaKnockout
   const hasAdminBracket = adminMatches.some((m) => m.homeTeam && m.awayTeam)
@@ -49,14 +56,7 @@ export default function FifaKnockoutView() {
     ? adminMatches.map((m) => {
         const userMatch = fifaKnockout.find((u) => u.id === m.id)
         if (userMatch) {
-          return {
-            ...m,
-            homeTeam: userMatch.homeTeam ?? m.homeTeam,
-            awayTeam: userMatch.awayTeam ?? m.awayTeam,
-            homeScore: userMatch.homeScore,
-            awayScore: userMatch.awayScore,
-            winner: userMatch.winner ?? m.winner,
-          }
+          return { ...m, homeScore: userMatch.homeScore, awayScore: userMatch.awayScore }
         }
         return m
       })
@@ -108,7 +108,7 @@ export default function FifaKnockoutView() {
             Captura tus marcadores — los ganadores avanzan automáticamente
           </p>
         </div>
-        {fifaLocked && (
+        {anyFifaLocked && (
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600/20 border border-red-500/30 rounded-lg">
             <Lock className="w-4 h-4 text-red-400" />
             <span className="text-xs text-red-300 font-medium">BLOQUEADO</span>
@@ -169,17 +169,17 @@ export default function FifaKnockoutView() {
                           <span className="text-gray-400">{match.label}</span>
                           <span className="text-gray-600">G:{pts.winner} E:{pts.exact}</span>
                         </div>
-                        <div className={`flex items-center gap-1 px-2 py-1.5 ${!editable ? "opacity-60" : ""}`}>
+                        <div className={`flex items-center gap-1 px-2 py-1.5 ${!isEditable(match.round) ? "opacity-60" : ""}`}>
                           <span className="text-gray-200 text-xs shrink-0 w-24 truncate text-right">{home?.flag} {home?.name ?? "—"}</span>
                           <ScoreSelect
                             value={match.homeScore}
-                            disabled={!editable}
+                            disabled={!isEditable(match.round)}
                             onChange={(v) => setFifaKnockoutScore(match.id, v, match.awayScore)}
                           />
                           <span className="text-gray-500 text-[10px]">-</span>
                           <ScoreSelect
                             value={match.awayScore}
-                            disabled={!editable}
+                            disabled={!isEditable(match.round)}
                             onChange={(v) => setFifaKnockoutScore(match.id, match.homeScore, v)}
                           />
                           <span className="text-gray-200 text-xs shrink-0 w-24 truncate text-left">{away?.flag} {away?.name ?? "—"}</span>
@@ -253,17 +253,17 @@ export default function FifaKnockoutView() {
                             <span className="text-gray-400">{match.label}</span>
                             <span className="text-gray-600">G:{pts.winner} E:{pts.exact}</span>
                           </div>
-                          <div className={`flex items-center gap-1 px-2 py-1.5 ${!editable ? "opacity-60" : ""}`}>
+                          <div className={`flex items-center gap-1 px-2 py-1.5 ${!isEditable(match.round) ? "opacity-60" : ""}`}>
                             <span className="text-gray-200 text-xs shrink-0 w-24 truncate text-right">{home?.flag} {home?.name ?? "—"}</span>
                             <ScoreSelect
                               value={match.homeScore}
-                              disabled={!editable}
+                              disabled={!isEditable(match.round)}
                               onChange={(v) => setFifaKnockoutScore(match.id, v, match.awayScore)}
                             />
                             <span className="text-gray-500 text-[10px]">-</span>
                             <ScoreSelect
                               value={match.awayScore}
-                              disabled={!editable}
+                              disabled={!isEditable(match.round)}
                               onChange={(v) => setFifaKnockoutScore(match.id, match.homeScore, v)}
                             />
                             <span className="text-gray-200 text-xs shrink-0 w-24 truncate text-left">{away?.flag} {away?.name ?? "—"}</span>

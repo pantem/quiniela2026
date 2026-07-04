@@ -84,7 +84,14 @@ export async function POST(req: Request) {
         return m
       })
       const existingFifaKnockout = existing.fifaKnockout ?? []
-      const finalFifaKnockout = canEditPhase('fifaLocked') ? (fifaKnockout ?? []) : existingFifaKnockout
+      const finalFifaKnockout = (fifaKnockout ?? []).map((m: KnockoutMatch) => {
+        const round = m.round
+        const lockKey = `fifa${round.charAt(0).toUpperCase()}${round.slice(1)}` as keyof PhaseLocks
+        if (!canEditPhase(lockKey)) {
+          return existingFifaKnockout.find((e: KnockoutMatch) => e.id === m.id) ?? m
+        }
+        return m
+      })
       const entry = buildChangelogEntry(
         { groups: existing.groups, matchPredictions: existing.matchPredictions ?? [], knockout: existingKnockout, fifaKnockout: existingFifaKnockout, bonuses: existing.bonuses ?? {} },
         { groups: finalGroups, matchPredictions: finalMatchPredictions, knockout: finalKnockout, fifaKnockout: finalFifaKnockout, bonuses: finalBonuses }
@@ -161,7 +168,14 @@ export async function PUT(req: Request) {
         return m
       })
       const existingFifaKnockout = existing.fifaKnockout ?? []
-      const finalFifaKnockout = canEditPhase('fifaLocked') ? (fifaKnockout ?? []) : existingFifaKnockout
+      const finalFifaKnockout = (fifaKnockout ?? []).map((m: KnockoutMatch) => {
+        const round = m.round
+        const lockKey = `fifa${round.charAt(0).toUpperCase()}${round.slice(1)}` as keyof PhaseLocks
+        if (!canEditPhase(lockKey)) {
+          return existingFifaKnockout.find((e: KnockoutMatch) => e.id === m.id) ?? m
+        }
+        return m
+      })
       const entry = buildChangelogEntry(
         { groups: existing.groups, matchPredictions: existing.matchPredictions ?? [], knockout: existingKnockout, fifaKnockout: existingFifaKnockout, bonuses: existing.bonuses ?? {} },
         { groups: finalGroups, matchPredictions: finalMatchPredictions, knockout: finalKnockout, fifaKnockout: finalFifaKnockout, bonuses: finalBonuses }
