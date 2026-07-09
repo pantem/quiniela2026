@@ -437,14 +437,23 @@ export const useQuinielaStore = create<QuinielaState>()(
       },
 
       setResultKnockoutScore: (matchId, homeScore, awayScore) => {
-        set((state) => ({
-          results: {
-            ...state.results,
-            knockout: state.results.knockout.map((m) =>
-              m.id === matchId ? { ...m, homeScore, awayScore } : m
-            ),
-          },
-        }))
+        set((state) => {
+          let winner: string | null = null
+          if (homeScore !== null && awayScore !== null && homeScore !== awayScore) {
+            const match = state.results.knockout.find((m) => m.id === matchId)
+            if (match) {
+              winner = homeScore > awayScore ? match.homeTeam : match.awayTeam
+            }
+          }
+          return {
+            results: {
+              ...state.results,
+              knockout: state.results.knockout.map((m) =>
+                m.id === matchId ? { ...m, homeScore, awayScore, winner } : m
+              ),
+            },
+          }
+        })
       },
 
       setBonus: (key, value) => {
