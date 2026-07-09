@@ -89,7 +89,7 @@ export async function calculateBonusPoints(
 }
 
 export async function calculateFifaKnockoutPoints(
-  predictions: Array<{ id: string; round: string; winner: string | null; homeScore?: number | null; awayScore?: number | null }>,
+  predictions: Array<{ id: string; round: string; winner: string | null; homeScore?: number | null; awayScore?: number | null; homeTeam?: string | null; awayTeam?: string | null }>,
   results: Array<{ id: string; winner: string | null; homeScore?: number | null; awayScore?: number | null; homeTeam?: string | null; awayTeam?: string | null }>
 ): Promise<number> {
   const cfg = await getScoringConfig()
@@ -103,6 +103,11 @@ export async function calculateFifaKnockoutPoints(
         : null
     )
     if (resultWinner == null) continue
+    const predWinner = pred.winner ?? (
+      pred.homeScore != null && pred.awayScore != null && pred.homeScore !== pred.awayScore
+        ? pred.homeScore > pred.awayScore ? pred.homeTeam ?? null : pred.awayTeam ?? null
+        : null
+    )
     const pts = points(cfg, pred.round)
     if (
       pred.homeScore != null && pred.awayScore != null &&
@@ -110,7 +115,7 @@ export async function calculateFifaKnockoutPoints(
       pred.homeScore === actual.homeScore && pred.awayScore === actual.awayScore
     ) {
       total += pts.exact
-    } else if (pred.winner === resultWinner) {
+    } else if (predWinner != null && predWinner === resultWinner) {
       total += pts.winner
     }
   }
@@ -118,7 +123,7 @@ export async function calculateFifaKnockoutPoints(
 }
 
 export async function calculateKnockoutPoints(
-  predictions: Array<{ id: string; round: string; winner: string | null; homeScore?: number | null; awayScore?: number | null }>,
+  predictions: Array<{ id: string; round: string; winner: string | null; homeScore?: number | null; awayScore?: number | null; homeTeam?: string | null; awayTeam?: string | null }>,
   results: Array<{ id: string; winner: string | null; homeScore?: number | null; awayScore?: number | null; homeTeam?: string | null; awayTeam?: string | null }>
 ): Promise<number> {
   const cfg = await getScoringConfig()
@@ -132,6 +137,11 @@ export async function calculateKnockoutPoints(
         : null
     )
     if (resultWinner == null) continue
+    const predWinner = pred.winner ?? (
+      pred.homeScore != null && pred.awayScore != null && pred.homeScore !== pred.awayScore
+        ? pred.homeScore > pred.awayScore ? pred.homeTeam ?? null : pred.awayTeam ?? null
+        : null
+    )
     const pts = points(cfg, pred.round)
     if (
       pred.homeScore != null && pred.awayScore != null &&
@@ -139,7 +149,7 @@ export async function calculateKnockoutPoints(
       pred.homeScore === actual.homeScore && pred.awayScore === actual.awayScore
     ) {
       total += pts.exact
-    } else if (pred.winner === resultWinner) {
+    } else if (predWinner != null && predWinner === resultWinner) {
       total += pts.winner
     }
   }

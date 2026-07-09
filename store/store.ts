@@ -569,10 +569,12 @@ export const useQuinielaStore = create<QuinielaState>()(
         const merged = matrix.map((m) => {
           const old = existing.find((e) => e.id === m.id)
           if (!old) return m
-          if (m.round === 'r32') {
-            return { ...m, winner: old.winner ?? m.winner }
+          return {
+            ...m,
+            homeScore: old.homeScore,
+            awayScore: old.awayScore,
+            winner: old.winner,
           }
-          return { ...m, ...old }
         })
         set({ knockout: propagateWinners(merged) })
       },
