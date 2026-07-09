@@ -90,14 +90,19 @@ export async function calculateBonusPoints(
 
 export async function calculateFifaKnockoutPoints(
   predictions: Array<{ id: string; round: string; winner: string | null; homeScore?: number | null; awayScore?: number | null }>,
-  results: Array<{ id: string; winner: string | null; homeScore?: number | null; awayScore?: number | null }>
+  results: Array<{ id: string; winner: string | null; homeScore?: number | null; awayScore?: number | null; homeTeam?: string | null; awayTeam?: string | null }>
 ): Promise<number> {
   const cfg = await getScoringConfig()
   let total = 0
   for (const pred of predictions) {
     const actual = results.find((r) => r.id === pred.id)
     if (!actual) continue
-    if (actual.winner == null) continue
+    const resultWinner = actual.winner ?? (
+      actual.homeScore != null && actual.awayScore != null && actual.homeScore !== actual.awayScore
+        ? actual.homeScore > actual.awayScore ? actual.homeTeam ?? null : actual.awayTeam ?? null
+        : null
+    )
+    if (resultWinner == null) continue
     const pts = points(cfg, pred.round)
     if (
       pred.homeScore != null && pred.awayScore != null &&
@@ -105,7 +110,7 @@ export async function calculateFifaKnockoutPoints(
       pred.homeScore === actual.homeScore && pred.awayScore === actual.awayScore
     ) {
       total += pts.exact
-    } else if (pred.winner === actual.winner) {
+    } else if (pred.winner === resultWinner) {
       total += pts.winner
     }
   }
@@ -114,14 +119,19 @@ export async function calculateFifaKnockoutPoints(
 
 export async function calculateKnockoutPoints(
   predictions: Array<{ id: string; round: string; winner: string | null; homeScore?: number | null; awayScore?: number | null }>,
-  results: Array<{ id: string; winner: string | null; homeScore?: number | null; awayScore?: number | null }>
+  results: Array<{ id: string; winner: string | null; homeScore?: number | null; awayScore?: number | null; homeTeam?: string | null; awayTeam?: string | null }>
 ): Promise<number> {
   const cfg = await getScoringConfig()
   let total = 0
   for (const pred of predictions) {
     const actual = results.find((r) => r.id === pred.id)
     if (!actual) continue
-    if (actual.winner == null) continue
+    const resultWinner = actual.winner ?? (
+      actual.homeScore != null && actual.awayScore != null && actual.homeScore !== actual.awayScore
+        ? actual.homeScore > actual.awayScore ? actual.homeTeam ?? null : actual.awayTeam ?? null
+        : null
+    )
+    if (resultWinner == null) continue
     const pts = points(cfg, pred.round)
     if (
       pred.homeScore != null && pred.awayScore != null &&
@@ -129,7 +139,7 @@ export async function calculateKnockoutPoints(
       pred.homeScore === actual.homeScore && pred.awayScore === actual.awayScore
     ) {
       total += pts.exact
-    } else if (pred.winner === actual.winner) {
+    } else if (pred.winner === resultWinner) {
       total += pts.winner
     }
   }

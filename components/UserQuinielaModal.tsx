@@ -43,11 +43,16 @@ function getGroupPosPoints(
 
 function getKnockoutPoints(
   pred: { winner: string | null; homeScore: number | null; awayScore: number | null },
-  result: { winner: string | null; homeScore: number | null; awayScore: number | null },
+  result: { winner: string | null; homeScore: number | null; awayScore: number | null; homeTeam?: string | null; awayTeam?: string | null },
   round: string,
   cfg: ScoringConfig
 ): { winnerPts: number; exactPts: number } {
-  if (!result.winner) return { winnerPts: 0, exactPts: 0 }
+  const resultWinner = result.winner ?? (
+    result.homeScore != null && result.awayScore != null && result.homeScore !== result.awayScore
+      ? result.homeScore > result.awayScore ? result.homeTeam ?? null : result.awayTeam ?? null
+      : null
+  )
+  if (!resultWinner) return { winnerPts: 0, exactPts: 0 }
   const pts: Record<string, { winner: number; exact: number }> = {
     r32: { winner: cfg.r32Winner, exact: cfg.r32Exact },
     r16: { winner: cfg.r16Winner, exact: cfg.r16Exact },
@@ -65,7 +70,7 @@ function getKnockoutPoints(
   ) {
     return { winnerPts: 0, exactPts: roundPts.exact }
   }
-  if (pred.winner && pred.winner === result.winner) {
+  if (pred.winner && pred.winner === resultWinner) {
     return { winnerPts: roundPts.winner, exactPts: 0 }
   }
   return { winnerPts: 0, exactPts: 0 }
