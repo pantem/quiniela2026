@@ -105,7 +105,7 @@ export async function calculateFifaKnockoutPoints(
     if (resultWinner == null) continue
     const predWinner = pred.winner ?? (
       pred.homeScore != null && pred.awayScore != null && pred.homeScore !== pred.awayScore
-        ? pred.homeScore > pred.awayScore ? pred.homeTeam ?? null : pred.awayTeam ?? null
+        ? pred.homeScore > pred.awayScore ? (pred.homeTeam ?? actual.homeTeam) : (pred.awayTeam ?? actual.awayTeam)
         : null
     )
     const pts = points(cfg, pred.round)
@@ -139,7 +139,7 @@ export async function calculateKnockoutPoints(
     if (resultWinner == null) continue
     const predWinner = pred.winner ?? (
       pred.homeScore != null && pred.awayScore != null && pred.homeScore !== pred.awayScore
-        ? pred.homeScore > pred.awayScore ? pred.homeTeam ?? null : pred.awayTeam ?? null
+        ? pred.homeScore > pred.awayScore ? (pred.homeTeam ?? actual.homeTeam) : (pred.awayTeam ?? actual.awayTeam)
         : null
     )
     const pts = points(cfg, pred.round)

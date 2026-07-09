@@ -104,7 +104,7 @@ export function calculateFifaKnockoutPoints(
 
     const predWinner = pred.winner ?? (
       pred.homeScore != null && pred.awayScore != null && pred.homeScore !== pred.awayScore
-        ? pred.homeScore > pred.awayScore ? pred.homeTeam : pred.awayTeam
+        ? pred.homeScore > pred.awayScore ? (pred.homeTeam ?? actual.homeTeam) : (pred.awayTeam ?? actual.awayTeam)
         : null
     )
 
@@ -143,7 +143,7 @@ export function calculateKnockoutPoints(
 
     const predWinner = pred.winner ?? (
       pred.homeScore != null && pred.awayScore != null && pred.homeScore !== pred.awayScore
-        ? pred.homeScore > pred.awayScore ? pred.homeTeam : pred.awayTeam
+        ? pred.homeScore > pred.awayScore ? (pred.homeTeam ?? actual.homeTeam) : (pred.awayTeam ?? actual.awayTeam)
         : null
     )
 

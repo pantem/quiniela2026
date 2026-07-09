@@ -53,9 +53,11 @@ function getKnockoutPoints(
       : null
   )
   if (!resultWinner) return { winnerPts: 0, exactPts: 0 }
+  const predHome = pred.homeTeam ?? result.homeTeam
+  const predAway = pred.awayTeam ?? result.awayTeam
   const predWinner = pred.winner ?? (
     pred.homeScore != null && pred.awayScore != null && pred.homeScore !== pred.awayScore
-      ? pred.homeScore > pred.awayScore ? pred.homeTeam ?? null : pred.awayTeam ?? null
+      ? pred.homeScore > pred.awayScore ? predHome : predAway
       : null
   )
   const pts: Record<string, { winner: number; exact: number }> = {
