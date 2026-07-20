@@ -1,4 +1,5 @@
 import { ScoringConfig, DEFAULT_SCORING } from "@/app/types"
+import { fuzzyPlayerMatch } from "@/utils/nameMatch"
 import { connectDB } from "./mongodb"
 import { ResultModel } from "@/models/Result"
 
@@ -82,9 +83,9 @@ export async function calculateBonusPoints(
   if (!predictions || !results) return 0
   const cfg = await getScoringConfig()
   let points = 0
-  if (predictions.bestGoalkeeper != null && predictions.bestGoalkeeper === results.bestGoalkeeper) points += cfg.goalkeeperBonus
-  if (predictions.topScorer != null && predictions.topScorer === results.topScorer) points += cfg.topScorerBonus
-  if (predictions.bestPlayer != null && predictions.bestPlayer === results.bestPlayer) points += cfg.playerBonus
+  if (fuzzyPlayerMatch(predictions.bestGoalkeeper, results.bestGoalkeeper)) points += cfg.goalkeeperBonus
+  if (fuzzyPlayerMatch(predictions.topScorer, results.topScorer)) points += cfg.topScorerBonus
+  if (fuzzyPlayerMatch(predictions.bestPlayer, results.bestPlayer)) points += cfg.playerBonus
   return points
 }
 

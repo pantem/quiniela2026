@@ -1,4 +1,5 @@
 import { KnockoutMatch, GroupPrediction, MatchScore, BonusPrediction, ScoringConfig, DEFAULT_SCORING } from "@/app/types"
+import { fuzzyPlayerMatch } from "@/utils/nameMatch"
 
 function getRoundPoints(
   cfg: ScoringConfig,
@@ -79,9 +80,9 @@ export function calculateBonusPoints(
 ): number {
   if (!predictions || !results) return 0
   let points = 0
-  if (predictions.bestGoalkeeper != null && predictions.bestGoalkeeper === results.bestGoalkeeper) points += cfg.goalkeeperBonus
-  if (predictions.topScorer != null && predictions.topScorer === results.topScorer) points += cfg.topScorerBonus
-  if (predictions.bestPlayer != null && predictions.bestPlayer === results.bestPlayer) points += cfg.playerBonus
+  if (fuzzyPlayerMatch(predictions.bestGoalkeeper, results.bestGoalkeeper)) points += cfg.goalkeeperBonus
+  if (fuzzyPlayerMatch(predictions.topScorer, results.topScorer)) points += cfg.topScorerBonus
+  if (fuzzyPlayerMatch(predictions.bestPlayer, results.bestPlayer)) points += cfg.playerBonus
   return points
 }
 
