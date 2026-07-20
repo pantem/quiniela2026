@@ -6,6 +6,7 @@ import { groups, getTeamById } from "@/utils/teams"
 import { X, ChevronDown, ChevronRight, Trophy, Timer, Swords, Star, UserCircle, History } from "lucide-react"
 import { useState, useMemo } from "react"
 import { DEFAULT_SCORING, type ScoringConfig } from "@/app/types"
+import { fuzzyPlayerMatch } from "@/utils/nameMatch"
 
 interface Props {
   participant: any
@@ -83,9 +84,9 @@ function getKnockoutPoints(
   return { winnerPts: 0, exactPts: 0 }
 }
 
-function getBonusItemPoints(key: string, pred: string | null, official: string | null, cfg: ScoringConfig): number {
-  if (pred == null || pred !== official) return 0
-  switch (key) {
+function getBonusItemPoints(_key: string, pred: string | null, official: string | null, cfg: ScoringConfig): number {
+  if (!fuzzyPlayerMatch(pred, official)) return 0
+  switch (_key) {
     case "bestGoalkeeper": return cfg.goalkeeperBonus
     case "topScorer": return cfg.topScorerBonus
     case "bestPlayer": return cfg.playerBonus
